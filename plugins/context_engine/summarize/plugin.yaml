@@ -1,0 +1,3 @@
+name: summarize
+description: Full LLM-based structured summarization (same algorithm as built-in compressor).
+version: "1.0"

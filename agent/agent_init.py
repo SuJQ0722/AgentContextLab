@@ -1582,7 +1582,8 @@ def init_agent(
     _engine_name = "compressor"  # default
     try:
         _ctx_cfg = _agent_cfg.get("context", {}) if isinstance(_agent_cfg, dict) else {}
-        _engine_name = _ctx_cfg.get("engine", "compressor") or "compressor"
+        _engine_name = os.getenv("COMPRESS_STRATEGY") or _ctx_cfg.get("engine", "compressor") or "compressor"
+        _engine_name = _engine_name.replace("-", "_")
     except Exception:
         pass
 

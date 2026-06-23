@@ -1,0 +1,3 @@
+name: sliding_window
+description: Keep the last N tool results intact, blank older ones to save context.
+version: "1.0"

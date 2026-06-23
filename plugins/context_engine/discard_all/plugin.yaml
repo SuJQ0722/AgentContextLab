@@ -1,0 +1,3 @@
+name: discard_all
+description: Aggressively discard tool results or full history to free context.
+version: "1.0"

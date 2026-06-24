@@ -1582,7 +1582,7 @@ def init_agent(
     _engine_name = "compressor"  # default
     try:
         _ctx_cfg = _agent_cfg.get("context", {}) if isinstance(_agent_cfg, dict) else {}
-        _engine_name = os.getenv("COMPRESS_STRATEGY") or _ctx_cfg.get("engine", "compressor") or "compressor"
+        _engine_name = os.getenv("CM") or _ctx_cfg.get("engine", "compressor") or "compressor"
         _engine_name = _engine_name.replace("-", "_")
     except Exception:
         pass
@@ -1679,6 +1679,15 @@ def init_agent(
             pass
     agent.compression_enabled = compression_enabled
     agent.compression_in_place = compression_in_place
+
+    # COMPRESS_THRESHOLD env var: absolute token count override (e.g. 32768)
+    _env_threshold = os.getenv("COMPRESS_THRESHOLD")
+    if _env_threshold:
+        try:
+            _abs_threshold = int(_env_threshold)
+            agent.context_compressor.threshold_tokens = _abs_threshold
+        except (TypeError, ValueError):
+            pass
 
     # Reject models whose context window is below the minimum required
     # for reliable tool-calling workflows (64K tokens).

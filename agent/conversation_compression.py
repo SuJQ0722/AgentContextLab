@@ -451,6 +451,12 @@ def compress_context(
     # Set True once the in-place DB write actually completes (the DB block can
     # raise and skip it). Surfaced to the gateway via agent._last_compaction_in_place.
     compacted_in_place = False
+    _engine_name = getattr(agent.context_compressor, "name", "compressor")
+    _pre_token_str = f"{approx_tokens:,}" if approx_tokens else "unknown"
+    logging.info(
+        f"\033[32m[ContextEngine] tokens={_pre_token_str} | "
+        f"strategy={_engine_name} | compressing...\033[0m"
+    )
     logger.info(
         "context compression started: session=%s messages=%d tokens=~%s model=%s focus=%r",
         agent.session_id or "none", _pre_msg_count,
@@ -918,6 +924,12 @@ def compress_context(
             "context compression done: session=%s messages=%d->%d rough_tokens=~%s awaiting_real_usage=true",
             agent.session_id or "none", _pre_msg_count, len(compressed),
             f"{_compressed_est:,}",
+        )
+        print(
+            f"\033[32m[ContextEngine] compression done | "
+            f"strategy={_engine_name} | "
+            f"messages={_pre_msg_count}->{len(compressed)} | "
+            f"tokens={_pre_token_str}->{_compressed_est:,}\033[0m"
         )
         return compressed, new_system_prompt
     finally:

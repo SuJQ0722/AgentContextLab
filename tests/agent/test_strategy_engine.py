@@ -1,4 +1,4 @@
-"""Tests for the context engine plugins (summarize, sliding_window, discard_all, visual)."""
+"""Tests for the context engine plugins (summarize, sliding_window, discard, visual)."""
 
 import os
 import pytest
@@ -90,36 +90,40 @@ class TestSlidingWindow:
 
 
 # ---------------------------------------------------------------------------
-# Test DiscardAllEngine
+# Test DiscardEngine
 # ---------------------------------------------------------------------------
 
-class TestDiscardAll:
+class TestDiscard:
     def _make_engine(self):
-        from plugins.context_engine.discard_all import DiscardAllEngine
-        engine = DiscardAllEngine()
+        from plugins.context_engine.discard import DiscardEngine
+        engine = DiscardEngine()
         engine.update_model("test", context_length=200000)
         return engine
 
     def test_is_context_engine(self):
         engine = self._make_engine()
         assert isinstance(engine, ContextEngine)
-        assert engine.name == "discard_all"
+        assert engine.name == "discard"
 
-    def test_tool_response_mode(self):
+    def test_discard_all_rounds(self):
         engine = self._make_engine()
         msgs = _make_messages(n_tool_rounds=3)
         result = engine.compress(msgs)
-        tool_msgs = [m for m in result if m.get("role") == "tool"]
-        assert all(m["content"] == "[tool response discarded]" for m in tool_msgs)
-
-    def test_full_history_mode(self):
-        engine = self._make_engine()
-        engine.configure({"strategy_config": {"discard_mode": "full_history"}})
-        msgs = _make_messages(n_tool_rounds=5)
-        result = engine.compress(msgs)
-        # head = system + 3 non-system = 4
-        assert len(result) == 4
+        # Should keep: system + first user only (all rounds discarded)
         assert result[0]["role"] == "system"
+        assert result[1]["role"] == "user"
+        tool_msgs = [m for m in result if m.get("role") == "tool"]
+        assert len(tool_msgs) == 0
+
+    def test_discard_75_percent(self):
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {"discard_ratio": 0.75}})
+        msgs = _make_messages(n_tool_rounds=4)
+        result = engine.compress(msgs)
+        # 4 rounds, discard 75% = 3 rounds discarded, 1 kept
+        assert result[0]["role"] == "system"
+        assert result[1]["role"] == "user"
+        assert any(m.get("role") == "assistant" for m in result[2:])
 
 
 # ---------------------------------------------------------------------------
@@ -230,12 +234,12 @@ class TestPluginDiscovery:
         names = [name for name, _, _ in available]
         assert "summarize" in names
         assert "sliding_window" in names
-        assert "discard_all" in names
+        assert "discard" in names
         assert "visual" in names
 
     def test_load_each_engine(self):
         from plugins.context_engine import load_context_engine
-        for name in ["summarize", "sliding_window", "discard_all", "visual"]:
+        for name in ["summarize", "sliding_window", "discard", "visual"]:
             engine = load_context_engine(name)
             assert engine is not None
             assert engine.name == name

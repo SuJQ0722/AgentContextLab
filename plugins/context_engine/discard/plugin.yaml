@@ -1,0 +1,3 @@
+name: discard
+description: Discard tool-call history rounds to free context (configurable ratio, default 100%).
+version: "2.0"

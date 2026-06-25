@@ -368,6 +368,18 @@ def _text_to_images_fallback(
 # Image utilities
 # ---------------------------------------------------------------------------
 
+def _save_merged_image(b64_str: str, save_dir: str, filename: str) -> None:
+    try:
+        os.makedirs(save_dir, exist_ok=True)
+        img_data = base64.b64decode(b64_str)
+        path = os.path.join(save_dir, filename)
+        with open(path, "wb") as f:
+            f.write(img_data)
+        logger.info("Visual: saved %s", path)
+    except Exception as e:
+        logger.warning("Visual: failed to save %s: %s", filename, e)
+
+
 def _downscale_image_b64(b64_str: str, scale: float = 0.5) -> str:
     from PIL import Image
 
@@ -459,11 +471,14 @@ def render_visual_compression(
     tool_name_map = _build_tool_name_map(messages)
 
     # Split into far_history and recent_history (50/50)
+    count = compact_count + 1
     split_point = len(to_render_msgs) // 2
     far_msgs = to_render_msgs[:split_point] if split_point > 0 else []
     recent_msgs = to_render_msgs[split_point:] if split_point < len(to_render_msgs) else to_render_msgs
 
-    count = compact_count + 1
+    # Determine the directory for saving final merged images.
+    # If save_dir is not provided, use cwd (which is the workspace dir in browse_comp runs).
+    effective_save_dir = save_dir or os.getcwd()
 
     # Render far history -> downscale
     history_b64: Optional[str] = None
@@ -478,6 +493,9 @@ def render_visual_compression(
             if far_images:
                 merged = _merge_images_vertical(far_images)
                 history_b64 = _downscale_image_b64(merged, scale=history_scale)
+                # Save old_N.png only for N>1 (first compression has no "old")
+                if count > 1:
+                    _save_merged_image(history_b64, effective_save_dir, f"old_{count}.png")
         except Exception as e:
             logger.error("Visual: far history rendering failed: %s", e)
 
@@ -493,6 +511,7 @@ def render_visual_compression(
             )
             if recent_images:
                 recent_b64 = _merge_images_vertical(recent_images)
+                _save_merged_image(recent_b64, effective_save_dir, f"recent_{count}.png")
         except Exception as e:
             logger.error("Visual: recent rendering failed: %s", e)
             return messages

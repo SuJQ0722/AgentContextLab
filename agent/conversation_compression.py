@@ -37,7 +37,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
-from agent.model_metadata import estimate_request_tokens_rough
+from agent.model_metadata import estimate_request_tokens_rough, estimate_messages_tokens_rough
 
 logger = logging.getLogger(__name__)
 
@@ -906,6 +906,7 @@ def compress_context(
             system_prompt=new_system_prompt or "",
             tools=agent.tools or None,
         )
+        _compressed_messages_only = estimate_messages_tokens_rough(compressed)
         agent.context_compressor.last_compression_rough_tokens = _compressed_est
         agent.context_compressor.last_prompt_tokens = -1
         agent.context_compressor.last_completion_tokens = 0
@@ -929,7 +930,7 @@ def compress_context(
             f"\033[32m[ContextEngine] compression done | "
             f"strategy={_engine_name} | "
             f"messages={_pre_msg_count}->{len(compressed)} | "
-            f"tokens={_pre_token_str}->{_compressed_est:,}\033[0m"
+            f"tokens={_pre_token_str}->{_compressed_messages_only:,}\033[0m"
         )
         return compressed, new_system_prompt
     finally:

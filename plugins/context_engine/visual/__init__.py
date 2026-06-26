@@ -16,6 +16,7 @@ Config (context section in config.yaml):
     density: dense
     history_scale: 0.75
     keep_rounds: 1
+    recent_rounds: 5
 """
 
 from __future__ import annotations
@@ -56,6 +57,7 @@ class VisualEngine(ContextEngine):
         self._density = "dense"
         self._history_scale = 0.75
         self._keep_rounds = 1
+        self._recent_rounds = 5
         self._save_dir: Optional[str] = None
 
     def configure(self, ctx_cfg: Dict[str, Any]) -> None:
@@ -68,6 +70,7 @@ class VisualEngine(ContextEngine):
         self._density = sc.get("density", self._density)
         self._history_scale = float(sc.get("history_scale", self._history_scale))
         self._keep_rounds = int(sc.get("keep_rounds", self._keep_rounds))
+        self._recent_rounds = int(sc.get("recent_rounds", self._recent_rounds))
         self._save_dir = sc.get("save_dir", self._save_dir)
 
     def update_model(
@@ -124,6 +127,7 @@ class VisualEngine(ContextEngine):
             density=self._density,
             history_scale=self._history_scale,
             keep_rounds=self._keep_rounds,
+            recent_rounds=self._recent_rounds,
             save_dir=self._save_dir,
             compact_count=self.compression_count,
         )

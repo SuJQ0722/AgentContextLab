@@ -1,21 +1,25 @@
 """Discard context engine — reset tool-call history to free context space.
 
 Implements the Discard strategy from BrowseComp/DeepSeek:
-  Once the running context exceeds a preset threshold, discard past
-  (thought, action, observation) tool-call pairs from the prompt while
-  keeping the original question and minimal task specification. The agent
-  re-initiates from a fresh context.
+  Once the running context exceeds a preset threshold, drop all earlier
+  ``(thought, action, observation)`` tool-call turns and leave only:
 
-Supports a configurable discard ratio:
-  - discard_ratio: 1.0 (default, "discard-all") removes ALL tool-call history
-  - discard_ratio: 0.75 ("discard-75%") removes the first 75% of rounds
+    [system] + [first_user] + [omission placeholder] + last ``keep_rounds`` rounds
+
+  The omission placeholder is a single ``user`` message carrying the literal
+  string ``"[previous tool call history has been omitted]"``. It is idempotent
+  — re-running compaction never appends a second placeholder.
+
+  Unlike ``sliding_window`` (which keeps every role frame and only blanks tool
+  *content*), discard removes the assistant/tool frames entirely so cumulative
+  tool-call metadata does not bloat the prompt either.
 
 Threshold: 32k tokens.
 
 Config (context section in config.yaml):
   engine: discard
   strategy_config:
-    discard_ratio: 1.0      # 0.0-1.0, fraction of rounds to discard from front
+    keep_rounds: 2   # number of most-recent (assistant + tool*) rounds to keep
 """
 
 from __future__ import annotations
@@ -28,6 +32,7 @@ from agent.context_engine import ContextEngine
 logger = logging.getLogger(__name__)
 
 _THRESHOLD_TOKENS = 32768
+OMISSION_PLACEHOLDER = "[previous tool call history has been omitted]"
 
 
 class DiscardEngine(ContextEngine):
@@ -47,12 +52,11 @@ class DiscardEngine(ContextEngine):
         self.last_prompt_tokens = 0
         self.last_completion_tokens = 0
         self.compression_count = 0
-        self._discard_ratio = 1.0
+        self._keep_rounds = 2
 
     def configure(self, ctx_cfg: Dict[str, Any]) -> None:
         sc = ctx_cfg.get("strategy_config") or {}
-        ratio = float(sc.get("discard_ratio", self._discard_ratio))
-        self._discard_ratio = max(0.0, min(ratio, 1.0))
+        self._keep_rounds = max(0, int(sc.get("keep_rounds", self._keep_rounds)))
 
     def update_model(
         self,
@@ -108,30 +112,35 @@ class DiscardEngine(ContextEngine):
         if first_user is None:
             return messages
 
-        # 3. Identify rounds: each round starts with an assistant message
-        #    and includes any following tool messages
+        # 3. Identify rounds. A "round" starts with an assistant message and
+        #    includes any contiguous tool messages that follow. Standalone
+        #    user messages (e.g. an existing omission placeholder from a prior
+        #    rotation, or a mid-stream user follow-up) are skipped — discard
+        #    wipes them too.
         rounds: List[List[Dict[str, Any]]] = []
         current_round: List[Dict[str, Any]] = []
-        last_user_msg: Optional[Dict[str, Any]] = None
 
         for i in range(idx, len(messages)):
             msg = messages[i]
             role = msg.get("role")
 
-            if role == "user":
+            if role == "assistant":
                 if current_round:
                     rounds.append(current_round)
-                    current_round = []
-                last_user_msg = msg
-            elif role == "assistant":
-                if current_round:
-                    rounds.append(current_round)
-                    current_round = []
-                current_round.append(msg)
+                current_round = [msg]
             elif role == "tool":
-                current_round.append(msg)
-            else:
-                current_round.append(msg)
+                if current_round:
+                    current_round.append(msg)
+                # tool message with no preceding assistant in this window is
+                # dropped — its assistant frame was already discarded.
+            elif role == "user":
+                # Boundary: any standalone user message ends the previous
+                # round and is itself not preserved (the engine wipes
+                # everything except the original first_user + last N rounds).
+                if current_round:
+                    rounds.append(current_round)
+                    current_round = []
+            # any other role (system mid-stream, etc.) is dropped
 
         if current_round:
             rounds.append(current_round)
@@ -139,29 +148,29 @@ class DiscardEngine(ContextEngine):
         if not rounds:
             return messages
 
-        # 4. Calculate how many rounds to discard
+        # 4. Decide which rounds to keep.
         n_rounds = len(rounds)
-        n_discard = int(n_rounds * self._discard_ratio)
-        if self._discard_ratio < 1.0 and n_discard >= n_rounds:
-            n_discard = n_rounds - 1
+        keep = min(self._keep_rounds, n_rounds) if self._keep_rounds > 0 else 0
+        n_discard = n_rounds - keep
+        kept_rounds = rounds[n_discard:] if keep > 0 else []
 
-        # 5. Assemble result: head + first_user + kept rounds + last_user
+        # 5. Assemble: system + first_user + [placeholder if anything dropped]
+        #              + kept rounds (assistant+tool pairs).
         result: List[Dict[str, Any]] = list(head)
         result.append(first_user)
 
-        kept_rounds = rounds[n_discard:]
+        if n_discard > 0:
+            result.append({
+                "role": "user",
+                "content": OMISSION_PLACEHOLDER,
+            })
+
         for round_msgs in kept_rounds:
             result.extend(round_msgs)
 
-        if last_user_msg is not None and last_user_msg is not first_user:
-            if not result or result[-1] is not last_user_msg:
-                if last_user_msg not in result:
-                    result.append(last_user_msg)
-
         self.compression_count += 1
-        ratio_pct = int(self._discard_ratio * 100)
         logger.info(
-            "Discard(%d%%): removed %d/%d rounds, kept %d messages",
-            ratio_pct, n_discard, n_rounds, len(result),
+            "Discard(keep_rounds=%d): dropped %d/%d rounds, kept %d messages",
+            self._keep_rounds, n_discard, n_rounds, len(result),
         )
         return result

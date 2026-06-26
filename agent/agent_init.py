@@ -1580,6 +1580,7 @@ def init_agent(
     _selected_engine = None
     _copy_failed = False
     _engine_name = "compressor"  # default
+    _ctx_cfg = {}
     try:
         _ctx_cfg = _agent_cfg.get("context", {}) if isinstance(_agent_cfg, dict) else {}
         _engine_name = os.getenv("CM") or _ctx_cfg.get("engine", "compressor") or "compressor"
@@ -1634,6 +1635,8 @@ def init_agent(
 
     if _selected_engine is not None:
         agent.context_compressor = _selected_engine
+        if hasattr(_selected_engine, "configure"):
+            _selected_engine.configure(_ctx_cfg)
         # Resolve context_length for plugin engines — mirrors switch_model() path
         from agent.model_metadata import get_model_context_length
         _plugin_ctx_len = get_model_context_length(

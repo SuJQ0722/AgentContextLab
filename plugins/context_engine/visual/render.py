@@ -170,9 +170,14 @@ def _render_blocks_to_images(
     save_dir: Optional[str] = None,
     save_prefix: str = "page",
 ) -> List[str]:
+    """Render blocks to a list of base64 PNG strings via PDF intermediate.
+
+    Does NOT save the raw PDF — callers wanting the vector form should grab it
+    from ``_blocks_to_pdf_bytes`` directly (see ``render_visual_compression``).
+    """
     try:
-        return _render_blocks_pdf(
-            blocks, font_path, font_size, page_width, max_image_height, dpi, save_dir, save_prefix
+        pdf_bytes = _blocks_to_pdf_bytes(
+            blocks, font_path, font_size, page_width, max_image_height, dpi
         )
     except ImportError as e:
         logger.info("PDF rendering unavailable (%s), using PIL fallback.", e)
@@ -181,25 +186,79 @@ def _render_blocks_to_images(
         logger.warning("PDF rendering failed (%s), using PIL fallback.", e)
         return _text_to_images_fallback(blocks, font_size, page_width, max_image_height, save_dir, save_prefix)
 
+    try:
+        return _pdf_bytes_to_image_b64_list(
+            pdf_bytes, dpi=dpi, save_dir=save_dir, save_prefix=save_prefix
+        )
+    except ImportError as e:
+        logger.info("pdf2image unavailable (%s), using PIL fallback.", e)
+        return _text_to_images_fallback(blocks, font_size, page_width, max_image_height, save_dir, save_prefix)
+    except Exception as e:
+        logger.warning("PDF->image failed (%s), using PIL fallback.", e)
+        return _text_to_images_fallback(blocks, font_size, page_width, max_image_height, save_dir, save_prefix)
 
-def _render_blocks_pdf(
+
+def _markup_body(text: str) -> str:
+    """Escape text, style URLs as blue underlined non-breaking, bold ID fields.
+
+    Mirrors the reportlab branch of Vista (visual_compress.py:_markup_body).
+    """
+    from xml.sax.saxutils import escape
+
+    if not text.strip():
+        return ""
+    url_re = re.compile(r"https?://\S+")
+    segments: List[tuple] = []  # (text, is_url)
+    pos = 0
+    for m in url_re.finditer(text):
+        before = text[pos:m.start()]
+        if before:
+            segments.append((before, False))
+        segments.append((m.group(0), True))
+        pos = m.end()
+    tail = text[pos:]
+    if tail:
+        segments.append((tail, False))
+
+    id_re = re.compile(r"(\[?\s*ID\s*\]?\s*:\s*)(\S+)", re.IGNORECASE)
+    parts: List[str] = []
+    for seg_text, is_url in segments:
+        if is_url:
+            parts.append(
+                f'<font color="#0969DA"><u>{escape(seg_text)}</u></font>'
+            )
+        else:
+            sub_pos = 0
+            for m in id_re.finditer(seg_text):
+                before = seg_text[sub_pos:m.start()]
+                if before:
+                    parts.append(escape(before))
+                parts.append(f"<b>{escape(m.group(1))}{escape(m.group(2))}</b>")
+                sub_pos = m.end()
+            remainder = seg_text[sub_pos:]
+            if remainder:
+                parts.append(escape(remainder))
+    return "".join(parts)
+
+
+def _blocks_to_pdf_bytes(
     blocks: List[Dict[str, str]],
     font_path: Optional[str],
     font_size: int,
     page_width: int,
     max_image_height: int,
     dpi: int,
-    save_dir: Optional[str],
-    save_prefix: str,
-) -> List[str]:
-    import numpy as np
-    from pdf2image import convert_from_bytes, pdfinfo_from_bytes
+) -> bytes:
+    """Render blocks to a single-paragraph PDF and return the raw bytes.
+
+    Styling matches the reportlab branch of Vista: per-role colored header
+    chips, URLs as blue underlined non-breaking, ID fields bold.
+    """
     from reportlab.lib import colors
     from reportlab.lib.enums import TA_LEFT
     from reportlab.lib.styles import ParagraphStyle
     from reportlab.platypus import Paragraph, SimpleDocTemplate
     from xml.sax.saxutils import escape
-    from PIL import Image
 
     font_name = _resolve_and_register_font(font_path)
 
@@ -230,8 +289,12 @@ def _render_blocks_pdf(
         header_text = block.get("header", "")
         body_text = block.get("body", "").replace("\xad", "").replace("​", "")
         bg, fg = _ROLE_COLORS.get(role, _DEFAULT_ROLE_COLOR)
-        label_markup = f'<font backColor="{bg}" color="{fg}"><b>&nbsp;{escape(header_text)}&nbsp;</b></font>'
-        body_markup = escape(body_text) if body_text else ""
+        label_markup = (
+            f'<font backColor="{bg}" color="{fg}">'
+            f"<b>&nbsp;{escape(header_text)}&nbsp;</b>"
+            f"</font>"
+        )
+        body_markup = _markup_body(body_text)
         if body_markup:
             markup_parts.append(f"{label_markup}&nbsp;{body_markup}")
         else:
@@ -241,14 +304,18 @@ def _render_blocks_pdf(
     try:
         story = [Paragraph(full_markup, body_style)]
     except Exception:
+        # Per-message paragraphs if single-paragraph build fails
         story = []
         for block in blocks:
             role = block.get("role", "unknown")
             header_text = block.get("header", "")
             body_text = block.get("body", "").replace("\xad", "").replace("​", "")
             bg, fg = _ROLE_COLORS.get(role, _DEFAULT_ROLE_COLOR)
-            label = f'<font backColor="{bg}" color="{fg}"><b>&nbsp;{escape(header_text)}&nbsp;</b></font>'
-            body_mk = escape(body_text)
+            label = (
+                f'<font backColor="{bg}" color="{fg}">'
+                f"<b>&nbsp;{escape(header_text)}&nbsp;</b></font>"
+            )
+            body_mk = _markup_body(body_text)
             markup = f"{label}&nbsp;{body_mk}" if body_mk else label
             try:
                 story.append(Paragraph(markup, body_style))
@@ -271,11 +338,18 @@ def _render_blocks_pdf(
 
     pdf_bytes = buf.getvalue()
     buf.close()
+    return pdf_bytes
 
-    if save_dir:
-        os.makedirs(save_dir, exist_ok=True)
-        with open(os.path.join(save_dir, f"{save_prefix}.pdf"), "wb") as f:
-            f.write(pdf_bytes)
+
+def _pdf_bytes_to_image_b64_list(
+    pdf_bytes: bytes,
+    dpi: int = 72,
+    save_dir: Optional[str] = None,
+    save_prefix: str = "page",
+) -> List[str]:
+    """Convert PDF bytes to a list of base64 PNG strings, one per page (with auto-crop)."""
+    import numpy as np
+    from pdf2image import convert_from_bytes, pdfinfo_from_bytes
 
     info = pdfinfo_from_bytes(pdf_bytes)
     total_pages = info["Pages"]
@@ -300,14 +374,35 @@ def _render_blocks_pdf(
             img.save(img_buf, format="PNG", optimize=True)
             result.append(base64.b64encode(img_buf.getvalue()).decode("ascii"))
             if save_dir:
+                os.makedirs(save_dir, exist_ok=True)
                 img.save(os.path.join(save_dir, f"{save_prefix}_{offset:03d}.png"), "PNG")
             img.close()
         images.clear()
         del images
 
-    del pdf_bytes
     gc.collect()
     return result
+
+
+def _concat_pdf_bytes(pdfs: List[bytes]) -> bytes:
+    """Concatenate multiple PDF byte strings into one. Empty/None entries are skipped."""
+    pdfs = [p for p in pdfs if p]
+    if not pdfs:
+        return b""
+    if len(pdfs) == 1:
+        return pdfs[0]
+    from PyPDF2 import PdfWriter, PdfReader
+
+    writer = PdfWriter()
+    readers = []  # keep alive until write
+    for p in pdfs:
+        r = PdfReader(io.BytesIO(p))
+        readers.append(r)
+        for page in r.pages:
+            writer.add_page(page)
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
 
 
 def _text_to_images_fallback(
@@ -443,10 +538,21 @@ def render_visual_compression(
     density: str = "dense",
     history_scale: float = 0.75,
     keep_rounds: int = 1,
+    recent_rounds: int = 5,
     save_dir: Optional[str] = None,
     compact_count: int = 0,
 ) -> List[Dict[str, Any]]:
-    """Render messages as images and return compressed message list."""
+    """Render messages as images and return compressed message list.
+
+    Split policy:
+      - The last ``keep_rounds`` rounds stay in TEXT form (tail, never rendered).
+      - Of the messages that ARE rendered, the last ``recent_rounds`` rounds
+        keep full resolution (``recent_<N>.png``); everything before them is
+        rendered identically and then additionally downscaled by
+        ``history_scale`` (``old_<N>.png``). Both files are always saved when
+        their segment is non-empty — recent and history are fully symmetric
+        apart from the extra downscale step on history.
+    """
 
     # Find round boundaries (assistant messages with tool_calls)
     round_starts: List[int] = []
@@ -470,51 +576,96 @@ def render_visual_compression(
 
     tool_name_map = _build_tool_name_map(messages)
 
-    # Split into far_history and recent_history (50/50)
+    # Split far/recent by ROUND COUNT (default: keep last 5 rounds at full resolution).
+    # recent_rounds=0 forces everything into far (no recent segment).
+    # If there are fewer than recent_rounds rounds inside the render range, everything
+    # is recent and history stays empty.
     count = compact_count + 1
-    split_point = len(to_render_msgs) // 2
-    far_msgs = to_render_msgs[:split_point] if split_point > 0 else []
-    recent_msgs = to_render_msgs[split_point:] if split_point < len(to_render_msgs) else to_render_msgs
+    render_round_starts = [i - head_end for i in round_starts if head_end <= i < compact_boundary]
+    if recent_rounds <= 0:
+        split_point = len(to_render_msgs)
+    elif len(render_round_starts) <= recent_rounds:
+        split_point = 0
+    else:
+        split_point = render_round_starts[len(render_round_starts) - recent_rounds]
+    far_msgs = to_render_msgs[:split_point]
+    recent_msgs = to_render_msgs[split_point:]
 
     # Determine the directory for saving final merged images.
     # If save_dir is not provided, use cwd (which is the workspace dir in browse_comp runs).
     effective_save_dir = save_dir or os.getcwd()
 
-    # Render far history -> downscale
-    history_b64: Optional[str] = None
-    if far_msgs:
-        far_blocks = [_format_message_block(m, density=density, tool_name_map=tool_name_map) for m in far_msgs]
-        try:
-            far_images = _render_blocks_to_images(
-                far_blocks, font_path=font_path, font_size=font_size,
-                page_width=image_width, max_image_height=max_image_height,
-                dpi=dpi, save_dir=save_dir, save_prefix=f"compact_{count}_history",
-            )
-            if far_images:
-                merged = _merge_images_vertical(far_images)
-                history_b64 = _downscale_image_b64(merged, scale=history_scale)
-                # Save old_N.png only for N>1 (first compression has no "old")
-                if count > 1:
-                    _save_merged_image(history_b64, effective_save_dir, f"old_{count}.png")
-        except Exception as e:
-            logger.error("Visual: far history rendering failed: %s", e)
+    def _render_segment(seg_msgs: List[Dict[str, Any]], prefix: str) -> tuple:
+        """Render a slice of messages.
 
-    # Render recent history -> full resolution
-    recent_b64: Optional[str] = None
-    if recent_msgs:
-        recent_blocks = [_format_message_block(m, density=density, tool_name_map=tool_name_map) for m in recent_msgs]
+        Returns (pdf_bytes, merged_png_b64). Both are None on empty input;
+        on PDF-render failure, falls back to PIL path (pdf_bytes will be b"").
+        """
+        if not seg_msgs:
+            return None, None
+        blocks = [_format_message_block(m, density=density, tool_name_map=tool_name_map) for m in seg_msgs]
+        # Try the PDF path first so we get raw vector bytes too.
+        pdf_bytes = b""
         try:
-            recent_images = _render_blocks_to_images(
-                recent_blocks, font_path=font_path, font_size=font_size,
-                page_width=image_width, max_image_height=max_image_height,
-                dpi=dpi, save_dir=save_dir, save_prefix=f"compact_{count}_recent",
+            pdf_bytes = _blocks_to_pdf_bytes(
+                blocks, font_path, font_size, image_width, max_image_height, dpi
             )
-            if recent_images:
-                recent_b64 = _merge_images_vertical(recent_images)
-                _save_merged_image(recent_b64, effective_save_dir, f"recent_{count}.png")
         except Exception as e:
-            logger.error("Visual: recent rendering failed: %s", e)
-            return messages
+            logger.warning("Visual: PDF render failed for %s (%s); using PIL fallback.", prefix, e)
+
+        if pdf_bytes:
+            try:
+                images = _pdf_bytes_to_image_b64_list(
+                    pdf_bytes, dpi=dpi, save_dir=save_dir, save_prefix=prefix
+                )
+            except Exception as e:
+                logger.warning("Visual: PDF->image failed for %s (%s); using PIL fallback.", prefix, e)
+                images = _text_to_images_fallback(
+                    blocks, font_size, image_width, max_image_height, save_dir, prefix
+                )
+        else:
+            images = _text_to_images_fallback(
+                blocks, font_size, image_width, max_image_height, save_dir, prefix
+            )
+
+        if not images:
+            return pdf_bytes, None
+        return pdf_bytes, _merge_images_vertical(images)
+
+    # Render recent first — it's the critical path. If it fails, abandon compression.
+    try:
+        recent_pdf, recent_b64 = _render_segment(recent_msgs, f"compact_{count}_recent")
+    except Exception as e:
+        logger.error("Visual: recent rendering failed: %s", e)
+        return messages
+    if recent_b64 is not None:
+        _save_merged_image(recent_b64, effective_save_dir, f"recent_{count}.png")
+
+    # Render far history identically, then additionally downscale.
+    # Far failure is non-fatal — we still emit recent-only compression.
+    history_b64: Optional[str] = None
+    history_pdf: bytes = b""
+    try:
+        history_pdf, history_full = _render_segment(far_msgs, f"compact_{count}_history")
+        if history_full is not None:
+            history_b64 = _downscale_image_b64(history_full, scale=history_scale)
+            _save_merged_image(history_b64, effective_save_dir, f"old_{count}.png")
+    except Exception as e:
+        logger.error("Visual: far history rendering failed: %s", e)
+
+    # Save the combined pre-downscale vector PDF (history pages first, then recent)
+    # as compact_<N>.pdf. This is the raw source the model would have seen before
+    # any resolution drop; useful for offline inspection and debugging.
+    try:
+        combined_pdf = _concat_pdf_bytes([history_pdf, recent_pdf or b""])
+        if combined_pdf:
+            os.makedirs(effective_save_dir, exist_ok=True)
+            pdf_out = os.path.join(effective_save_dir, f"compact_{count}.pdf")
+            with open(pdf_out, "wb") as f:
+                f.write(combined_pdf)
+            logger.info("Visual: saved %s", pdf_out)
+    except Exception as e:
+        logger.warning("Visual: failed to save combined compact_%d.pdf: %s", count, e)
 
     if not recent_b64 and not history_b64:
         logger.warning("Visual: no images generated.")

@@ -125,6 +125,24 @@ class TestDiscard:
         assert result[1]["role"] == "user"
         assert any(m.get("role") == "assistant" for m in result[2:])
 
+    def test_env_overrides_keep_rounds(self, monkeypatch):
+        # Env var should beat config value.
+        monkeypatch.setenv("HERMES_DISCARD_KEEP_ROUNDS", "0")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {"keep_rounds": 5}})
+        assert engine._keep_rounds == 0
+        msgs = _make_messages(n_tool_rounds=3)
+        result = engine.compress(msgs)
+        # keep_rounds=0 -> system + first_user + omission placeholder, no rounds.
+        assert [m["role"] for m in result] == ["system", "user", "user"]
+        assert not any(m.get("role") in ("assistant", "tool") for m in result)
+
+    def test_env_invalid_falls_back_to_config(self, monkeypatch):
+        monkeypatch.setenv("HERMES_DISCARD_KEEP_ROUNDS", "not-an-int")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {"keep_rounds": 3}})
+        assert engine._keep_rounds == 3
+
 
 # ---------------------------------------------------------------------------
 # Test SummarizeEngine (mocked LLM)
@@ -215,12 +233,70 @@ class TestVisual:
         assert has_image
         assert len(result) < len(msgs)
 
+    def test_compression_stats_tracked(self):
+        engine = self._make_engine()
+        msgs = _make_messages(n_tool_rounds=5)
+        engine.compress(msgs)
+        stats = engine._compression_stats
+        assert stats["compressions"] == 1
+        assert stats["total_text_tokens"] > 0
+        assert stats["total_image_tokens"] > 0
+        assert stats["total_token_savings"] >= 0
+        assert len(stats["per_compression"]) == 1
+        entry = stats["per_compression"][0]
+        assert entry["index"] == 1
+        assert entry["text_tokens"] > 0
+        assert entry["image_count"] >= 1
+
     def test_skips_when_too_few_rounds(self):
         engine = self._make_engine()
         engine.configure({"strategy_config": {"keep_rounds": 5}})
         msgs = _make_messages(n_tool_rounds=2)
         result = engine.compress(msgs)
         assert result is msgs
+
+    def test_env_layout_override(self, monkeypatch):
+        monkeypatch.setenv("HERMES_VISUAL_LAYOUT", "plain_no_header")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {}})
+        assert engine._layout == "plain_no_header"
+
+    def test_env_layout_override_1d(self, monkeypatch):
+        monkeypatch.setenv("HERMES_VISUAL_LAYOUT", "highlight_no_wrap")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {"layout": "highlight"}})
+        assert engine._layout == "highlight_no_wrap"
+
+    def test_env_layout_invalid_ignored(self, monkeypatch):
+        monkeypatch.setenv("HERMES_VISUAL_LAYOUT", "invalid_mode")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {"layout": "highlight"}})
+        assert engine._layout == "highlight"
+
+    def test_env_history_scale_override(self, monkeypatch):
+        monkeypatch.setenv("HERMES_VISUAL_HISTORY_SCALE", "0.25")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {"history_scale": 0.75}})
+        assert engine._history_scale == 0.25
+
+    def test_env_history_scale_zero_no_history(self, monkeypatch):
+        monkeypatch.setenv("HERMES_VISUAL_HISTORY_SCALE", "0")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {}})
+        assert engine._history_scale == 0.0
+        msgs = _make_messages(n_tool_rounds=10)
+        result = engine.compress(msgs)
+        # With scale=0, history image should not be present (only recent)
+        for m in result:
+            content = m.get("content")
+            if isinstance(content, list):
+                texts = [p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text"]
+                assert not any("lower resolution" in t for t in texts)
+
+    def test_layout_config_default_highlight(self):
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {}})
+        assert engine._layout == "highlight"
 
 
 # ---------------------------------------------------------------------------

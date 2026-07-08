@@ -21,14 +21,14 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _FONT_SEARCH_PATHS = [
-    "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/google-noto-cjk/NotoSansCJKsc-Regular.otf",
+    "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
 ]
 
 _RE_CJK = re.compile(r"[一-鿿]")
@@ -72,12 +72,6 @@ def _resolve_and_register_font(font_path: Optional[str]) -> str:
 # Message formatting
 # ---------------------------------------------------------------------------
 
-def _densify_text(text: str) -> str:
-    if not text:
-        return text
-    return re.sub(r"\s+", " ", text).strip()
-
-
 def _build_tool_name_map(messages: List[Dict[str, Any]]) -> Dict[str, str]:
     mapping = {}
     for msg in messages:
@@ -95,7 +89,7 @@ def _build_tool_name_map(messages: List[Dict[str, Any]]) -> Dict[str, str]:
 
 def _format_message_block(
     msg: Dict[str, Any],
-    density: str = "dense",
+    layout: str = "highlight",
     tool_name_map: Optional[Dict[str, str]] = None,
 ) -> Dict[str, str]:
     role = msg.get("role", "unknown")
@@ -139,10 +133,11 @@ def _format_message_block(
             body_parts.append(joined)
 
     body = "\n".join(body_parts)
-    if density == "dense":
-        body = _densify_text(body)
-    elif density == "compact":
+    if layout in ("plain", "plain_no_header", "highlight", "highlight_no_wrap"):
         body = re.sub(r"\n{3,}", "\n\n", body).strip()
+
+    if layout == "plain_no_header":
+        header = ""
 
     return {"role": role, "header": header, "body": body}
 
@@ -224,8 +219,14 @@ def _markup_body(text: str) -> str:
     parts: List[str] = []
     for seg_text, is_url in segments:
         if is_url:
+            escaped_url = escape(seg_text)
+            # Insert zero-width spaces after : / ? & = to allow line breaks
+            # (otherwise reportlab's CJK wrap keeps long URLs as a single
+            # unbreakable token and may overflow the page width).
+            for ch in (":", "/", "?", "&amp;", "="):
+                escaped_url = escaped_url.replace(ch, ch + "&#8203;")
             parts.append(
-                f'<font color="#0969DA"><u>{escape(seg_text)}</u></font>'
+                f'<font color="#0969DA"><u>{escaped_url}</u></font>'
             )
         else:
             sub_pos = 0
@@ -248,11 +249,13 @@ def _blocks_to_pdf_bytes(
     page_width: int,
     max_image_height: int,
     dpi: int,
+    layout: str = "highlight",
 ) -> bytes:
     """Render blocks to a single-paragraph PDF and return the raw bytes.
 
-    Styling matches the reportlab branch of Vista: per-role colored header
-    chips, URLs as blue underlined non-breaking, ID fields bold.
+    layout controls styling:
+      - "highlight": role-colored header chips + URL/ID markup (full styling)
+      - "plain" / "1d": plain escaped text, no colors or markup
     """
     from reportlab.lib import colors
     from reportlab.lib.enums import TA_LEFT
@@ -263,6 +266,8 @@ def _blocks_to_pdf_bytes(
     font_name = _resolve_and_register_font(font_path)
 
     page_pt_width = page_width * 72.0 / dpi
+    if layout == "highlight_no_wrap":
+        page_pt_width = 8192 * 72.0 / dpi
     page_pt_height = max_image_height * 72.0 / dpi
     page_size = (page_pt_width, page_pt_height)
 
@@ -285,42 +290,53 @@ def _blocks_to_pdf_bytes(
 
     markup_parts = []
     for block in blocks:
-        role = block.get("role", "unknown")
         header_text = block.get("header", "")
         body_text = block.get("body", "").replace("\xad", "").replace("​", "")
-        bg, fg = _ROLE_COLORS.get(role, _DEFAULT_ROLE_COLOR)
-        label_markup = (
-            f'<font backColor="{bg}" color="{fg}">'
-            f"<b>&nbsp;{escape(header_text)}&nbsp;</b>"
-            f"</font>"
-        )
-        body_markup = _markup_body(body_text)
-        if body_markup:
-            markup_parts.append(f"{label_markup}&nbsp;{body_markup}")
+
+        if layout in ("highlight", "highlight_no_wrap"):
+            role = block.get("role", "unknown")
+            bg, fg = _ROLE_COLORS.get(role, _DEFAULT_ROLE_COLOR)
+            label_markup = (
+                f'<font backColor="{bg}" color="{fg}">'
+                f"<b>&nbsp;{escape(header_text)}&nbsp;</b>"
+                f"</font>"
+            )
+            body_markup = _markup_body(body_text)
+            if body_markup:
+                markup_parts.append(f"{label_markup}&nbsp;{body_markup}")
+            else:
+                markup_parts.append(label_markup)
+        elif layout == "plain_no_header":
+            markup_parts.append(escape(body_text))
         else:
-            markup_parts.append(label_markup)
+            plain = escape(f"[{header_text}] {body_text}")
+            markup_parts.append(plain)
 
     full_markup = " ".join(markup_parts)
     try:
         story = [Paragraph(full_markup, body_style)]
     except Exception:
-        # Per-message paragraphs if single-paragraph build fails
         story = []
         for block in blocks:
-            role = block.get("role", "unknown")
             header_text = block.get("header", "")
             body_text = block.get("body", "").replace("\xad", "").replace("​", "")
-            bg, fg = _ROLE_COLORS.get(role, _DEFAULT_ROLE_COLOR)
-            label = (
-                f'<font backColor="{bg}" color="{fg}">'
-                f"<b>&nbsp;{escape(header_text)}&nbsp;</b></font>"
-            )
-            body_mk = _markup_body(body_text)
-            markup = f"{label}&nbsp;{body_mk}" if body_mk else label
+            if layout in ("highlight", "highlight_no_wrap"):
+                role = block.get("role", "unknown")
+                bg, fg = _ROLE_COLORS.get(role, _DEFAULT_ROLE_COLOR)
+                label = (
+                    f'<font backColor="{bg}" color="{fg}">'
+                    f"<b>&nbsp;{escape(header_text)}&nbsp;</b></font>"
+                )
+                body_mk = _markup_body(body_text)
+                markup = f"{label}&nbsp;{body_mk}" if body_mk else label
+            elif layout == "plain_no_header":
+                markup = escape(body_text[:500])
+            else:
+                markup = escape(f"[{header_text}] {body_text[:500]}")
             try:
                 story.append(Paragraph(markup, body_style))
             except Exception:
-                story.append(Paragraph(escape(f"[{header_text}] {body_text[:500]}"), body_style))
+                story.append(Paragraph(escape(body_text[:500]), body_style))
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -511,6 +527,28 @@ def _merge_images_vertical(b64_list: List[str]) -> str:
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+def _image_b64_dimensions(data_url: str) -> Optional[tuple]:
+    """Extract (width, height) from a data:image/png;base64,... URL."""
+    from PIL import Image
+    try:
+        if data_url.startswith("data:"):
+            b64 = data_url.split(",", 1)[1]
+        else:
+            b64 = data_url
+        img = Image.open(io.BytesIO(base64.b64decode(b64)))
+        dims = img.size
+        img.close()
+        return dims
+    except Exception:
+        return None
+
+
+def _estimate_vlm_image_tokens(width: int, height: int, tile_size: int = 28) -> int:
+    """Estimate VLM image tokens using the Qwen2.5-VL / OpenAI high-detail formula."""
+    import math
+    return math.ceil(height / tile_size) * math.ceil(width / tile_size) * 4
+
+
 # ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
@@ -535,12 +573,13 @@ def render_visual_compression(
     max_image_height: int = 4096,
     font_path: Optional[str] = None,
     dpi: int = 72,
-    density: str = "dense",
+    layout: str = "highlight",
     history_scale: float = 0.75,
     keep_rounds: int = 1,
     recent_rounds: int = 5,
     save_dir: Optional[str] = None,
     compact_count: int = 0,
+    stats: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """Render messages as images and return compressed message list.
 
@@ -574,6 +613,13 @@ def render_visual_compression(
     if not to_render_msgs:
         return messages
 
+    # Measure text content being replaced (for compression ratio stats)
+    if stats is not None:
+        text_chars = sum(len(str(m.get("content", ""))) for m in to_render_msgs)
+        stats["text_chars"] = text_chars
+        stats["text_tokens_estimate"] = (text_chars + 3) // 4
+        stats["messages_rendered"] = len(to_render_msgs)
+
     tool_name_map = _build_tool_name_map(messages)
 
     # Split far/recent by ROUND COUNT (default: keep last 5 rounds at full resolution).
@@ -603,12 +649,13 @@ def render_visual_compression(
         """
         if not seg_msgs:
             return None, None
-        blocks = [_format_message_block(m, density=density, tool_name_map=tool_name_map) for m in seg_msgs]
+        blocks = [_format_message_block(m, layout=layout, tool_name_map=tool_name_map) for m in seg_msgs]
         # Try the PDF path first so we get raw vector bytes too.
         pdf_bytes = b""
         try:
             pdf_bytes = _blocks_to_pdf_bytes(
-                blocks, font_path, font_size, image_width, max_image_height, dpi
+                blocks, font_path, font_size, image_width, max_image_height, dpi,
+                layout=layout,
             )
         except Exception as e:
             logger.warning("Visual: PDF render failed for %s (%s); using PIL fallback.", prefix, e)
@@ -643,15 +690,20 @@ def render_visual_compression(
 
     # Render far history identically, then additionally downscale.
     # Far failure is non-fatal — we still emit recent-only compression.
+    # history_scale=0 means skip far history entirely (no history image).
     history_b64: Optional[str] = None
     history_pdf: bytes = b""
-    try:
-        history_pdf, history_full = _render_segment(far_msgs, f"compact_{count}_history")
-        if history_full is not None:
-            history_b64 = _downscale_image_b64(history_full, scale=history_scale)
-            _save_merged_image(history_b64, effective_save_dir, f"old_{count}.png")
-    except Exception as e:
-        logger.error("Visual: far history rendering failed: %s", e)
+    if history_scale > 0:
+        try:
+            history_pdf, history_full = _render_segment(far_msgs, f"compact_{count}_history")
+            if history_full is not None:
+                if history_scale < 1.0:
+                    history_b64 = _downscale_image_b64(history_full, scale=history_scale)
+                else:
+                    history_b64 = history_full
+                _save_merged_image(history_b64, effective_save_dir, f"old_{count}.png")
+        except Exception as e:
+            logger.error("Visual: far history rendering failed: %s", e)
 
     # Save the combined pre-downscale vector PDF (history pages first, then recent)
     # as compact_<N>.pdf. This is the raw source the model would have seen before
@@ -693,6 +745,30 @@ def render_visual_compression(
     result = list(messages[:head_end])
     result.append({"role": "user", "content": content_parts})
     result.extend(messages[compact_boundary:])
+
+    # Populate image token stats for compression ratio tracking
+    if stats is not None:
+        image_tokens = 0
+        for part in content_parts:
+            if not isinstance(part, dict) or part.get("type") != "image_url":
+                continue
+            detail = part.get("image_url", {}).get("detail", "high")
+            if detail == "low":
+                image_tokens += 85
+            else:
+                dims = _image_b64_dimensions(
+                    part.get("image_url", {}).get("url", "")
+                )
+                if dims:
+                    w, h = dims
+                    image_tokens += _estimate_vlm_image_tokens(w, h)
+                else:
+                    image_tokens += 1500
+        stats["image_tokens_estimate"] = image_tokens
+        stats["image_count"] = sum(
+            1 for p in content_parts
+            if isinstance(p, dict) and p.get("type") == "image_url"
+        )
 
     logger.info("Visual: rendered %d messages as images, kept %d tail messages",
                 len(to_render_msgs), len(messages) - compact_boundary)

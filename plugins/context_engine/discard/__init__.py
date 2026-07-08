@@ -20,11 +20,15 @@ Config (context section in config.yaml):
   engine: discard
   strategy_config:
     keep_rounds: 2   # number of most-recent (assistant + tool*) rounds to keep
+
+Env override (local-only, takes precedence over config when set):
+  HERMES_DISCARD_KEEP_ROUNDS=<int>   # e.g. 0 to discard every prior round
 """
 
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 from agent.context_engine import ContextEngine
@@ -56,7 +60,18 @@ class DiscardEngine(ContextEngine):
 
     def configure(self, ctx_cfg: Dict[str, Any]) -> None:
         sc = ctx_cfg.get("strategy_config") or {}
-        self._keep_rounds = max(0, int(sc.get("keep_rounds", self._keep_rounds)))
+        keep = sc.get("keep_rounds", self._keep_rounds)
+        env_keep = os.getenv("HERMES_DISCARD_KEEP_ROUNDS")
+        if env_keep is not None and env_keep.strip() != "":
+            try:
+                keep = int(env_keep)
+            except ValueError:
+                logger.warning(
+                    "Ignoring HERMES_DISCARD_KEEP_ROUNDS=%r (not an int); "
+                    "falling back to config value %r",
+                    env_keep, keep,
+                )
+        self._keep_rounds = max(0, int(keep))
 
     def update_model(
         self,

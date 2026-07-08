@@ -65,6 +65,7 @@ class VisualEngine(ContextEngine):
         self._history_scale = 0.75
         self._keep_rounds = 1
         self._recent_rounds = 5
+        self._max_history_rounds = 0  # 0 = unlimited (keep all history)
         self._save_dir: Optional[str] = None
 
         # Accumulated history of all messages that have been compressed.
@@ -92,6 +93,7 @@ class VisualEngine(ContextEngine):
         self._history_scale = float(sc.get("history_scale", self._history_scale))
         self._keep_rounds = int(sc.get("keep_rounds", self._keep_rounds))
         self._recent_rounds = int(sc.get("recent_rounds", self._recent_rounds))
+        self._max_history_rounds = int(sc.get("max_history_rounds", self._max_history_rounds))
         self._save_dir = sc.get("save_dir", self._save_dir)
 
         env_layout = os.getenv("HERMES_VISUAL_LAYOUT")
@@ -113,6 +115,16 @@ class VisualEngine(ContextEngine):
                 logger.warning(
                     "Ignoring HERMES_VISUAL_HISTORY_SCALE=%r (not a float)",
                     env_scale,
+                )
+
+        env_max_hist = os.getenv("HERMES_VISUAL_MAX_HISTORY_ROUNDS")
+        if env_max_hist and env_max_hist.strip():
+            try:
+                self._max_history_rounds = int(env_max_hist)
+            except ValueError:
+                logger.warning(
+                    "Ignoring HERMES_VISUAL_MAX_HISTORY_ROUNDS=%r (not an int)",
+                    env_max_hist,
                 )
 
     def update_model(
@@ -193,6 +205,14 @@ class VisualEngine(ContextEngine):
 
         # Append new messages to accumulated history
         self._full_history.extend(new_msgs)
+
+        # Truncate history to max_history_rounds if set (sliding window over visual history).
+        # This bounds the visual context to O(K) instead of O(N), addressing the
+        # linear growth concern while retaining more information than summary/discard.
+        if self._max_history_rounds > 0:
+            self._full_history = self._truncate_to_max_rounds(
+                self._full_history, self._max_history_rounds
+            )
 
         # Render from full accumulated history, collecting per-compression stats
         render_stats: Dict[str, Any] = {}
@@ -279,6 +299,20 @@ class VisualEngine(ContextEngine):
         if messages and messages[0].get("role") == "system":
             head = 1
         return head + 3
+
+    @staticmethod
+    def _truncate_to_max_rounds(
+        history: List[Dict[str, Any]], max_rounds: int
+    ) -> List[Dict[str, Any]]:
+        """Keep only the last max_rounds tool-call rounds in history."""
+        round_starts: List[int] = []
+        for i, msg in enumerate(history):
+            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                round_starts.append(i)
+        if len(round_starts) <= max_rounds:
+            return history
+        cut = round_starts[len(round_starts) - max_rounds]
+        return history[cut:]
 
     def _write_stats_sidecar(self) -> None:
         save_dir = self._save_dir or os.getcwd()

@@ -298,6 +298,25 @@ class TestVisual:
         engine.configure({"strategy_config": {}})
         assert engine._layout == "highlight"
 
+    def test_env_max_history_rounds(self, monkeypatch):
+        monkeypatch.setenv("HERMES_VISUAL_MAX_HISTORY_ROUNDS", "3")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {}})
+        assert engine._max_history_rounds == 3
+
+    def test_max_history_rounds_truncates(self):
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {"max_history_rounds": 3}})
+        # Compress with many rounds — history should be bounded
+        msgs = _make_messages(n_tool_rounds=10)
+        engine.compress(msgs)
+        # _full_history should have at most 3 rounds worth of messages
+        round_count = sum(
+            1 for m in engine._full_history
+            if m.get("role") == "assistant" and m.get("tool_calls")
+        )
+        assert round_count <= 3
+
 
 # ---------------------------------------------------------------------------
 # Test plugin discovery

@@ -1,0 +1,8 @@
+name: local-web
+version: 1.0.0
+description: "Override web_search / web_extract tools with SenseTime-internal backends (Serper cache proxy + local httpx fetcher w/ Jina fallback). Bundled → auto-trusted for tool override. Reads web.local_web.search.* and web.local_web.fetch.* from config.yaml. SERPER_API_KEY / JINA_API_KEY env vars override in-config keys."
+author: local
+kind: standalone
+provides_tools:
+  - web_search
+  - web_extract

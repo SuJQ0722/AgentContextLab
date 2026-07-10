@@ -711,7 +711,10 @@ def build_api_kwargs(agent, api_messages: list) -> dict:
         or base_url_host_matches(agent.base_url, "moonshot.ai")
         or base_url_host_matches(agent.base_url, "moonshot.cn")
     )
-    _is_tokenhub = base_url_host_matches(agent._base_url_lower, "tokenhub.tencentmaas.com")
+    _is_tokenhub = (
+        base_url_host_matches(agent._base_url_lower, "tokenhub.tencentmaas.com")
+        or base_url_host_matches(agent._base_url_lower, "tokenhub.sensetime.com")
+    )
     _is_lmstudio = (agent.provider or "").strip().lower() == "lmstudio"
 
     # Temperature: _fixed_temperature_for_model may return OMIT_TEMPERATURE

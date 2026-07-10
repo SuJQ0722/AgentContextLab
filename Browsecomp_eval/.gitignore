@@ -1,0 +1,98 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+*.egg
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Output general
+output/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Dataset patterns
+!*/**/*/*.py
+*.partial
+*.pickle
+*.pickle.bak
+**/results_1x_old.pickle
+**/output/**/*
+
+# Lock files
+pure.idle.lock
+.venv.lock
+*.lock
+
+# Sphinx
+docs/_build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Global cache
+.cache/
+
+# intangible specific patterns
+!*/**/*/__init__.py
+*/**/__main__.py
+!**/venv/
+!**/ENV/
+!**/env/
+!**/.venv/
+
+# intangible-1 full migration (optional)
+intangible-1/
+*/**/intangible-1/**
+/intangible-1/**
+
+# intangible-2 full migration (optional)
+intangible-2/
+*/**/intangible-2/**
+/intangible-2/**

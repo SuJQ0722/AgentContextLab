@@ -56,7 +56,7 @@ class DiscardEngine(ContextEngine):
         self.last_prompt_tokens = 0
         self.last_completion_tokens = 0
         self.compression_count = 0
-        self._keep_rounds = 2
+        self._keep_rounds = 0
 
     def configure(self, ctx_cfg: Dict[str, Any]) -> None:
         sc = ctx_cfg.get("strategy_config") or {}

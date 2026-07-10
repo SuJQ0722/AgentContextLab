@@ -1,7 +1,0 @@
-name: web-search-server
-version: 1.0.0
-description: "Search via an HTTP /search service compatible with mcp_tools SearchTool."
-author: local
-kind: backend
-provides_web_providers:
-  - search_server

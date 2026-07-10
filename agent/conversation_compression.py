@@ -926,7 +926,7 @@ def compress_context(
             agent.session_id or "none", _pre_msg_count, len(compressed),
             f"{_compressed_est:,}",
         )
-        print(
+        logging.info(
             f"\033[32m[ContextEngine] compression done | "
             f"strategy={_engine_name} | "
             f"messages={_pre_msg_count}->{len(compressed)} | "

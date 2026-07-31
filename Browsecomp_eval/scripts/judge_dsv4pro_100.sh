@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 # ── 推理结果目录 ──────────────────────────────────────────────
 MODEL="${MODEL:-qwen3_5_9b_sft_sw}"
 SAVE_NAME="${SAVE_NAME:-${MODEL//\//_}}"
-DATASET="${DATASET:-browsecomp_subset_final}"
+DATASET="${DATASET:-browsecomp_subset_200}"
 PRED_ROOT="${PRED_ROOT:-output/preds/${SAVE_NAME}/${DATASET}}"
 
 # ── Judge 配置 ────────────────────────────────────────────────

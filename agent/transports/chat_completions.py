@@ -10,6 +10,9 @@ reasoning configuration, temperature handling, and extra_body assembly.
 """
 
 import copy
+import json
+import re
+import uuid
 from typing import Any, Dict
 
 from agent.lmstudio_reasoning import resolve_lmstudio_effort
@@ -17,6 +20,56 @@ from agent.moonshot_schema import is_moonshot_model, sanitize_moonshot_tools
 from agent.prompt_builder import DEVELOPER_ROLE_MODELS
 from agent.transports.base import ProviderTransport
 from agent.transports.types import NormalizedResponse, ToolCall, Usage
+
+
+_DEFAULT_API_TOOL_CALL_RE = re.compile(
+    r"^\s*call:default_api:([A-Za-z_][A-Za-z0-9_.-]*)\s*(\{.*\})\s*$",
+    re.DOTALL,
+)
+
+
+def _parse_default_api_tool_call(text: str) -> ToolCall | None:
+    """Parse Gemini/OpenAI-compat text tool calls misrouted via refusal."""
+    match = _DEFAULT_API_TOOL_CALL_RE.match(text or "")
+    if not match:
+        return None
+
+    name = match.group(1)
+    args_text = match.group(2).strip()
+    try:
+        args = json.loads(
+            re.sub(
+                r'([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:',
+                r'\1"\2":',
+                args_text,
+            )
+        )
+    except Exception:
+        inner = (
+            args_text[1:-1].strip()
+            if args_text.startswith("{") and args_text.endswith("}")
+            else args_text
+        )
+        single = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.*)$", inner, re.DOTALL)
+        if not single:
+            return None
+        key = single.group(1)
+        value = single.group(2).strip()
+        if len(value) >= 2 and value[0] == value[-1] == '"':
+            try:
+                value = json.loads(value)
+            except Exception:
+                value = value[1:-1]
+        args = {key: value}
+    if not isinstance(args, dict):
+        return None
+
+    return ToolCall(
+        id=f"call_default_api_{uuid.uuid4().hex[:12]}",
+        name=name,
+        arguments=json.dumps(args, ensure_ascii=False),
+        provider_data={"source": "default_api_refusal_text"},
+    )
 
 
 def _build_gemini_thinking_config(model: str, reasoning_config: dict | None) -> dict | None:
@@ -684,6 +737,20 @@ class ChatCompletionsTransport(ProviderTransport):
             # Record the refusal explanation regardless — it's useful provider
             # metadata even when the model also returned a usable payload.
             provider_data["refusal"] = refusal
+            default_api_tool_call = _parse_default_api_tool_call(refusal)
+            if default_api_tool_call is not None and not tool_calls:
+                tool_calls = [default_api_tool_call]
+                content = ""
+                finish_reason = "tool_calls"
+                provider_data["refusal_promoted_to_tool_call"] = True
+                return NormalizedResponse(
+                    content=content,
+                    tool_calls=tool_calls,
+                    finish_reason=finish_reason,
+                    reasoning=reasoning,
+                    usage=usage,
+                    provider_data=provider_data or None,
+                )
             _has_text = isinstance(content, str) and content.strip()
             _has_tool_calls = bool(tool_calls)
             # Only promote to a terminal ``content_filter`` when the refusal is

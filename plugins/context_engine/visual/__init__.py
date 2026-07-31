@@ -12,6 +12,7 @@ Config (context section in config.yaml):
     image_width: 1024
     font_size: 8
     max_image_height: 4096
+    history_max_image_height: 6144
     dpi: 72
     layout: highlight
     history_scale: 0.75
@@ -21,6 +22,7 @@ Config (context section in config.yaml):
 Env overrides (take precedence over config):
   HERMES_VISUAL_LAYOUT=1d|plain|highlight
   HERMES_VISUAL_HISTORY_SCALE=0.0-1.0  (0=no history image, 0.5=2x downsample, 0.25=4x, 1.0=original)
+  HERMES_VISUAL_HISTORY_MAX_IMAGE_HEIGHT=6144
 """
 
 from __future__ import annotations
@@ -59,6 +61,7 @@ class VisualEngine(ContextEngine):
         self._image_width = 1024
         self._font_size = 8
         self._max_image_height = 4096
+        self._history_max_image_height = 6144
         self._font_path: Optional[str] = None
         self._dpi = 72
         self._layout = "highlight"
@@ -66,6 +69,7 @@ class VisualEngine(ContextEngine):
         self._keep_rounds = 1
         self._recent_rounds = 5
         self._max_history_rounds = 0  # 0 = unlimited (keep all history)
+        self._text_only = False
         self._save_dir: Optional[str] = None
 
         # Accumulated history of all messages that have been compressed.
@@ -87,6 +91,9 @@ class VisualEngine(ContextEngine):
         self._image_width = int(sc.get("image_width", self._image_width))
         self._font_size = int(sc.get("font_size", self._font_size))
         self._max_image_height = int(sc.get("max_image_height", self._max_image_height))
+        self._history_max_image_height = int(
+            sc.get("history_max_image_height", self._history_max_image_height)
+        )
         self._font_path = sc.get("font_path", self._font_path)
         self._dpi = int(sc.get("dpi", self._dpi))
         self._layout = sc.get("layout", self._layout)
@@ -94,6 +101,7 @@ class VisualEngine(ContextEngine):
         self._keep_rounds = int(sc.get("keep_rounds", self._keep_rounds))
         self._recent_rounds = int(sc.get("recent_rounds", self._recent_rounds))
         self._max_history_rounds = int(sc.get("max_history_rounds", self._max_history_rounds))
+        self._text_only = bool(sc.get("text_only", self._text_only))
         self._save_dir = sc.get("save_dir", self._save_dir)
 
         env_layout = os.getenv("HERMES_VISUAL_LAYOUT")
@@ -126,6 +134,20 @@ class VisualEngine(ContextEngine):
                     "Ignoring HERMES_VISUAL_MAX_HISTORY_ROUNDS=%r (not an int)",
                     env_max_hist,
                 )
+
+        env_hist_height = os.getenv("HERMES_VISUAL_HISTORY_MAX_IMAGE_HEIGHT")
+        if env_hist_height and env_hist_height.strip():
+            try:
+                self._history_max_image_height = int(env_hist_height)
+            except ValueError:
+                logger.warning(
+                    "Ignoring HERMES_VISUAL_HISTORY_MAX_IMAGE_HEIGHT=%r (not an int)",
+                    env_hist_height,
+                )
+
+        env_text_only = os.getenv("HERMES_VISUAL_TEXT_ONLY", "").strip()
+        if env_text_only in ("1", "true", "yes"):
+            self._text_only = True
 
     def update_model(
         self,
@@ -222,6 +244,7 @@ class VisualEngine(ContextEngine):
             image_width=self._image_width,
             font_size=self._font_size,
             max_image_height=self._max_image_height,
+            history_max_image_height=self._history_max_image_height,
             font_path=self._font_path,
             dpi=self._dpi,
             layout=self._layout,
@@ -231,6 +254,7 @@ class VisualEngine(ContextEngine):
             save_dir=self._save_dir,
             compact_count=self.compression_count,
             stats=render_stats,
+            text_only=self._text_only,
         )
 
         if result is self._full_history:

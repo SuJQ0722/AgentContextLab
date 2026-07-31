@@ -24,6 +24,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from agent.thread_scoped_output import thread_scoped_silence
+from agent.session_storage import SESSION_KIND_SUBAGENT
 
 logger = logging.getLogger(__name__)
 
@@ -656,6 +657,8 @@ def _run_review_in_thread(
                 api_key=_rt.get("api_key") or None,
                 credential_pool=getattr(agent, "_credential_pool", None),
                 parent_session_id=agent.session_id,
+                root_session_id=getattr(agent, "_root_session_id", None) or agent.session_id,
+                session_kind=SESSION_KIND_SUBAGENT,
                 enabled_toolsets=getattr(agent, "enabled_toolsets", None),
                 disabled_toolsets=getattr(agent, "disabled_toolsets", None),
                 skip_memory=True,

@@ -2621,6 +2621,23 @@ DEFAULT_CONFIG = {
         # Env scrubbing (strips *_API_KEY, *_TOKEN, *_SECRET, ...) and the
         # tool whitelist apply identically in both modes.
         "mode": "project",
+        # Host filesystem policy:
+        #   full (default) — preserve the existing execute_code behavior.
+        #   none           — Linux-only fail-closed namespaces + masked tmpfs +
+        #     seccomp; only the system Python runtime, generated script, and
+        #     Hermes RPC transport remain usable. Host data paths are hidden.
+        "filesystem_access": "full",
+        # Network policy:
+        #   full (default) — preserve the existing child-process networking.
+        #   none           — fail-closed Linux network namespace isolation.
+        #     This currently requires filesystem_access=none and
+        #     tool_access=none so no RPC transport needs host networking.
+        "network_access": "full",
+        # Hermes RPC policy for scripts:
+        #   full (default) — expose the intersection of the session's tools
+        #     and execute_code's RPC allow-list.
+        #   none           — expose no Hermes tools; Python computation only.
+        "tool_access": "full",
     },
 
     # Tool Search (progressive disclosure for large tool surfaces).

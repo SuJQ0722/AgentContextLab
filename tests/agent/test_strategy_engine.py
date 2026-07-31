@@ -304,6 +304,12 @@ class TestVisual:
         engine.configure({"strategy_config": {}})
         assert engine._max_history_rounds == 3
 
+    def test_env_history_max_image_height(self, monkeypatch):
+        monkeypatch.setenv("HERMES_VISUAL_HISTORY_MAX_IMAGE_HEIGHT", "8192")
+        engine = self._make_engine()
+        engine.configure({"strategy_config": {}})
+        assert engine._history_max_image_height == 8192
+
     def test_max_history_rounds_truncates(self):
         engine = self._make_engine()
         engine.configure({"strategy_config": {"max_history_rounds": 3}})
@@ -316,6 +322,102 @@ class TestVisual:
             if m.get("role") == "assistant" and m.get("tool_calls")
         )
         assert round_count <= 3
+
+    def test_history_pages_are_not_merged_before_model(self, monkeypatch, tmp_path):
+        from plugins.context_engine.visual import render as visual_render
+
+        one_pixel_png = (
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l"
+            "EQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+        )
+
+        render_sizes = []
+
+        def fake_blocks_to_pdf_bytes(*args, **kwargs):
+            render_sizes.append((args[3], args[4]))
+            return b"%PDF"
+
+        def fake_pdf_to_images(pdf_bytes, dpi=72, save_dir=None, save_prefix="page"):
+            if "history" in save_prefix:
+                return [one_pixel_png, one_pixel_png]
+            return [one_pixel_png]
+
+        merge_calls = []
+
+        def fake_merge_images_vertical(images):
+            merge_calls.append(len(images))
+            return one_pixel_png
+
+        monkeypatch.setattr(visual_render, "_blocks_to_pdf_bytes", fake_blocks_to_pdf_bytes)
+        monkeypatch.setattr(visual_render, "_pdf_bytes_to_image_b64_list", fake_pdf_to_images)
+        monkeypatch.setattr(visual_render, "_merge_images_vertical", fake_merge_images_vertical)
+        monkeypatch.setattr(visual_render, "_downscale_image_b64", lambda b64, scale=0.5: b64)
+        monkeypatch.setattr(visual_render, "_concat_pdf_bytes", lambda pdfs: b"%PDF")
+
+        result = visual_render.render_visual_compression(
+            _make_messages(n_tool_rounds=8),
+            head_end=0,
+            history_scale=0.5,
+            keep_rounds=0,
+            recent_rounds=1,
+            save_dir=str(tmp_path),
+            history_max_image_height=6144,
+        )
+
+        content = next(m["content"] for m in result if isinstance(m.get("content"), list))
+        image_parts = [
+            p for p in content
+            if isinstance(p, dict) and p.get("type") == "image_url"
+        ]
+        low_images = [
+            p for p in image_parts
+            if p.get("image_url", {}).get("detail") == "low"
+        ]
+        assert len(low_images) == 2
+        assert len(image_parts) == 3
+        assert merge_calls == []
+        assert render_sizes == [(1024, 4096), (2048, 12288)]
+        assert (tmp_path / "old_1_001.png").exists()
+        assert (tmp_path / "old_1_002.png").exists()
+
+    def test_recent_segment_renders_as_single_source_page(self, monkeypatch, tmp_path):
+        from plugins.context_engine.visual import render as visual_render
+
+        one_pixel_png = (
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l"
+            "EQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+        )
+
+        render_calls = []
+
+        def fake_blocks_to_pdf_bytes(*args, **kwargs):
+            render_calls.append({
+                "width": args[3],
+                "height": args[4],
+                "fit_to_content_height": kwargs.get("fit_to_content_height"),
+            })
+            return b"%PDF"
+
+        monkeypatch.setattr(visual_render, "_blocks_to_pdf_bytes", fake_blocks_to_pdf_bytes)
+        monkeypatch.setattr(visual_render, "_pdf_bytes_to_image_b64_list", lambda *a, **k: [one_pixel_png])
+        monkeypatch.setattr(visual_render, "_downscale_image_b64", lambda b64, scale=0.5: b64)
+        monkeypatch.setattr(visual_render, "_concat_pdf_bytes", lambda pdfs: b"%PDF")
+
+        visual_render.render_visual_compression(
+            _make_messages(n_tool_rounds=5),
+            head_end=0,
+            history_scale=0,
+            keep_rounds=0,
+            recent_rounds=5,
+            save_dir=str(tmp_path),
+            max_image_height=4096,
+        )
+
+        assert render_calls == [{
+            "width": 1024,
+            "height": 20480,
+            "fit_to_content_height": True,
+        }]
 
 
 # ---------------------------------------------------------------------------

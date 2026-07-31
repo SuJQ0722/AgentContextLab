@@ -185,11 +185,42 @@ _TOKEN_COLUMNS = (
     "api_call_count",
 )
 
+_TOKEN_DERIVED_COLUMNS = (
+    "cache_total_tokens",
+    "noncached_total_tokens",
+    "prompt_tokens_including_cache",
+    "total_tokens_including_cache",
+)
+
 
 def _empty_token_usage() -> dict[str, int]:
     usage = {col: 0 for col in _TOKEN_COLUMNS}
     usage["total_tokens"] = 0
+    for col in _TOKEN_DERIVED_COLUMNS:
+        usage[col] = 0
     usage["session_count"] = 0
+    return usage
+
+
+def _finalize_token_usage(usage: dict[str, int]) -> dict[str, int]:
+    input_tokens = int(usage.get("input_tokens", 0) or 0)
+    output_tokens = int(usage.get("output_tokens", 0) or 0)
+    cache_read_tokens = int(usage.get("cache_read_tokens", 0) or 0)
+    cache_write_tokens = int(usage.get("cache_write_tokens", 0) or 0)
+    existing_total_tokens = int(usage.get("total_tokens", 0) or 0)
+
+    cache_total_tokens = cache_read_tokens + cache_write_tokens
+    if input_tokens or output_tokens or cache_total_tokens or existing_total_tokens == 0:
+        noncached_total_tokens = input_tokens + output_tokens
+    else:
+        noncached_total_tokens = existing_total_tokens
+    prompt_tokens_including_cache = input_tokens + cache_total_tokens
+
+    usage["cache_total_tokens"] = cache_total_tokens
+    usage["noncached_total_tokens"] = noncached_total_tokens
+    usage["total_tokens"] = noncached_total_tokens
+    usage["prompt_tokens_including_cache"] = prompt_tokens_including_cache
+    usage["total_tokens_including_cache"] = prompt_tokens_including_cache + output_tokens
     return usage
 
 
@@ -241,7 +272,7 @@ def _load_token_usage_from_db(
         if not cols:
             usage = _empty_token_usage()
             usage["session_count"] = len(_get_session_lineage(conn, session_id))
-            return usage
+            return _finalize_token_usage(usage)
 
         session_ids = _get_session_lineage(conn, session_id)
         placeholders = ",".join("?" for _ in session_ids)
@@ -255,9 +286,8 @@ def _load_token_usage_from_db(
         usage = _empty_token_usage()
         for col, value in zip(cols, summed):
             usage[col] = int(value or 0)
-        usage["total_tokens"] = usage["input_tokens"] + usage["output_tokens"]
         usage["session_count"] = len(session_ids)
-        return usage
+        return _finalize_token_usage(usage)
     except Exception:
         return None
     finally:

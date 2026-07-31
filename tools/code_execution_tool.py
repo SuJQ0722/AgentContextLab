@@ -34,8 +34,8 @@ import json
 import logging
 import os
 import platform
-import secrets
 import shlex
+import shutil
 import socket
 import subprocess
 import sys
@@ -75,6 +75,17 @@ DEFAULT_MAX_TOOL_CALLS = 50
 MAX_STDOUT_BYTES = 50_000    # 50 KB
 MAX_STDERR_BYTES = 10_000    # 10 KB
 
+# Host filesystem policy. ``none`` is opt-in and fail-closed: model-authored
+# code runs in Linux namespaces with data directories masked by empty tmpfs and
+# filesystem mutations denied by seccomp. Normal Hermes sessions retain the
+# existing ``full`` behavior unless configured otherwise.
+FILESYSTEM_ACCESS_MODES = ("full", "none")
+DEFAULT_FILESYSTEM_ACCESS = "full"
+NETWORK_ACCESS_MODES = ("full", "none")
+DEFAULT_NETWORK_ACCESS = "full"
+TOOL_ACCESS_MODES = ("full", "none")
+DEFAULT_TOOL_ACCESS = "full"
+
 # Environment variable scrubbing rules (shared between the local + remote
 # backends).  Secret-substring block is applied first; anything left must
 # match a safe prefix, the operational HERMES_ allowlist, or (on Windows) an
@@ -89,16 +100,7 @@ _SAFE_ENV_PREFIXES = ("PATH", "HOME", "USER", "LANG", "LC_", "TERM",
                       "TMPDIR", "TMP", "TEMP", "SHELL", "LOGNAME",
                       "XDG_", "PYTHONPATH", "VIRTUAL_ENV", "CONDA")
 _SECRET_SUBSTRINGS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL",
-                      "PASSWD", "AUTH", "DSN", "WEBHOOK",
-                      # Abbreviations that appear in real-world credential
-                      # variable names but were previously undetected:
-                      # CREDS (CREDENTIALS abbreviated), BEARER
-                      # (Authorization: Bearer tokens), APIKEY (written
-                      # without an underscore). "PASS" is intentionally NOT
-                      # added — it false-positives on legitimate non-secret
-                      # vars (BYPASS_CACHE, COMPASS_DIR, PASSENGER_HOST) while
-                      # PASSWORD/PASSWD already cover the credential cases.
-                      "CREDS", "BEARER", "APIKEY")
+                      "PASSWD", "AUTH", "DSN", "WEBHOOK")
 
 # Operational HERMES_* vars the child legitimately needs by exact name — these
 # are non-secret runtime-location flags (the same set hermes_cli treats as the
@@ -229,9 +231,9 @@ _TOOL_STUBS = {
     ),
     "web_extract": (
         "web_extract",
-        "urls: list, char_limit: int = None",
-        '"""Extract content from URLs (no LLM summarization). Returns dict with results list of {url, title, content, error}. Pages over char_limit (default 15000) are head+tail truncated with the full text stored on disk; the content footer gives the path. content is markdown."""',
-        '{"urls": urls, "char_limit": char_limit}',
+        "urls: list",
+        '"""Extract content from URLs. Returns dict with results list of {url, title, content, error}."""',
+        '{"urls": urls}',
     ),
     "read_file": (
         "read_file",
@@ -382,11 +384,7 @@ def _connect():
 
 def _call(tool_name, args):
     """Send a tool call to the parent process and return the parsed result."""
-    request = json.dumps({
-        "tool": tool_name,
-        "args": args,
-        "token": os.environ.get("HERMES_RPC_TOKEN", ""),
-    }) + "\\n"
+    request = json.dumps({"tool": tool_name, "args": args}) + "\\n"
     with _call_lock:
         conn = _connect()
         conn.sendall(request.encode())
@@ -439,12 +437,7 @@ def _call(tool_name, args):
     # non-ASCII chars in tool args when encoding them as JSON.
     tmp = req_file + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
-        json.dump({
-            "tool": tool_name,
-            "args": args,
-            "seq": seq,
-            "token": os.environ.get("HERMES_RPC_TOKEN", ""),
-        }, f)
+        json.dump({"tool": tool_name, "args": args, "seq": seq}, f)
     os.rename(tmp, req_file)
 
     # Wait for response with adaptive polling
@@ -492,7 +485,6 @@ def _rpc_server_loop(
     max_tool_calls: int,
     allowed_tools: frozenset,
     stop_event: threading.Event,
-    rpc_token: str,
 ):
     """
     Accept one client connection and dispatch tool-call requests until
@@ -535,13 +527,6 @@ def _rpc_server_loop(
                     request = json.loads(line.decode())
                 except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                     resp = tool_error(f"Invalid RPC request: {exc}")
-                    conn.sendall((resp + "\n").encode())
-                    continue
-
-                if not rpc_token or not secrets.compare_digest(
-                    str(request.get("token") or ""), rpc_token
-                ):
-                    resp = json.dumps({"error": "Unauthorized RPC request"})
                     conn.sendall((resp + "\n").encode())
                     continue
 
@@ -768,7 +753,6 @@ def _rpc_poll_loop(
     max_tool_calls: int,
     allowed_tools: frozenset,
     stop_event: threading.Event,
-    rpc_token: str,
 ):
     """Poll the remote filesystem for tool call requests and dispatch them.
 
@@ -819,13 +803,6 @@ def _rpc_poll_loop(
                 except (json.JSONDecodeError, ValueError):
                     logger.debug("Malformed RPC request in %s", req_file)
                     # Remove bad request to avoid infinite retry
-                    env.execute(f"rm -f {quoted_req_file}", cwd="/", timeout=5)
-                    continue
-
-                if not rpc_token or not secrets.compare_digest(
-                    str(request.get("token") or ""), rpc_token
-                ):
-                    logger.debug("Unauthorized RPC request in %s", req_file)
                     env.execute(f"rm -f {quoted_req_file}", cwd="/", timeout=5)
                     continue
 
@@ -925,10 +902,13 @@ def _execute_remote(
     timeout = _cfg.get("timeout", DEFAULT_TIMEOUT)
     max_tool_calls = _cfg.get("max_tool_calls", DEFAULT_MAX_TOOL_CALLS)
 
-    session_tools = set(enabled_tools) if enabled_tools else set()
-    sandbox_tools = frozenset(SANDBOX_ALLOWED_TOOLS & session_tools)
-    if not sandbox_tools:
-        sandbox_tools = SANDBOX_ALLOWED_TOOLS
+    if _get_tool_access() == "none":
+        sandbox_tools = frozenset()
+    else:
+        session_tools = set(enabled_tools) if enabled_tools else set()
+        sandbox_tools = frozenset(SANDBOX_ALLOWED_TOOLS & session_tools)
+        if not sandbox_tools:
+            sandbox_tools = SANDBOX_ALLOWED_TOOLS
 
     effective_task_id = task_id or "default"
     env, env_type = _get_or_create_env(effective_task_id)
@@ -968,8 +948,6 @@ def _execute_remote(
             f"mkdir -p {quoted_rpc_dir}", cwd="/", timeout=10,
         )
 
-        rpc_token = secrets.token_urlsafe(32)
-
         # Generate and ship files
         tools_src = generate_hermes_tools_module(
             list(sandbox_tools), transport="file",
@@ -985,7 +963,7 @@ def _execute_remote(
             args=(
                 env, f"{sandbox_dir}/rpc", effective_task_id,
                 tool_call_log, tool_call_counter, max_tool_calls,
-                sandbox_tools, stop_event, rpc_token,
+                sandbox_tools, stop_event,
             ),
             daemon=True,
         )
@@ -994,12 +972,11 @@ def _execute_remote(
         # Build environment variable prefix for the script
         env_prefix = (
             f"HERMES_RPC_DIR={shlex.quote(f'{sandbox_dir}/rpc')} "
-            f"HERMES_RPC_TOKEN={shlex.quote(rpc_token)} "
             f"PYTHONDONTWRITEBYTECODE=1"
         )
         tz = os.getenv("HERMES_TIMEZONE", "").strip()
         if tz:
-            env_prefix += f" TZ={shlex.quote(tz)}"
+            env_prefix += f" TZ={tz}"
 
         # Execute the script on the remote backend
         logger.info("Executing code on %s backend (task %s)...",
@@ -1069,11 +1046,9 @@ def _execute_remote(
     from tools.ansi_strip import strip_ansi
     stdout_text = strip_ansi(stdout_text)
 
-    # Redact secrets. code_file=True: execute_code output is code-execution
-    # output that often echoes source/config — skip false-positive ENV/JSON/
-    # f-string-template redaction while still masking real credentials.
+    # Redact secrets
     from agent.redact import redact_sensitive_text
-    stdout_text = redact_sensitive_text(stdout_text, code_file=True)
+    stdout_text = redact_sensitive_text(stdout_text)
 
     # Build response
     result: Dict[str, Any] = {
@@ -1142,21 +1117,58 @@ def execute_code(
         return tool_error("No code provided.")
 
     # Dispatch: remote backends use file-based RPC, local uses UDS
-    from tools.terminal_tool import _get_env_config, _docker_has_host_access
-    _env_config = _get_env_config()
-    env_type = _env_config["env_type"]
+    from tools.terminal_tool import _get_env_config
+    env_type = _get_env_config()["env_type"]
+
+    filesystem_access = _get_filesystem_access()
+    network_access = _get_network_access()
+    tool_access = _get_tool_access()
+    if network_access == "none" and filesystem_access != "none":
+        return json.dumps({
+            "status": "error",
+            "error": (
+                "execute_code refused to run: code_execution.network_access=none "
+                "currently requires code_execution.filesystem_access=none."
+            ),
+            "tool_calls_made": 0,
+            "duration_seconds": 0,
+        }, ensure_ascii=False)
+    if network_access == "none" and tool_access != "none":
+        return json.dumps({
+            "status": "error",
+            "error": (
+                "execute_code refused to run: code_execution.network_access=none "
+                "currently requires code_execution.tool_access=none."
+            ),
+            "tool_calls_made": 0,
+            "duration_seconds": 0,
+        }, ensure_ascii=False)
+    if filesystem_access == "none" and env_type != "local":
+        return json.dumps({
+            "status": "error",
+            "error": (
+                "execute_code refused to run: code_execution.filesystem_access=none "
+                f"cannot guarantee host-file isolation on terminal backend {env_type!r}."
+            ),
+            "tool_calls_made": 0,
+            "duration_seconds": 0,
+        }, ensure_ascii=False)
+    if filesystem_access == "none":
+        isolation_error = _filesystem_isolation_preflight()
+        if isolation_error:
+            return json.dumps({
+                "status": "error",
+                "error": f"execute_code filesystem isolation unavailable: {isolation_error}",
+                "tool_calls_made": 0,
+                "duration_seconds": 0,
+            }, ensure_ascii=False)
 
     # execute_code runs arbitrary Python (subprocess/os.system/...) that never
     # passes through terminal()/DANGEROUS_PATTERNS, so guard the whole script
     # here before either dispatch path spawns it. Runs synchronously in the
     # caller (tool-executor) thread, which holds the session context (#30882).
-    # A Docker sandbox with host bind mounts is no longer isolated, so its
-    # script does not get the container fast-path.
     from tools.approval import check_execute_code_guard
-    _guard = check_execute_code_guard(
-        code, env_type,
-        has_host_access=_docker_has_host_access(_env_config),
-    )
+    _guard = check_execute_code_guard(code, env_type)
     if not _guard.get("approved", False):
         return json.dumps({
             "status": "error",
@@ -1168,7 +1180,7 @@ def execute_code(
     if env_type != "local":
         return _execute_remote(code, task_id, enabled_tools)
 
-    # --- Local execution path (UDS) --- below this line is unchanged ---
+    # --- Local execution path ---
 
     # Import per-thread interrupt check (cooperative cancellation)
     from tools.interrupt import is_interrupted as _is_interrupted
@@ -1179,11 +1191,16 @@ def execute_code(
     max_tool_calls = _cfg.get("max_tool_calls", DEFAULT_MAX_TOOL_CALLS)
 
     # Determine which tools the sandbox can call
-    session_tools = set(enabled_tools) if enabled_tools else set()
-    sandbox_tools = frozenset(SANDBOX_ALLOWED_TOOLS & session_tools)
-
-    if not sandbox_tools:
-        sandbox_tools = SANDBOX_ALLOWED_TOOLS
+    if tool_access == "none":
+        sandbox_tools = frozenset()
+    else:
+        session_tools = set(enabled_tools) if enabled_tools else set()
+        sandbox_tools = frozenset(SANDBOX_ALLOWED_TOOLS & session_tools)
+        if not sandbox_tools:
+            # Preserve execute_code's historical direct-call behavior. The
+            # BrowseComp pure-compute profile takes the explicit tool_access
+            # branch above, so it never reaches this fallback.
+            sandbox_tools = SANDBOX_ALLOWED_TOOLS
 
     # --- Set up temp directory with hermes_tools.py and script.py ---
     tmpdir = tempfile.mkdtemp(prefix="hermes_sandbox_")
@@ -1199,10 +1216,14 @@ def execute_code(
     # request/response framing.  The generated client reads the transport
     # selector from HERMES_RPC_SOCKET (path vs. ``tcp://host:port``).
     _sock_tmpdir = "/tmp" if sys.platform == "darwin" else tempfile.gettempdir()
-    _use_tcp_rpc = _IS_WINDOWS
-    if _use_tcp_rpc:
-        sock_path = None  # not used on Windows; TCP endpoint stored below
-        rpc_endpoint = None  # set after bind()
+    # Filesystem-denied mode masks host /tmp, so use the already-supported
+    # loopback TCP transport instead of a filesystem UDS. The network namespace
+    # stays shared solely for this parent/child loopback connection.
+    _rpc_enabled = bool(sandbox_tools)
+    _use_tcp_rpc = _rpc_enabled and (_IS_WINDOWS or filesystem_access == "none")
+    if not _rpc_enabled or _use_tcp_rpc:
+        sock_path = None  # no UDS for pure compute or TCP-backed RPC
+        rpc_endpoint = None  # set after bind() when RPC is enabled
     else:
         sock_path = os.path.join(_sock_tmpdir, f"hermes_rpc_{uuid.uuid4().hex}.sock")
         rpc_endpoint = sock_path
@@ -1233,7 +1254,6 @@ def execute_code(
             f.write(code)
 
         # --- Start RPC server ---
-        rpc_token = secrets.token_urlsafe(32)
         # Two transports:
         #   POSIX: AF_UNIX stream socket on sock_path, chmod 0600 for
         #   owner-only access.  Filesystem permissions gate the socket.
@@ -1242,7 +1262,10 @@ def execute_code(
         #   means only the current user's processes (not remote) can
         #   connect.  HERMES_RPC_SOCKET is set to ``tcp://127.0.0.1:<port>``
         #   which the generated client parses to pick AF_INET.
-        if _use_tcp_rpc:
+        rpc_thread = None
+        if not _rpc_enabled:
+            server_sock = None
+        elif _use_tcp_rpc:
             server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_sock.bind(("127.0.0.1", 0))  # ephemeral port
             _host, _port = server_sock.getsockname()[:2]
@@ -1251,20 +1274,22 @@ def execute_code(
             server_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             server_sock.bind(sock_path)
             os.chmod(sock_path, 0o600)
-        server_sock.listen(1)
+        if server_sock is not None:
+            server_sock.listen(1)
 
         # Wrapped so the thread inherits the turn's approval context + callbacks
         # (see tools.thread_context) — else gateway sandbox tool calls silently
         # auto-approve dangerous commands (#33057, #30882).
-        rpc_thread = threading.Thread(
-            target=propagate_context_to_thread(_rpc_server_loop),
-            args=(
-                server_sock, task_id, tool_call_log,
-                tool_call_counter, max_tool_calls, sandbox_tools, stop_event, rpc_token,
-            ),
-            daemon=True,
-        )
-        rpc_thread.start()
+        if server_sock is not None:
+            rpc_thread = threading.Thread(
+                target=propagate_context_to_thread(_rpc_server_loop),
+                args=(
+                    server_sock, task_id, tool_call_log,
+                    tool_call_counter, max_tool_calls, sandbox_tools, stop_event,
+                ),
+                daemon=True,
+            )
+            rpc_thread.start()
 
         # --- Spawn child process ---
         # Build a minimal environment for the child. We intentionally exclude
@@ -1277,8 +1302,10 @@ def execute_code(
         # passed through — without those, the child can't create a socket
         # or spawn a subprocess.  See ``_scrub_child_env`` for the rules.
         child_env = _scrub_child_env(os.environ)
-        child_env["HERMES_RPC_SOCKET"] = rpc_endpoint
-        child_env["HERMES_RPC_TOKEN"] = rpc_token
+        if rpc_endpoint:
+            child_env["HERMES_RPC_SOCKET"] = rpc_endpoint
+        else:
+            child_env.pop("HERMES_RPC_SOCKET", None)
         child_env["PYTHONDONTWRITEBYTECODE"] = "1"
         # Force UTF-8 for the child's stdio and default file encoding.
         #
@@ -1305,9 +1332,12 @@ def execute_code(
         # when the subprocess CWD is not tmpdir (project mode).
         _hermes_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         _existing_pp = child_env.get("PYTHONPATH", "")
-        _pp_parts = [tmpdir, _hermes_root]
-        if _existing_pp:
-            _pp_parts.append(_existing_pp)
+        if filesystem_access == "none":
+            _pp_parts = ["/tmp/hermes_exec"]
+        else:
+            _pp_parts = [tmpdir, _hermes_root]
+            if _existing_pp:
+                _pp_parts.append(_existing_pp)
         child_env["PYTHONPATH"] = os.pathsep.join(_pp_parts)
         # Inject user's configured timezone so datetime.now() in sandboxed
         # code reflects the correct wall-clock time.  Only TZ is set —
@@ -1331,14 +1361,25 @@ def execute_code(
         _child_cwd = _resolve_child_cwd(_mode, tmpdir)
         _script_path = os.path.join(tmpdir, "script.py")
 
+        child_command = [_child_python, _script_path]
+        popen_cwd = _child_cwd
+        if filesystem_access == "none":
+            child_command = _build_filesystem_isolation_command(
+                staging_dir=tmpdir,
+                network_access=network_access,
+            )
+            # The trusted launcher starts on the host and immediately builds +
+            # enters the restricted root. Never start it from the user project.
+            popen_cwd = tmpdir
+
         proc = subprocess.Popen(
-            [_child_python, _script_path],
-            cwd=_child_cwd,
+            child_command,
+            cwd=popen_cwd,
             env=child_env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
-            start_new_session=True,
+            preexec_fn=None if _IS_WINDOWS else os.setsid,
             creationflags=subprocess.CREATE_NO_WINDOW if _IS_WINDOWS else 0,
         )
 
@@ -1475,9 +1516,11 @@ def execute_code(
 
         # Wait for RPC thread to finish
         stop_event.set()
-        server_sock.close()  # break accept() so thread exits promptly
-        server_sock = None  # prevent double close in finally
-        rpc_thread.join(timeout=3)
+        if server_sock is not None:
+            server_sock.close()  # break accept() so thread exits promptly
+            server_sock = None  # prevent double close in finally
+        if rpc_thread is not None:
+            rpc_thread.join(timeout=3)
 
         # Strip ANSI escape sequences so the model never sees terminal
         # formatting — prevents it from copying escapes into file writes.
@@ -1489,11 +1532,9 @@ def execute_code(
         # The sandbox env-var filter (lines 434-454) blocks os.environ access,
         # but scripts can still read secrets from disk (e.g. open('~/.hermes/.env')).
         # This ensures leaked secrets never enter the model context.
-        # code_file=True: this is code-execution output — skip false-positive
-        # ENV/JSON/f-string-template redaction; real credentials still masked.
         from agent.redact import redact_sensitive_text
-        stdout_text = redact_sensitive_text(stdout_text, code_file=True)
-        stderr_text = redact_sensitive_text(stderr_text, code_file=True)
+        stdout_text = redact_sensitive_text(stdout_text)
+        stderr_text = redact_sensitive_text(stderr_text)
 
         # Build response
         result: Dict[str, Any] = {
@@ -1553,7 +1594,6 @@ def execute_code(
                 server_sock.close()
             except OSError as e:
                 logger.debug("Server socket close error: %s", e)
-        import shutil
         shutil.rmtree(tmpdir, ignore_errors=True)
         try:
             # Only UDS has a filesystem socket to unlink; TCP sockets are
@@ -1636,6 +1676,106 @@ def _load_config() -> dict:
 # ---------------------------------------------------------------------------
 # Execution mode resolution (strict vs project)
 # ---------------------------------------------------------------------------
+
+
+def _get_filesystem_access() -> str:
+    """Return ``code_execution.filesystem_access`` (``full`` or ``none``)."""
+    value = str(
+        _load_config().get("filesystem_access", DEFAULT_FILESYSTEM_ACCESS)
+    ).strip().lower()
+    if value in FILESYSTEM_ACCESS_MODES:
+        return value
+    logger.warning(
+        "Ignoring code_execution.filesystem_access=%r (expected one of %s), "
+        "falling back to %r",
+        value,
+        FILESYSTEM_ACCESS_MODES,
+        DEFAULT_FILESYSTEM_ACCESS,
+    )
+    return DEFAULT_FILESYSTEM_ACCESS
+
+
+def _get_network_access() -> str:
+    """Return ``code_execution.network_access`` (``full`` or ``none``)."""
+    value = str(
+        _load_config().get("network_access", DEFAULT_NETWORK_ACCESS)
+    ).strip().lower()
+    if value in NETWORK_ACCESS_MODES:
+        return value
+    logger.warning(
+        "Ignoring code_execution.network_access=%r (expected one of %s), "
+        "falling back to %r",
+        value,
+        NETWORK_ACCESS_MODES,
+        DEFAULT_NETWORK_ACCESS,
+    )
+    return DEFAULT_NETWORK_ACCESS
+
+
+def _get_tool_access() -> str:
+    """Return ``code_execution.tool_access`` (``full`` or ``none``)."""
+    value = str(
+        _load_config().get("tool_access", DEFAULT_TOOL_ACCESS)
+    ).strip().lower()
+    if value in TOOL_ACCESS_MODES:
+        return value
+    logger.warning(
+        "Ignoring code_execution.tool_access=%r (expected one of %s), "
+        "falling back to %r",
+        value,
+        TOOL_ACCESS_MODES,
+        DEFAULT_TOOL_ACCESS,
+    )
+    return DEFAULT_TOOL_ACCESS
+
+
+def _filesystem_isolation_preflight() -> str:
+    """Return an error string when fail-closed filesystem isolation is absent."""
+    if sys.platform != "linux":
+        return "filesystem_access=none currently requires Linux"
+    if not shutil.which("unshare"):
+        return "the 'unshare' executable was not found"
+    if not os.path.isfile("/usr/bin/mount"):
+        return "the '/usr/bin/mount' executable was not found"
+    if not os.path.isfile("/usr/bin/python3"):
+        return "the '/usr/bin/python3' interpreter was not found"
+    helper = os.path.join(os.path.dirname(__file__), "execute_code_fs_sandbox.py")
+    if not os.path.isfile(helper):
+        return f"internal launcher is missing: {helper}"
+    return ""
+
+
+def _build_filesystem_isolation_command(
+    staging_dir: str,
+    network_access: str = DEFAULT_NETWORK_ACCESS,
+) -> List[str]:
+    """Build the fail-closed namespace/tmpfs/seccomp launcher command."""
+    unshare = shutil.which("unshare")
+    if not unshare:
+        raise RuntimeError("the 'unshare' executable was not found")
+    helper = os.path.join(os.path.dirname(__file__), "execute_code_fs_sandbox.py")
+    command = [
+        unshare,
+        "--user",
+        "--map-root-user",
+        "--mount",
+        "--pid",
+        "--ipc",
+        "--uts",
+    ]
+    if network_access == "none":
+        command.append("--net")
+    command.extend([
+        "--fork",
+        "--kill-child",
+        "--propagation",
+        "private",
+        sys.executable,
+        helper,
+        "--staging",
+        staging_dir,
+    ])
+    return command
 
 # Valid values for code_execution.mode. Kept as a module constant so tests
 # and the config layer can reference the canonical set.
@@ -1767,9 +1907,8 @@ _TOOL_DOC_LINES = [
      "  web_search(query: str, limit: int = 5) -> dict\n"
      "    Returns {\"data\": {\"web\": [{\"url\", \"title\", \"description\"}, ...]}}"),
     ("web_extract",
-     "  web_extract(urls: list[str], char_limit: int = None) -> dict\n"
-     "    Returns {\"results\": [{\"url\", \"title\", \"content\", \"error\"}, ...]} where content is markdown.\n"
-     "    No LLM summarization. Pages over char_limit (default 15000) are head+tail truncated; full text stored on disk (path in the content footer)."),
+     "  web_extract(urls: list[str]) -> dict\n"
+     "    Returns {\"results\": [{\"url\", \"title\", \"content\", \"error\"}, ...]} where content is markdown"),
     ("read_file",
      "  read_file(path: str, offset: int = 1, limit: int = 500) -> dict\n"
      "    Lines are 1-indexed. Returns {\"content\": \"...\", \"total_lines\": N}"),
@@ -1789,7 +1928,10 @@ _TOOL_DOC_LINES = [
 
 
 def build_execute_code_schema(enabled_sandbox_tools: set = None,
-                              mode: str = None) -> dict:
+                              mode: str = None,
+                              filesystem_access: str = None,
+                              network_access: str = None,
+                              tool_access: str = None) -> dict:
     """Build the execute_code schema with description listing only enabled tools.
 
     When tools are disabled via ``hermes tools`` (e.g. web is turned off),
@@ -1806,11 +1948,26 @@ def build_execute_code_schema(enabled_sandbox_tools: set = None,
         enabled_sandbox_tools = SANDBOX_ALLOWED_TOOLS
     if mode is None:
         mode = _get_execution_mode()
+    if filesystem_access is None:
+        filesystem_access = _get_filesystem_access()
+    if network_access is None:
+        network_access = _get_network_access()
+    if tool_access is None:
+        tool_access = _get_tool_access()
+    if tool_access == "none":
+        enabled_sandbox_tools = set()
 
     # Build tool documentation lines for only the enabled tools
     tool_lines = "\n".join(
         doc for name, doc in _TOOL_DOC_LINES if name in enabled_sandbox_tools
     )
+    if tool_lines:
+        tool_section = (
+            "Available via `from hermes_tools import ...`:\n\n"
+            f"{tool_lines}"
+        )
+    else:
+        tool_section = "No Hermes tools are available inside this execution."
 
     # Build example import list from enabled tools
     import_examples = [n for n in ("web_search", "terminal") if n in enabled_sandbox_tools]
@@ -1824,7 +1981,23 @@ def build_execute_code_schema(enabled_sandbox_tools: set = None,
     # Mode-specific CWD guidance. Project mode is the default and matches
     # terminal()'s filesystem/interpreter; strict mode retains the isolated
     # temp-dir staging and hermes-agent's own python.
-    if mode == "strict":
+    if filesystem_access == "none" and network_access == "none" and tool_access == "none":
+        cwd_note = (
+            "This is a pure-compute sandbox. Local host filesystem access, filesystem writes, "
+            "outbound networking, and Hermes tool RPC are disabled. Do not use open(), pathlib, "
+            "os file APIs, subprocesses for file access, socket, urllib, requests, or "
+            "from hermes_tools import tool functions. Process data entirely in memory with the "
+            "system Python standard library; project virtualenv packages are unavailable."
+        )
+    elif filesystem_access == "none":
+        cwd_note = (
+            "Local host filesystem access is disabled. Do not use open(), pathlib, os file APIs, "
+            "or subprocesses to read or write files; host project, profile, home, and temporary "
+            "paths are unavailable and filesystem writes fail. Process data in memory and use "
+            "only the Hermes tools listed above. The restricted process uses the system Python "
+            "standard library; project virtualenv packages are unavailable."
+        )
+    elif mode == "strict":
         cwd_note = (
             "Scripts run in their own temp dir, not the session's CWD — use absolute paths "
             "(os.path.expanduser('~/.hermes/.env')) or terminal()/read_file() for user files."
@@ -1836,7 +2009,7 @@ def build_execute_code_schema(enabled_sandbox_tools: set = None,
         )
 
     description = (
-        "Run a Python script that can call Hermes tools programmatically. "
+        "Run a Python script for in-memory computation and, when enabled, programmatic Hermes tool calls. "
         "Use this when you need 3+ tool calls with processing logic between them, "
         "need to filter/reduce large tool outputs before they enter your context, "
         "need conditional branching (if X then Y else Z), or need to loop "
@@ -1844,8 +2017,7 @@ def build_execute_code_schema(enabled_sandbox_tools: set = None,
         "Use normal tool calls instead when: single tool call with no processing, "
         "you need to see the full result and apply complex reasoning, "
         "or the task requires interactive user input.\n\n"
-        f"Available via `from hermes_tools import ...`:\n\n"
-        f"{tool_lines}\n\n"
+        f"{tool_section}\n\n"
         "Limits: 5-minute timeout, 50KB stdout cap, max 50 tool calls per script. "
         "terminal() is foreground-only (no background or pty).\n\n"
         f"{cwd_note}\n\n"
@@ -1866,9 +2038,16 @@ def build_execute_code_schema(enabled_sandbox_tools: set = None,
                 "code": {
                     "type": "string",
                     "description": (
-                        "Python code to execute. Import tools with "
-                        f"`from hermes_tools import {import_str}` "
-                        "and print your final result to stdout."
+                        (
+                            "Python code to execute. Import tools with "
+                            f"`from hermes_tools import {import_str}` and print "
+                            "your final result to stdout."
+                        )
+                        if enabled_sandbox_tools
+                        else (
+                            "Python code to execute in memory. Print your final "
+                            "result to stdout; no Hermes tools are available."
+                        )
                     ),
                 },
             },

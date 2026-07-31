@@ -12,9 +12,31 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .session_reader import _finalize_token_usage
+
 
 INCORRECT_SCORE = 0.0
 CORRECT_SCORE = 1.0
+
+_CONTAMINATION_PATH_PATTERNS = (
+    "/browsecomp_eval/data",
+    "/browsecomp_eval/output/preds",
+    "browsecomp_eval/data",
+    "browsecomp_eval/output/preds",
+    "questions.jsonl",
+    "questions_200.jsonl",
+    "questions_50.jsonl",
+    "judge_summary.jsonl",
+    "judge_metrics.json",
+    "summary.jsonl",
+)
+_CONTAMINATION_URL_PATTERNS = (
+    "browsecomp",
+)
+_CONTAMINATION_CONTENT_PATTERNS = (
+    '"answer":',
+    "'answer':",
+)
 
 
 @dataclass(frozen=True)
@@ -57,6 +79,14 @@ class PredictionRecord:
     type: str
     token_usage: dict[str, Any]
     raw: dict[str, Any]
+
+    def load_messages(self) -> list:
+        """Lazy-load messages from disk to avoid keeping them all in memory."""
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+            return data.get("messages") or data.get("history") or []
+        except Exception:
+            return []
 
 
 class JudgeClient:
@@ -186,7 +216,7 @@ class BrowseCompJudge:
                     except Exception as exc:
                         result = self._judge_failed_result(record, exc)
                         self._write_result(record, result)
-                    print(f"[{completed}/{len(pending)}] {record.run_id}: {result.get('status')} score={result.get('score')}")
+                    print(f"[{completed}/{len(pending)}] {format_record_label(record)}: {result.get('status')} score={result.get('score')}")
 
         metrics = compute_metrics(load_judge_results(self.config.output_dir))
         self.config.metrics_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -198,6 +228,8 @@ class BrowseCompJudge:
         return not self._result_path(record).exists()
 
     def _judge_one(self, record: PredictionRecord) -> dict[str, Any]:
+        contamination = detect_contamination(record)
+
         if record.pred_status != "success" and not self.config.include_failed:
             result = self._base_result(record)
             result.update(
@@ -207,6 +239,7 @@ class BrowseCompJudge:
                     "judge_reason": f"inference status is {record.pred_status}",
                     "judge_raw_response": "",
                     "judge_response": None,
+                    **contamination,
                 }
             )
             self._write_result(record, result)
@@ -221,6 +254,7 @@ class BrowseCompJudge:
                     "judge_reason": "empty model response",
                     "judge_raw_response": "",
                     "judge_response": None,
+                    **contamination,
                 }
             )
             self._write_result(record, result)
@@ -238,6 +272,7 @@ class BrowseCompJudge:
                 "judge_reason": judged["judge_reason"],
                 "judge_raw_response": judged["judge_raw_response"],
                 "judge_response": judged["judge_response"],
+                **contamination,
             }
         )
         self._write_result(record, result)
@@ -254,12 +289,14 @@ class BrowseCompJudge:
             "answer": record.answer,
             "prediction": record.pred,
             "token_usage": record.token_usage,
+            "rounds": coerce_int(record.raw.get("rounds")) or 0,
             "compression_stats": record.raw.get("compression_stats", {}),
             "pred_path": str(record.path),
         }
 
     def _judge_failed_result(self, record: PredictionRecord, exc: Exception) -> dict[str, Any]:
         result = self._base_result(record)
+        contamination = detect_contamination(record)
         result.update(
             {
                 "status": "judge_failed",
@@ -268,6 +305,7 @@ class BrowseCompJudge:
                 "judge_raw_response": "",
                 "judge_response": None,
                 "error": str(exc),
+                **contamination,
             }
         )
         return result
@@ -306,6 +344,10 @@ _TOKEN_FIELDS = (
     "total_tokens",
     "cache_read_tokens",
     "cache_write_tokens",
+    "cache_total_tokens",
+    "noncached_total_tokens",
+    "prompt_tokens_including_cache",
+    "total_tokens_including_cache",
     "reasoning_tokens",
     "api_call_count",
 )
@@ -325,9 +367,7 @@ def _extract_token_usage(raw: dict[str, Any]) -> dict[str, int]:
             usage[field] = int(value or 0)
         except (TypeError, ValueError):
             usage[field] = 0
-    if usage["total_tokens"] == 0:
-        usage["total_tokens"] = usage["input_tokens"] + usage["output_tokens"]
-    return usage
+    return _finalize_token_usage(usage)
 
 
 def _aggregate_token_usage(results: list[dict[str, Any]]) -> dict[str, Any]:
@@ -340,9 +380,16 @@ def _aggregate_token_usage(results: list[dict[str, Any]]) -> dict[str, Any]:
     totals: dict[str, int] = {field: 0 for field in _TOKEN_FIELDS}
     counted = 0
     for result in results:
-        usage = result.get("token_usage")
-        if not isinstance(usage, dict):
+        raw_usage = result.get("token_usage")
+        if not isinstance(raw_usage, dict):
             continue
+        usage: dict[str, int] = {field: 0 for field in _TOKEN_FIELDS}
+        for field in _TOKEN_FIELDS:
+            try:
+                usage[field] = int(raw_usage.get(field, 0) or 0)
+            except (TypeError, ValueError):
+                usage[field] = 0
+        _finalize_token_usage(usage)
         has_data = any(int(usage.get(f, 0) or 0) for f in _TOKEN_FIELDS)
         if not has_data:
             continue
@@ -420,6 +467,43 @@ def _aggregate_compression_stats(results: list[dict[str, Any]], token_usage: dic
     }
 
 
+def _compute_distribution(values: list[int]) -> dict[str, Any]:
+    if not values:
+        return {
+            "count": 0,
+            "min": 0,
+            "max": 0,
+            "mean": 0.0,
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "p90": 0.0,
+            "values": [],
+        }
+    sorted_vals = sorted(values)
+    n = len(sorted_vals)
+    return {
+        "count": n,
+        "min": sorted_vals[0],
+        "max": sorted_vals[-1],
+        "mean": round(sum(sorted_vals) / n, 2),
+        "median": round(_percentile(sorted_vals, 50), 2),
+        "p25": round(_percentile(sorted_vals, 25), 2),
+        "p75": round(_percentile(sorted_vals, 75), 2),
+        "p90": round(_percentile(sorted_vals, 90), 2),
+        "values": sorted_vals,
+    }
+
+
+def _percentile(sorted_vals: list[int], p: float) -> float:
+    if not sorted_vals:
+        return 0.0
+    k = (len(sorted_vals) - 1) * p / 100.0
+    f = int(k)
+    c = min(f + 1, len(sorted_vals) - 1)
+    return sorted_vals[f] + (k - f) * (sorted_vals[c] - sorted_vals[f])
+
+
 def load_prediction_records(conv_dir: Path) -> list[PredictionRecord]:
     if not conv_dir.is_dir():
         raise FileNotFoundError(f"prediction conv dir not found: {conv_dir}")
@@ -431,6 +515,11 @@ def load_prediction_records(conv_dir: Path) -> list[PredictionRecord]:
             continue
         run_id = str(raw.get("run_id") or path.stem)
         question_id = str(raw.get("question_id") or infer_question_id(run_id, path))
+        raw_slim = {
+            k: raw[k]
+            for k in ("rounds", "compression_stats", "delegate_sessions")
+            if k in raw
+        }
         records.append(
             PredictionRecord(
                 path=path,
@@ -443,7 +532,7 @@ def load_prediction_records(conv_dir: Path) -> list[PredictionRecord]:
                 pred_status=str(raw.get("status", "unknown")),
                 type=str(raw.get("type", "")),
                 token_usage=_extract_token_usage(raw),
-                raw=raw,
+                raw=raw_slim,
             )
         )
     return records
@@ -523,6 +612,32 @@ def compute_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
             majority_correct += 1
 
     token_usage = _aggregate_token_usage(results)
+    turns_list: list[int] = []
+    tokens_list: list[int] = []
+    per_question_stats: list[dict[str, Any]] = []
+    for result in results:
+        rounds = coerce_int(result.get("rounds")) or 0
+        tu = result.get("token_usage")
+        total_tok = int((tu or {}).get("total_tokens", 0) or 0) if isinstance(tu, dict) else 0
+        turns_list.append(rounds)
+        tokens_list.append(total_tok)
+        per_question_stats.append(
+            {
+                "question_id": result.get("question_id"),
+                "repeat_index": result.get("repeat_index"),
+                "turns": rounds,
+                "total_tokens": total_tok,
+                "score": result.get("score"),
+                "contaminated": result.get("contaminated", False),
+            }
+        )
+
+    contaminated_results = [r for r in results if r.get("contaminated")]
+    clean_results = [r for r in results if not r.get("contaminated")]
+    clean_scored = [r for r in clean_results if r.get("score") in (0, 1)]
+    clean_correct = sum(1 for r in clean_scored if r.get("score") == 1)
+    contaminated_scored = [r for r in contaminated_results if r.get("score") in (0, 1)]
+    contaminated_correct = sum(1 for r in contaminated_scored if r.get("score") == 1)
 
     return {
         "prediction_total": total,
@@ -537,6 +652,21 @@ def compute_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
         "token_usage": token_usage,
         "compression": _aggregate_compression_stats(results, token_usage),
         "run_level_accuracy_scored": safe_ratio(correct, len(scored)),
+        "turns_distribution": _compute_distribution(turns_list),
+        "tokens_distribution": _compute_distribution(tokens_list),
+        "per_question_stats": per_question_stats,
+        "contamination": {
+            "contaminated_total": len(contaminated_results),
+            "clean_total": len(clean_results),
+            "clean_scored": len(clean_scored),
+            "clean_correct": clean_correct,
+            "clean_accuracy": safe_ratio(clean_correct, len(clean_scored)),
+            "clean_accuracy_by_total": safe_ratio(clean_correct, len(clean_results)),
+            "contaminated_scored": len(contaminated_scored),
+            "contaminated_correct": contaminated_correct,
+            "contaminated_accuracy": safe_ratio(contaminated_correct, len(contaminated_scored)),
+            "contaminated_accuracy_by_total": safe_ratio(contaminated_correct, len(contaminated_results)),
+        },
         "question_total_all": question_total_all,
         "question_total_scored": question_total_scored,
         "question_any_correct": any_correct,
@@ -547,6 +677,76 @@ def compute_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
         "question_majority_by_total": safe_ratio(majority_correct, question_total_all),
         "by_type": by_type,
     }
+
+
+def detect_contamination(record: PredictionRecord) -> dict[str, Any]:
+    signals: list[str] = []
+    messages = record.load_messages()
+
+    for msg in messages:
+        if not isinstance(msg, dict):
+            continue
+        role = str(msg.get("role", ""))
+        content = msg.get("content", "")
+
+        tool_inputs: list[tuple[str, str]] = []
+        if isinstance(content, list):
+            parts: list[str] = []
+            for block in content:
+                if isinstance(block, str):
+                    parts.append(block)
+                elif isinstance(block, dict):
+                    if block.get("type") == "tool_use":
+                        name = str(block.get("name", ""))
+                        inp = json.dumps(block.get("input", {}), ensure_ascii=False)
+                        tool_inputs.append((name, inp))
+                    text = block.get("text", "")
+                    if text:
+                        parts.append(str(text))
+            text_blob = "\n".join(parts)
+        elif isinstance(content, str):
+            text_blob = content
+        else:
+            text_blob = ""
+
+        text_lower = text_blob.lower()
+        if role == "tool":
+            for pat in _CONTAMINATION_PATH_PATTERNS:
+                if pat.lower() in text_lower:
+                    _append_once(signals, f"tool_result contains path pattern: {pat}")
+            for pat in _CONTAMINATION_CONTENT_PATTERNS:
+                if pat.lower() in text_lower:
+                    _append_once(signals, f"tool_result contains content pattern: {pat}")
+
+        if role == "assistant":
+            for pat in _CONTAMINATION_PATH_PATTERNS:
+                if pat.lower() in text_lower:
+                    _append_once(signals, f"assistant mentions path pattern: {pat}")
+
+        for name, inp in tool_inputs:
+            _check_tool_call(name, inp, signals)
+
+    return {
+        "contaminated": bool(signals),
+        "contamination_signals": signals,
+    }
+
+
+def _check_tool_call(name: str, input_json: str, signals: list[str]) -> None:
+    input_lower = input_json.lower()
+    if name in ("read_file", "search_files", "write_file", "patch"):
+        for pat in _CONTAMINATION_PATH_PATTERNS:
+            if pat.lower() in input_lower:
+                _append_once(signals, f"tool_call {name} targets path pattern: {pat}")
+    if name in ("web_extract", "web_search", "browser_navigate"):
+        for pat in _CONTAMINATION_URL_PATTERNS:
+            if pat.lower() in input_lower:
+                _append_once(signals, f"tool_call {name} contains URL pattern: {pat}")
+
+
+def _append_once(values: list[str], value: str) -> None:
+    if value not in values:
+        values.append(value)
 
 
 def get_chat_template() -> str:
@@ -670,6 +870,12 @@ def infer_question_id(run_id: str, path: Path) -> str:
     if path.parent.name != "conv":
         return path.parent.name
     return run_id
+
+
+def format_record_label(record: PredictionRecord) -> str:
+    if record.repeat_index is None:
+        return record.run_id
+    return f"iter{record.repeat_index}/{record.run_id}"
 
 
 def safe_ratio(numerator: int, denominator: int) -> float | None:
@@ -797,19 +1003,33 @@ def main(argv: list[str] | None = None) -> int:
     )
     metrics = runner.run()
     print("done")
-    print("  " + " ".join(f"{key}={value}" for key, value in metrics.items() if key not in ("by_type", "token_usage", "compression")))
+    hidden_keys = ("by_type", "token_usage", "compression", "turns_distribution", "tokens_distribution", "per_question_stats", "contamination")
+    print("  " + " ".join(f"{key}={value}" for key, value in metrics.items() if key not in hidden_keys))
+    ct_info = metrics.get("contamination", {})
+    if isinstance(ct_info, dict):
+        print(
+            "  contamination: contaminated=%s clean=%s clean_correct=%s clean_accuracy=%s contaminated_accuracy=%s"
+            % (
+                ct_info.get("contaminated_total", 0),
+                ct_info.get("clean_total", 0),
+                ct_info.get("clean_correct", 0),
+                ct_info.get("clean_accuracy", "N/A"),
+                ct_info.get("contaminated_accuracy", "N/A"),
+            )
+        )
     tu = metrics.get("token_usage", {})
     tu_total = tu.get("total", {}) if isinstance(tu, dict) else {}
     tu_avg = tu.get("average_per_run", {}) if isinstance(tu, dict) else {}
     print(
-        "  tokens: runs_with_usage=%s total_input=%s total_output=%s total=%s | avg_input=%s avg_output=%s avg_total=%s avg_api_calls=%s"
+        "  tokens: runs_with_usage=%s input=%s output=%s total_noncache=%s cache_read=%s cache_write=%s total_including_cache=%s | avg_noncache=%s avg_api_calls=%s"
         % (
             tu.get("runs_with_usage", 0) if isinstance(tu, dict) else 0,
             tu_total.get("input_tokens", 0),
             tu_total.get("output_tokens", 0),
             tu_total.get("total_tokens", 0),
-            tu_avg.get("avg_input_tokens", 0),
-            tu_avg.get("avg_output_tokens", 0),
+            tu_total.get("cache_read_tokens", 0),
+            tu_total.get("cache_write_tokens", 0),
+            tu_total.get("total_tokens_including_cache", 0),
             tu_avg.get("avg_total_tokens", 0),
             tu_avg.get("avg_api_call_count", 0),
         )

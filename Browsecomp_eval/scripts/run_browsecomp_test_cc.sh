@@ -15,7 +15,7 @@ MODEL="${MODEL:-gpt-5}"
 PROVIDER="${PROVIDER:-custom}"
 HERMES_BIN="${HERMES_BIN:-/root/.local/bin/hermes}"
 
-DATA_SOURCE="${DATA_SOURCE:-/mnt/afs_agents/sujiaqi/workspace/projects/Browsecomp_eval/data/browsecomp_subset_first3/questions_3.jsonl}"
+DATA_SOURCE="${DATA_SOURCE:-/mnt/afs_agents/sujiaqi/workspace/projects/hermes-agent/Browsecomp_eval/data/browsecomp_subset_first3/questions_3.jsonl}"
 DATASET="${DATASET:-browsecomp_subset_first3}"
 FIRST_N="${FIRST_N:-3}"
 DATA_PATH="${DATA_PATH:-data/${DATASET}/questions_${FIRST_N}.jsonl}"

@@ -875,6 +875,32 @@ class TestChatCompletionsNormalize:
         assert nr.content == "I can't help with that."
         assert nr.provider_data == {"refusal": "I can't help with that."}
 
+    def test_default_api_refusal_text_promoted_to_tool_call(self, transport):
+        """Some Gemini OpenAI-compatible routes put a tool call in refusal.
+
+        That payload is not a safety refusal; it should continue through the
+        normal tool-call path instead of terminating the turn.
+        """
+        r = SimpleNamespace(
+            choices=[SimpleNamespace(
+                message=SimpleNamespace(
+                    content=None, tool_calls=None, reasoning_content=None,
+                    refusal='call:default_api:web_search{query:"John Martinis" birth OR born}',
+                ),
+                finish_reason="content_filter",
+            )],
+            usage=None,
+        )
+        nr = transport.normalize_response(r)
+        assert nr.finish_reason == "tool_calls"
+        assert nr.content == ""
+        assert nr.tool_calls and nr.tool_calls[0].name == "web_search"
+        assert nr.tool_calls[0].arguments == '{"query": "\\"John Martinis\\" birth OR born"}'
+        assert nr.provider_data == {
+            "refusal": 'call:default_api:web_search{query:"John Martinis" birth OR born}',
+            "refusal_promoted_to_tool_call": True,
+        }
+
     def test_refusal_none_is_noop(self, transport):
         """The common case: ``refusal`` is None → behavior unchanged."""
         r = SimpleNamespace(

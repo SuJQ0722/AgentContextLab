@@ -6,15 +6,15 @@ cd "$(dirname "$0")/.."
 # Local OpenAI-compatible Qwen endpoint. This private IP must bypass the
 # global proxy in this environment.
 HERMES_API_KEY="${HERMES_API_KEY:-sk-2f8nSdpTYtOEvTOraocJ3dY4jDinlHRqRgxp3974pwgbbvkp}"
-HERMES_BASE_URL="${HERMES_BASE_URL:-https://tokenhub.sensetime.com/v1}"
+HERMES_BASE_URL="${HERMES_BASE_URL:-http://10.120.1.224:8000/v1}"
 MODEL="${MODEL:-qwen3.5-35b-a3b}"
 
 PROVIDER="${PROVIDER:-custom}"
 HERMES_BIN="${HERMES_BIN:-/root/.local/bin/hermes}"
 
-DATA_SOURCE="${DATA_SOURCE:-/mnt/afs_agents/sujiaqi/workspace/projects/Browsecomp_eval/data/browsecomp_subset_final/questions_200.jsonl}"
-DATASET="${DATASET:-browsecomp_subset_final}"
-FIRST_N="${FIRST_N:-200}"
+DATA_SOURCE="${DATA_SOURCE:-/mnt/afs_agents/sujiaqi/workspace/projects/hermes-agent/Browsecomp_eval/data/browsecomp_subset_final/questions_200.jsonl}"
+DATASET="${DATASET:-browsecomp_subset_200}"
+FIRST_N="${FIRST_N:-100}"
 DATA_PATH="${DATA_PATH:-data/${DATASET}/questions_${FIRST_N}.jsonl}"
 EXPECTED_TOTAL="${EXPECTED_TOTAL:-200}"
 
@@ -25,7 +25,7 @@ MAX_ROUNDS="${MAX_ROUNDS:-200}"
 MAX_RETRIES="${MAX_RETRIES:-3}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-3600}"
 CONTEXT_LENGTH="${CONTEXT_LENGTH:-262144}"
-COMPRESS_THRESHOLD="${COMPRESS_THRESHOLD:-32768}"
+COMPRESS_THRESHOLD="${COMPRESS_THRESHOLD:-65536}"
 HERMES_QUIET="${HERMES_QUIET:-1}"
 HERMES_SESSION_STORAGE_ROOT="${HERMES_SESSION_STORAGE_ROOT:-/root/.hermes/sessions}"
 FORCE="${FORCE:-0}"
@@ -125,30 +125,30 @@ export HERMES_SESSION_STORAGE_ROOT
 # Set context engine (CM=none to disable compression entirely)
 "${HERMES_BIN}" config set context.engine "${CM}"
 
-set +e 
-python -m browsecomp_eval.run \
-  --dataset "${DATASET}" \
-  --data-path "${DATA_PATH}" \
-  --model "${MODEL}" \
-  --provider "${PROVIDER}" \
-  --base-url "${HERMES_BASE_URL}" \
-  --hermes-bin "${HERMES_BIN}" \
-  --save-name "${SAVE_NAME}" \
-  --repeats "${REPEATS}" \
-  --num-workers "${NUM_WORKERS}" \
-  --max-rounds "${MAX_ROUNDS}" \
-  --max-retries "${MAX_RETRIES}" \
-  --timeout-seconds "${TIMEOUT_SECONDS}" \
-  --context-length "${CONTEXT_LENGTH}" \
-  --compression-threshold "${COMPRESS_THRESHOLD}" \
-  --context-engine "${CM}" \
-  --tool-whitelist "${TOOL_WHITELIST}" \
-  --skill-whitelist "${SKILL_WHITELIST}" \
-  --ignore-rules \
-  $(if [[ "${HERMES_QUIET}" == "0" ]]; then printf '%s' "--no-quiet"; fi) \
-  $(if [[ "${FORCE}" == "1" ]]; then printf '%s' "--force"; fi)
-INFER_EXIT=$?
-set -e
+# set +e 
+# python -m browsecomp_eval.run \
+#   --dataset "${DATASET}" \
+#   --data-path "${DATA_PATH}" \
+#   --model "${MODEL}" \
+#   --provider "${PROVIDER}" \
+#   --base-url "${HERMES_BASE_URL}" \
+#   --hermes-bin "${HERMES_BIN}" \
+#   --save-name "${SAVE_NAME}" \
+#   --repeats "${REPEATS}" \
+#   --num-workers "${NUM_WORKERS}" \
+#   --max-rounds "${MAX_ROUNDS}" \
+#   --max-retries "${MAX_RETRIES}" \
+#   --timeout-seconds "${TIMEOUT_SECONDS}" \
+#   --context-length "${CONTEXT_LENGTH}" \
+#   --compression-threshold "${COMPRESS_THRESHOLD}" \
+#   --context-engine "${CM}" \
+#   --tool-whitelist "${TOOL_WHITELIST}" \
+#   --skill-whitelist "${SKILL_WHITELIST}" \
+#   --ignore-rules \
+#   $(if [[ "${HERMES_QUIET}" == "0" ]]; then printf '%s' "--no-quiet"; fi) \
+#   $(if [[ "${FORCE}" == "1" ]]; then printf '%s' "--force"; fi)
+# INFER_EXIT=$?
+# set -e
 
 # ── Judge ────────────────────────────────────────────────────
 echo ""

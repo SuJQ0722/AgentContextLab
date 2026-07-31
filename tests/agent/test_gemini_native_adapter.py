@@ -251,6 +251,15 @@ def test_native_client_uses_x_goog_api_key_and_native_models_endpoint(monkeypatc
     assert response.choices[0].message.content == "hello"
 
 
+def test_tokenhub_is_treated_as_native_gemini_endpoint():
+    from agent.gemini_native_adapter import is_native_gemini_base_url
+
+    assert is_native_gemini_base_url("https://tokenhub.sensetime.com/v1")
+    assert is_native_gemini_base_url("https://tokenhub.sensetime.com/v1beta")
+    assert not is_native_gemini_base_url("https://tokenhub.sensetime.com/v1/openai")
+    assert not is_native_gemini_base_url("https://tokenhub.sensetime.com/v1/chat/completions")
+
+
 @pytest.mark.parametrize("model, expected", [
     ("google/gemini-2.0-flash", "gemini-2.0-flash"),
     ("gemini/gemini-3-pro-preview", "gemini-3-pro-preview"),

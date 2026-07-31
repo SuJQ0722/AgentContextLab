@@ -1,6 +1,6 @@
 # 主流 Agent 框架的上下文管理实现调研
 
-调研对象：**Claude Code**（Anthropic 官方 CLI，闭源 minified）、**Hermes Agent**、**OpenCode**（sst/opencode，主流开源 Claude Code 替代品）、**OpenAI Codex CLI**（openai/codex，Rust 实现）、**DeerFlow**（bytedance/deer-flow，LangGraph 路线）。
+调研对象：**Claude Code**（Anthropic 官方 CLI，闭源 minified）、**Hermes Agent**、**OpenCode**（sst/opencode，主流开源 Claude Code 替代品）、**OpenAI Codex CLI**（openai/codex，Rust 实现）、**DeerFlow**（bytedance/deer-flow，LangGraph 路线）。还有 openclaw
 
 每节给出：核心机制 → 关键源码片段（Codex / DeerFlow / OpenCode / Hermes 来自仓库直读，Claude Code 来自官方文档 + 社区逆向）→ 评价。文末有横向对比表与选型建议。
 

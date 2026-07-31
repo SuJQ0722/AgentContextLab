@@ -1,5 +1,6 @@
 output
 Browsecomp_eval/output/
+*.egg-info
 
 .DS_Store
 /venv/

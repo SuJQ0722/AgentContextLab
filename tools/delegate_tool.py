@@ -39,6 +39,7 @@ _RUNTIME_PROVIDER_CUSTOM = "custom"
 from tools import file_state
 from tools.terminal_tool import set_approval_callback as _set_subagent_approval_cb
 from utils import base_url_hostname, is_truthy_value
+from agent.session_storage import SESSION_KIND_SUBAGENT
 
 
 # Tools that children must never have access to
@@ -1323,6 +1324,9 @@ def _build_child_agent(
         thinking_callback=child_thinking_cb,
         session_db=getattr(parent_agent, "_session_db", None),
         parent_session_id=getattr(parent_agent, "session_id", None),
+        root_session_id=getattr(parent_agent, "_root_session_id", None)
+                        or getattr(parent_agent, "session_id", None),
+        session_kind=SESSION_KIND_SUBAGENT,
         providers_allowed=child_providers_allowed,
         providers_ignored=child_providers_ignored,
         providers_order=child_providers_order,

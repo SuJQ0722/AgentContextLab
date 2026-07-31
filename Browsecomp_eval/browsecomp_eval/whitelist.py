@@ -28,7 +28,7 @@ TOOLSETS: dict[str, dict[str, list[str]]] = {
     "file": {"tools": ["read_file", "write_file", "patch", "search_files"], "includes": []},
     "code_execution": {"tools": ["execute_code"], "includes": []},
     "skills": {"tools": ["skills_list", "skill_view", "skill_manage"], "includes": []},
-    "vision": {"tools": ["vision_analyze"], "includes": []},
+    "vision": {"tools": ["vision_analyze", "image_search", "image_crop", "image_zoom_in"], "includes": []},
     "image_gen": {"tools": ["image_generate"], "includes": []},
     "video": {"tools": ["video_analyze"], "includes": []},
     "video_gen": {"tools": ["video_generate"], "includes": []},

@@ -3,10 +3,16 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-DATASET="${DATASET:-browsecomp_subset_final}"
+DATASET="${DATASET:-browsecomp_subset_200}"
 MODEL="${MODEL:-bailian/deepseek-v4-pro}"
 SAVE_NAME="${SAVE_NAME:-${MODEL//\//_}}"
-PRED_ROOT="${PRED_ROOT:-output/preds/${SAVE_NAME}/${DATASET}}"
+if [[ -z "${PRED_ROOT:-}" ]]; then
+  if [[ "${SAVE_NAME}" == */* ]]; then
+    PRED_ROOT="output/preds/${SAVE_NAME}"
+  else
+    PRED_ROOT="output/preds/${SAVE_NAME}/${DATASET}"
+  fi
+fi
 
 # Azure-style defaults match the reference implementation. For OpenAI-compatible
 # APIs, set JUDGE_PROVIDER=openai and JUDGE_BASE_URL=https://.../v1.
@@ -14,7 +20,7 @@ JUDGE_PROVIDER="${JUDGE_PROVIDER:-openai}"
 JUDGE_MODEL="${JUDGE_MODEL:-gpt-5-mini}"
 JUDGE_BASE_URL="${JUDGE_BASE_URL:-https://tokenhub.sensetime.com/v1}"
 JUDGE_API_VERSION="${JUDGE_API_VERSION:-2024-12-01-preview}"
-JUDGE_API_KEY="${JUDGE_API_KEY:-sk-2f8nSdpTYtOEvTOraocJ3dY4jDinlHRqRgxp3974pwgbbvkp}"
+JUDGE_API_KEY="${JUDGE_API_KEY:-REDACTED_API_KEY}"
 
 JUDGE_NUM_WORKERS="${JUDGE_NUM_WORKERS:-10}"
 JUDGE_MAX_RETRIES="${JUDGE_MAX_RETRIES:-3}"

@@ -38,8 +38,52 @@ from pathlib import Path
 from typing import Any, Optional, Tuple
 
 from agent.model_metadata import estimate_request_tokens_rough, estimate_messages_tokens_rough
+from agent.session_storage import SESSION_KIND_COMPRESSION, sync_agent_session_storage
 
 logger = logging.getLogger(__name__)
+
+
+def _save_compression_turn(agent: Any, old_session_id: str) -> None:
+    """Persist the compression LLM call as a single-turn session JSON file.
+
+    Creates a file named ``session_compress_{old_session_id}.json`` in the
+    agent's logs_dir. Contains the prompt sent to the compressor and the
+    summary it returned — a single user→assistant exchange.
+    """
+    from datetime import datetime as _dt
+
+    compressor = getattr(agent, "context_compressor", None)
+    if compressor is None:
+        return
+    prompt_text = getattr(compressor, "_last_compression_prompt", None)
+    summary_text = getattr(compressor, "_last_compression_summary", None)
+    if not prompt_text or not summary_text:
+        return
+
+    logs_dir = getattr(agent, "logs_dir", None)
+    if not logs_dir:
+        return
+
+    messages = [
+        {"role": "user", "content": prompt_text},
+        {"role": "assistant", "content": summary_text},
+    ]
+
+    entry = {
+        "session_id": f"compress_{old_session_id}",
+        "parent_session_id": old_session_id,
+        "child_session_id": agent.session_id,
+        "session_kind": "compression_turn",
+        "model": getattr(compressor, "summary_model", None) or getattr(compressor, "model", ""),
+        "timestamp": _dt.now().isoformat(),
+        "message_count": 2,
+        "messages": messages,
+    }
+
+    from utils import atomic_json_write
+    log_file = Path(logs_dir) / f"session_compress_{old_session_id}.json"
+    atomic_json_write(log_file, entry, indent=2, default=str)
+
 
 # Stable marker the gateway matches on to re-tag the auto-compaction lifecycle
 # status as ``kind="compacting"`` (tui_gateway/server.py::_status_update), so
@@ -705,11 +749,21 @@ def compress_context(
                         agent._flush_messages_to_session_db(messages)
                     except Exception:
                         pass  # best-effort — don't block compression on a flush error
+                    # Trajectory: snapshot pre-compression messages under the
+                    # current (soon-to-be-old) session_id before rotation.
+                    try:
+                        agent._save_session_log(messages)
+                    except Exception:
+                        pass
                     # Propagate title to the new session with auto-numbering
                     old_title = agent._session_db.get_session_title(agent.session_id)
                     agent._session_db.end_session(agent.session_id, "compression")
                     old_session_id = agent.session_id
                     agent.session_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+                    agent.session_kind = SESSION_KIND_COMPRESSION
+                    agent._parent_session_id = old_session_id
+                    agent._root_session_id = getattr(agent, "_root_session_id", None) or old_session_id
+                    sync_agent_session_storage(agent)
                     # Ordering contract: the agent thread updates the contextvar here;
                     # the gateway propagates to SessionEntry after run_in_executor returns.
                     try:
@@ -825,6 +879,15 @@ def compress_context(
         _old_sid = locals().get("old_session_id")
         _is_boundary = bool(_old_sid) or in_place
         _boundary_parent = _old_sid or agent.session_id or ""
+
+        # Trajectory: persist the single-turn compression call as a separate
+        # session file so the full trajectory (pre-compress → compressor call →
+        # post-compress) is recoverable from JSON snapshots.
+        if _old_sid and getattr(agent, "_session_json_enabled", False):
+            try:
+                _save_compression_turn(agent, _old_sid)
+            except Exception as _ct_err:
+                logger.debug("Failed to save compression turn: %s", _ct_err)
 
         # Notify the context engine that a compaction boundary occurred. Plugin
         # engines (e.g. hermes-lcm) use boundary_reason="compression" to preserve

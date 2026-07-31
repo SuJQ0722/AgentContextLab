@@ -12,7 +12,7 @@ PROVIDER="${PROVIDER:-custom}"
 HERMES_BIN="${HERMES_BIN:-/root/hermes-agent/.venv/bin/hermes}"
 
 # ── Dataset ──────────────────────────────────────────────────
-DATA_SOURCE="${DATA_SOURCE:-/mnt/afs_agents/sujiaqi/workspace/projects/Browsecomp_eval/data/browsecomp_subset_final/questions.jsonl}"
+DATA_SOURCE="${DATA_SOURCE:-/mnt/afs_agents/sujiaqi/workspace/projects/hermes-agent/Browsecomp_eval/data/browsecomp_subset_final/questions.jsonl}"
 DATASET="${DATASET:-browsecomp_subset_100}"
 DATA_PATH="${DATA_PATH:-data/${DATASET}/questions.jsonl}"
 EXPECTED_TOTAL="${EXPECTED_TOTAL:-100}"

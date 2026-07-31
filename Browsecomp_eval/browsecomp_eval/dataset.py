@@ -17,6 +17,7 @@ class DatasetItem:
     answer: str
     type: str
     source_line: int
+    image: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -52,7 +53,32 @@ def _coerce_item(raw: dict, source_line: int) -> DatasetItem:
         answer=str(raw["answer"]),
         type=str(raw["type"]),
         source_line=source_line,
+        image=_coerce_image(raw.get("image")),
     )
+
+
+def _coerce_image(value: object) -> tuple[str, ...]:
+    if value is None or value == "":
+        return ()
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return ()
+        if stripped.startswith("["):
+            try:
+                return _coerce_image(json.loads(stripped))
+            except json.JSONDecodeError:
+                pass
+        return (stripped,)
+    if isinstance(value, (list, tuple)):
+        images: list[str] = []
+        for item in value:
+            text = str(item).strip()
+            if text:
+                images.append(text)
+        return tuple(images)
+    text = str(value).strip()
+    return (text,) if text else ()
 
 
 def load_dataset(path: str | Path) -> List[DatasetItem]:

@@ -57,7 +57,7 @@ output/preds/{save_name}/{dataset}/judge_summary.jsonl
 output/preds/{save_name}/{dataset}/judge_metrics.json
 ```
 
-Existing result files with `status=success` or `status=policy_violation` are skipped by default. Use `--force` to rerun everything.
+Existing result files with `status=success` are skipped by default. `failed` and `policy_violation` runs are retried on resume. Use `--force` to rerun everything.
 
 ## Judge
 

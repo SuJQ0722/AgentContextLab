@@ -40,6 +40,11 @@ from agent.model_metadata import (
     query_ollama_num_ctx,
 )
 from agent.process_bootstrap import _install_safe_stdio
+from agent.session_storage import (
+    get_sessions_root,
+    normalize_session_kind,
+    sync_agent_session_storage,
+)
 from agent.subdirectory_hints import SubdirectoryHintTracker
 from agent.think_scrubber import StreamingThinkScrubber
 from agent.tool_guardrails import (
@@ -227,6 +232,8 @@ def init_agent(
     skip_memory: bool = False,
     session_db=None,
     parent_session_id: str = None,
+    session_kind: str = None,
+    root_session_id: str = None,
     iteration_budget: "IterationBudget" = None,
     fallback_model: Dict[str, Any] = None,
     credential_pool=None,
@@ -1114,19 +1121,24 @@ def init_agent(
     except Exception:
         os.environ["HERMES_SESSION_ID"] = agent.session_id
 
-    # Session logs go into ~/.hermes/sessions/ alongside gateway sessions
-    hermes_home = get_hermes_home()
-    agent.logs_dir = hermes_home / "sessions"
-    agent.logs_dir.mkdir(parents=True, exist_ok=True)
-    # Per-session JSON snapshot writer (~/.hermes/sessions/session_{sid}.json)
-    # is opt-in via sessions.write_json_snapshots (default False).  state.db
-    # is canonical — the snapshot is only useful for external tooling that
-    # reads the JSON files directly.  See run_agent._save_session_log.
-    agent._session_json_enabled = False
+    agent.session_kind = normalize_session_kind(
+        session_kind,
+        parent_session_id=parent_session_id,
+    )
+    agent._root_session_id = root_session_id or parent_session_id or agent.session_id
+    # JSON snapshots live under HERMES_HOME / ~/.hermes and keep the
+    # <model>/<dataset>/<task>/<main|subagents> namespace split.
+    agent.sessions_root_dir = get_sessions_root(model_name=agent.model)
+    sync_agent_session_storage(agent)
+    # Per-session JSON snapshot writer.  BrowseComp-style evaluation tooling
+    # consumes these grouped files under ~/.hermes/sessions, so keep them on
+    # by default while allowing users to disable via sessions.write_json_snapshots.
+    # state.db remains the canonical store.  See run_agent._save_session_log.
+    agent._session_json_enabled = True
     try:
         from hermes_cli.config import load_config as _load_sess_cfg
         _sess_cfg = (_load_sess_cfg().get("sessions") or {})
-        agent._session_json_enabled = bool(_sess_cfg.get("write_json_snapshots", False))
+        agent._session_json_enabled = bool(_sess_cfg.get("write_json_snapshots", True))
     except Exception:
         pass
     # logs_dir is retained unconditionally for request_dump_*.json (debug

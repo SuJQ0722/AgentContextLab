@@ -56,9 +56,13 @@ def is_native_gemini_base_url(base_url: str) -> bool:
     normalized = str(base_url or "").strip().rstrip("/").lower()
     if not normalized:
         return False
-    if "generativelanguage.googleapis.com" not in normalized:
+    native_hosts = (
+        "generativelanguage.googleapis.com",
+        "tokenhub.sensetime.com",
+    )
+    if not any(host in normalized for host in native_hosts):
         return False
-    return not normalized.endswith("/openai")
+    return not normalized.endswith(("/openai", "/chat/completions"))
 
 
 def probe_gemini_tier(

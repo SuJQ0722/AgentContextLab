@@ -487,6 +487,8 @@ class AIAgent:
         skip_memory: bool = False,
         session_db=None,
         parent_session_id: str = None,
+        session_kind: str = None,
+        root_session_id: str = None,
         iteration_budget: "IterationBudget" = None,
         fallback_model: Dict[str, Any] = None,
         credential_pool=None,
@@ -562,6 +564,8 @@ class AIAgent:
             skip_memory=skip_memory,
             session_db=session_db,
             parent_session_id=parent_session_id,
+            session_kind=session_kind,
+            root_session_id=root_session_id,
             iteration_budget=iteration_budget,
             fallback_model=fallback_model,
             credential_pool=credential_pool,
@@ -2592,6 +2596,9 @@ class AIAgent:
 
             entry = {
                 "session_id": self.session_id,
+                "parent_session_id": getattr(self, "_parent_session_id", None),
+                "root_session_id": getattr(self, "_root_session_id", None) or self.session_id,
+                "session_kind": getattr(self, "session_kind", "primary"),
                 "model": self.model,
                 "base_url": self.base_url,
                 "platform": self.platform,

@@ -237,6 +237,7 @@ _EMPTY_OK_COMMANDS: frozenset = frozenset({"close", "record"})
 
 _cached_command_timeout: Optional[int] = None
 _command_timeout_resolved = False
+_command_timeout_lock = threading.Lock()
 
 
 def _sanitize_url_for_logs(value: object) -> str:
@@ -259,24 +260,22 @@ def _get_command_timeout() -> int:
     cached after the first call and cleared by ``cleanup_all_browsers()``.
     """
     global _cached_command_timeout, _command_timeout_resolved
-    if _command_timeout_resolved and _cached_command_timeout is not None:
-        return _cached_command_timeout
+    with _command_timeout_lock:
+        if _command_timeout_resolved and _cached_command_timeout is not None:
+            return _cached_command_timeout
 
-    result = DEFAULT_COMMAND_TIMEOUT
-    try:
-        from hermes_cli.config import read_raw_config
-        cfg = read_raw_config()
-        val = cfg_get(cfg, "browser", "command_timeout")
-        if val is not None:
-            result = max(int(val), 5)  # Floor at 5s to avoid instant kills
-    except Exception as e:
-        logger.debug("Could not read command_timeout from config: %s", e)
-    # Assign the cached value BEFORE flipping the resolved flag so a
-    # concurrent reader cannot observe ``resolved=True`` while the cache
-    # is still ``None`` (see issue #14331).
-    _cached_command_timeout = result
-    _command_timeout_resolved = True
-    return result
+        result = DEFAULT_COMMAND_TIMEOUT
+        try:
+            from hermes_cli.config import read_raw_config
+            cfg = read_raw_config()
+            val = cfg_get(cfg, "browser", "command_timeout")
+            if val is not None:
+                result = max(int(val), 5)  # Floor at 5s to avoid instant kills
+        except Exception as e:
+            logger.debug("Could not read command_timeout from config: %s", e)
+        _cached_command_timeout = result
+        _command_timeout_resolved = True
+        return result
 
 
 def _safe_command_timeout() -> int:

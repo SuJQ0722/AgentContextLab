@@ -17,6 +17,7 @@ from .dataset import RunSpec
 from .session_reader import (
     _TOKEN_COLUMNS,
     _empty_token_usage,
+    _finalize_token_usage,
     extract_final_assistant_message,
     extract_trace,
     load_child_sessions,
@@ -94,6 +95,7 @@ class HermesConfig:
     api_mode: str | None = None
     compression_threshold: float | None = None
     context_engine: str | None = None
+    context_image_dir: Path | None = None
 
 
 class HermesClient:
@@ -103,11 +105,12 @@ class HermesClient:
     def run(self, spec: RunSpec, workspace_dir: Path, attempt: int) -> dict[str, Any]:
         workspace_dir.mkdir(parents=True, exist_ok=True)
         profile = profile_name(self.config.save_name, spec.question_id, spec.repeat_index, attempt)
-        self._setup_profile(profile, workspace_dir)
+        context_image_dir = self._context_image_dir(spec, attempt)
+        self._setup_profile(profile, workspace_dir, context_image_dir)
 
         query = build_query(spec, enable_delegate=has_delegation_tool(self.config.toolsets))
         cmd = self._build_chat_command(profile, query)
-        env = self._build_env(spec)
+        env = self._build_env(spec, workspace_dir)
 
         started = time.time()
         stdout = ""
@@ -149,7 +152,11 @@ class HermesClient:
         token_usage = load_token_usage(session_id, profile)
         delegate_sessions = load_child_sessions(session_id, profile) if session_id else []
         model_response, final_assistant_error = extract_final_assistant_message(session)
-        compression_stats = _load_compression_stats(workspace_dir.parent)
+        compression_stats = _load_compression_stats(context_image_dir or workspace_dir.parent)
+        compression_count = max(
+            int((session_full or {}).get("compression_count", 0) or 0),
+            _compression_count_from_stats(compression_stats),
+        )
         compression_snapshots = load_compression_snapshots(session_id, profile) if session_id else []
 
         delegate_token_usage = _empty_token_usage()
@@ -160,15 +167,21 @@ class HermesClient:
                 child_usage = load_token_usage(child_id, profile)
                 for col in _TOKEN_COLUMNS:
                     delegate_token_usage[col] += child_usage.get(col, 0)
-                delegate_token_usage["total_tokens"] += child_usage.get("total_tokens", 0)
                 delegate_token_usage["session_count"] += child_usage.get("session_count", 0)
                 child_snaps = load_compression_snapshots(child_id, profile)
                 if child_snaps:
                     delegate_compression_snapshots[child_id] = child_snaps
+        _finalize_token_usage(delegate_token_usage)
+
+        api_call_count = int(token_usage.get("api_call_count", 0) or 0)
+        reached_round_limit = _reached_round_limit(api_call_count, self.config.max_rounds)
 
         status = "success"
         api_code, api_msg = parse_api_error(stderr)
-        if api_code is not None:
+        if reached_round_limit:
+            status = "failed"
+            error = f"reached max rounds ({api_call_count}/{self.config.max_rounds})"
+        elif api_code is not None:
             status = "failed"
             error = f"HTTP {api_code}: {api_msg}"
         elif timed_out or error or (returncode not in (0, None)):
@@ -179,6 +192,7 @@ class HermesClient:
             reason = _extract_fail_reason(stdout, stderr, agent_log_text)
             if reason and reason not in error:
                 error = f"{error} | {reason}"
+
         if not model_response and status == "success":
             status = "failed"
             error = final_assistant_error or "empty final assistant response"
@@ -191,6 +205,7 @@ class HermesClient:
             "question": spec.item.question,
             "answer": spec.item.answer,
             "type": spec.item.type,
+            "image": list(spec.item.image),
             "model": self.config.model,
             "provider": self.config.provider,
             "save_name": self.config.save_name,
@@ -205,6 +220,7 @@ class HermesClient:
             "session_id": session_id,
             "profile": profile,
             "workspace_dir": str(workspace_dir),
+            "context_image_dir": str(context_image_dir) if context_image_dir else "",
             "output_files": list_workspace_files(workspace_dir),
             "tool_calls": trace["tool_calls"],
             "rounds": trace["rounds"],
@@ -221,7 +237,7 @@ class HermesClient:
             "agent_log_tail": read_profile_agent_log_tail(profile),
             "history": (session_full or session or {}).get("messages", []),
             "compressed_session_messages": (session or {}).get("messages", []),
-            "compression_count": (session_full or {}).get("compression_count", 0),
+            "compression_count": compression_count,
             "compression_stats": compression_stats,
             "compression_snapshots": compression_snapshots,
             "delegate_sessions": delegate_sessions,
@@ -229,7 +245,12 @@ class HermesClient:
             "delegate_compression_snapshots": delegate_compression_snapshots,
         }
 
-    def _setup_profile(self, profile: str, workspace_dir: Path) -> None:
+    def _setup_profile(
+        self,
+        profile: str,
+        workspace_dir: Path,
+        context_image_dir: Path | None = None,
+    ) -> None:
         self._run_hermes(["profile", "create", profile, "--no-alias"], check=False)
         self._copy_default_profile_config(profile)
 
@@ -245,18 +266,28 @@ class HermesClient:
             ("model.api_key", self.config.api_key),
             ("terminal.timeout", str(max(120, self.config.timeout_seconds))),
             ("terminal.cwd", "."),
-            # Pin visual-compression image/PDF output to the per-question workspace
-            # (one level above attempt_N) so artifacts survive retries and sit at
-            # the level a human inspector expects.
-            ("context.strategy_config.save_dir", str(workspace_dir.parent)),
+            # BrowseComp anti-hack: run execute_code in a namespace sandbox with
+            # no host filesystem, no network, and no tool RPC access.
+            ("code_execution.mode", "strict"),
+            ("code_execution.filesystem_access", "none"),
+            ("code_execution.network_access", "none"),
+            ("code_execution.tool_access", "none"),
             # Eval isolation: keep every run hermetic. Disable cross-session
             # memory (no reading or writing a persistent profile/user store)
             # and the curator (background skill auto-evolution / archiving) so
             # one question's run can neither pollute nor be polluted by another.
+            ("agent.coding_context", "off"),
             ("memory.memory_enabled", "false"),
             ("memory.user_profile_enabled", "false"),
             ("curator.enabled", "false"),
+            ("sessions.write_json_snapshots", "true"),
         ]
+        if context_image_dir:
+            # Visual compression sends data:image/png;base64 parts directly in
+            # model requests; these files are inspection sidecars only. Keep
+            # them next to history/conv under the persistent eval output tree,
+            # not inside the agent scratch workspace.
+            configs.append(("context.strategy_config.save_dir", str(context_image_dir)))
         if self.config.context_length:
             configs.append(("model.context_length", str(self.config.context_length)))
         if self.config.reasoning_effort:
@@ -267,25 +298,42 @@ class HermesClient:
             configs.append(("tool_output.max_bytes", str(self.config.max_tool_response_tokens)))
         if self.config.api_mode:
             configs.append(("model.api_mode", self.config.api_mode))
-        if self.config.compression_threshold is not None:
+        context_engine = (self.config.context_engine or "").strip()
+        compression_disabled = context_engine.lower() in {"none", "off", "false", "0"}
+        if compression_disabled:
+            configs.append(("compression.enabled", "false"))
+            # Neutralize any context.engine copied from the default profile.
+            configs.append(("context.engine", "compressor"))
+        elif self.config.compression_threshold is not None:
             threshold = self.config.compression_threshold
             if threshold >= 1.0:
                 ctx_len = self.config.context_length or 262144
                 threshold = threshold / ctx_len
             configs.append(("compression.enabled", "true"))
             configs.append(("compression.threshold", str(threshold)))
-        if self.config.context_engine:
-            configs.append(("context.engine", self.config.context_engine))
+        if context_engine and not compression_disabled:
+            configs.append(("context.engine", context_engine))
 
         for key, value in configs:
             self._run_hermes(["--profile", profile, "config", "set", key, value])
 
+        # Enable the BrowseComp anti-cheat guard plugin for this eval profile.
+        # The plugin itself also checks BROWSE_COMP_RUN_ID before acting.
+        self._run_hermes(
+            ["--profile", profile, "plugins", "enable", "browsecomp_guard"]
+        )
+
+    def _context_image_dir(self, spec: RunSpec, attempt: int) -> Path | None:
+        if self.config.context_image_dir is None:
+            return None
+        return self.config.context_image_dir / f"iter{spec.repeat_index}" / spec.question_id / f"attempt_{attempt}"
+
     def _copy_default_profile_config(self, profile: str) -> None:
-        default_home = Path.home() / ".hermes"
-        profile_home = default_home / "profiles" / profile
+        source_home = source_hermes_home()
+        profile_home = hermes_root_home() / "profiles" / profile
         profile_home.mkdir(parents=True, exist_ok=True)
         for filename in ("config.yaml", ".env"):
-            src = default_home / filename
+            src = source_home / filename
             if src.exists():
                 shutil.copy2(src, profile_home / filename)
         self._merge_profile_env(profile_home / ".env")
@@ -334,7 +382,7 @@ class HermesClient:
             cmd.append("--ignore-rules")
         return cmd
 
-    def _build_env(self, spec: RunSpec) -> dict[str, str]:
+    def _build_env(self, spec: RunSpec, workspace_dir: Path) -> dict[str, str]:
         env = os.environ.copy()
         env["ANTHROPIC_API_KEY"] = self.config.api_key
         env["OPENAI_API_KEY"] = self.config.api_key
@@ -347,12 +395,29 @@ class HermesClient:
             env["no_proxy"] = no_proxy
         env["HERMES_SESSION_MODEL"] = self.config.save_name
         env["HERMES_SESSION_DATASET"] = self.config.dataset
-        env.setdefault("HERMES_SESSION_STORAGE_ROOT", str(Path.home() / ".hermes" / "sessions"))
+        # Build per-run session storage root so each question gets an
+        # isolated directory:  <base>/<model>/iter_<N>/<q_id>/
+        # When the caller sets HERMES_SESSION_STORAGE_ROOT (e.g. run_data_pipeline.sh
+        # points it to output/data_synthesis), we use it directly as the base —
+        # the dataset context is already encoded in that path.
+        # When unset, we fall back to ~/.hermes/sessions/<dataset>.
+        _sessions_base = os.environ.get("HERMES_SESSION_STORAGE_ROOT", "").strip()
+        if _sessions_base:
+            session_root = Path(_sessions_base) / self.config.save_name / f"iter_{spec.repeat_index}" / spec.question_id
+        else:
+            session_root = Path.home() / ".hermes" / "sessions" / self.config.dataset / self.config.save_name / f"iter_{spec.repeat_index}" / spec.question_id
+        env["HERMES_SESSION_STORAGE_ROOT"] = str(session_root)
         env["HERMES_SESSION_TASK_TYPE"] = spec.item.type
         env["HERMES_SESSION_TASK_ID"] = spec.question_id
         env["HERMES_SESSION_TASK_NAME"] = spec.question_id
         env.pop("HERMES_TASK_ID", None)
         env["BROWSE_COMP_RUN_ID"] = f"iter{spec.repeat_index}/{spec.question_id}"
+        env["HERMES_READ_DENY_PREFIXES"] = "/mnt"
+        image_roots = local_image_roots(spec.item.image)
+        env["HERMES_READ_DENY_ALLOW_PREFIXES"] = os.pathsep.join([str(workspace_dir), *image_roots])
+        if image_roots:
+            env["HERMES_IMAGE_ROOT"] = os.pathsep.join(image_roots)
+        env["HERMES_URL_DENY_PATTERNS"] = "browsecomp"
         return env
 
     def _merge_profile_env(self, env_path: Path) -> None:
@@ -388,10 +453,35 @@ class HermesClient:
         host = endpoint_host(self.config.base_url)
         if host:
             additions.append(host)
+        additions.extend(configured_web_backend_hosts())
         return additions
 
 def has_delegation_tool(toolsets: list[str]) -> bool:
     return any(toolset.strip() == "delegation" for toolset in toolsets)
+
+
+def local_image_roots(images: tuple[str, ...]) -> list[str]:
+    roots: list[str] = []
+    for image in images:
+        text = str(image).strip()
+        if not text or "://" in text or text.startswith("data:"):
+            continue
+        path = Path(os.path.expanduser(text))
+        if not path.is_absolute():
+            continue
+        root = path.parent if path.suffix else path
+        try:
+            resolved = str(root.resolve())
+        except OSError:
+            resolved = str(root)
+        if resolved not in roots:
+            roots.append(resolved)
+    return roots
+
+
+def _reached_round_limit(api_call_count: int, max_rounds: int) -> bool:
+    """Return True once an eval attempt consumes its configured call budget."""
+    return max_rounds > 0 and api_call_count >= max_rounds
 
 
 def build_query(spec: RunSpec, enable_delegate: bool = False) -> str:
@@ -412,10 +502,23 @@ def build_query(spec: RunSpec, enable_delegate: bool = False) -> str:
     )
     task = (
         f"Task type: {spec.item.type}\n"
+        f"{format_images_for_prompt(spec.item.image)}"
         f"Question:\n{spec.item.question}\n\n"
         "Return the final answer clearly."
     )
     return base + (delegate_prompt if enable_delegate else "") + task
+
+
+def format_images_for_prompt(images: tuple[str, ...]) -> str:
+    if not images:
+        return ""
+    lines = ["Images:"]
+    for idx, image in enumerate(images, start=1):
+        lines.append(f"{idx}. {image}")
+    lines.append(
+        "Use these image URLs or local image paths with vision/image tools when visual information is needed."
+    )
+    return "\n".join(lines) + "\n\n"
 
 
 def profile_name(save_name: str, question_id: str, repeat_index: int, attempt: int) -> str:
@@ -433,6 +536,87 @@ def endpoint_host(base_url: str) -> str:
         return urlparse(base_url).hostname or ""
     except Exception:
         return ""
+
+
+def hermes_root_home() -> Path:
+    try:
+        from hermes_constants import get_default_hermes_root
+
+        return get_default_hermes_root()
+    except Exception:
+        return Path.home() / ".hermes"
+
+
+def source_hermes_home() -> Path:
+    env_home = os.environ.get("HERMES_HOME", "").strip()
+    if env_home:
+        return Path(env_home).expanduser()
+
+    root = hermes_root_home()
+    active_path = root / "active_profile"
+    try:
+        active = active_path.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        active = ""
+    if active and active != "default":
+        candidate = root / "profiles" / active
+        if candidate.is_dir():
+            return candidate
+    return root
+
+
+def configured_web_backend_hosts(config_path: Path | None = None) -> list[str]:
+    """Return web backend hosts that should bypass process HTTP proxies."""
+    path = config_path or (source_hermes_home() / "config.yaml")
+    try:
+        import yaml
+    except ImportError:
+        return []
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except Exception:
+        return []
+    if not isinstance(data, dict):
+        return []
+
+    web = data.get("web", {})
+    if not isinstance(web, dict):
+        return []
+    hosts: list[str] = []
+
+    def add_url(value: Any) -> None:
+        host = endpoint_host(str(value or ""))
+        if host:
+            hosts.append(host)
+
+    def add_host(value: Any) -> None:
+        raw = str(value or "").strip()
+        if not raw:
+            return
+        if "://" in raw:
+            add_url(raw)
+        else:
+            hosts.append(raw.split("/", 1)[0].split(":", 1)[0])
+
+    local_web = web.get("local_web", {})
+    if isinstance(local_web, dict):
+        search = local_web.get("search", {})
+        if isinstance(search, dict):
+            add_host(search.get("url"))
+        fetch = local_web.get("fetch", {})
+        if isinstance(fetch, dict):
+            fetch_server = fetch.get("fetch_server", {})
+            if isinstance(fetch_server, dict):
+                add_url(fetch_server.get("base_url"))
+
+    for section_name in ("search_server", "fetch_server"):
+        section = web.get(section_name, {})
+        if not isinstance(section, dict):
+            continue
+        add_url(section.get("base_url") or section.get("endpoint"))
+        add_host(section.get("url"))
+
+    return list(dict.fromkeys(hosts))
 
 
 def merge_no_proxy(existing: str, additions: list[str]) -> str:
@@ -530,3 +714,12 @@ def _load_compression_stats(save_dir: Path) -> dict[str, Any]:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return {}
+
+
+def _compression_count_from_stats(stats: dict[str, Any]) -> int:
+    if not isinstance(stats, dict):
+        return 0
+    try:
+        return int(stats.get("compressions", 0) or 0)
+    except (TypeError, ValueError):
+        return 0

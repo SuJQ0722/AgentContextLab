@@ -23,7 +23,6 @@ class RunnerConfig:
     skip_statuses: set[str]
     allowed_tools: set[str]
     conv_dir: Path | None = None
-    compress_trace_dir: Path | None = None
 
 
 class BrowseCompRunner:
@@ -38,8 +37,6 @@ class BrowseCompRunner:
         self.config.summary_path.parent.mkdir(parents=True, exist_ok=True)
         if self.config.conv_dir:
             self.config.conv_dir.mkdir(parents=True, exist_ok=True)
-        if self.config.compress_trace_dir:
-            self.config.compress_trace_dir.mkdir(parents=True, exist_ok=True)
 
         all_specs = list(specs)
         pending = [spec for spec in all_specs if self._should_run(spec)]
@@ -63,7 +60,7 @@ class BrowseCompRunner:
                     self._write_result(spec, result)
                 status = result.get("status", "failed")
                 stats[status] = stats.get(status, 0) + 1
-                print(f"[{completed}/{len(pending)}] {spec.run_id}: {status}")
+                print(f"[{completed}/{len(pending)}] {format_run_label(spec)}: {status}")
         return stats
 
     def _should_run(self, spec: RunSpec) -> bool:
@@ -130,9 +127,6 @@ class BrowseCompRunner:
         if self.config.conv_dir:
             self._write_conv(spec, result)
 
-        if self.config.compress_trace_dir:
-            self._write_compression_snapshots(spec, result)
-
         summary = {
             "run_id": result.get("run_id"),
             "question_id": result.get("question_id"),
@@ -153,6 +147,7 @@ class BrowseCompRunner:
             "delegate_token_usage": result.get("delegate_token_usage", {}),
             "result_path": str(path),
             "workspace_dir": result.get("workspace_dir"),
+            "context_image_dir": result.get("context_image_dir", ""),
         }
         with self._summary_lock:
             with self.config.summary_path.open("a", encoding="utf-8") as f:
@@ -171,10 +166,12 @@ class BrowseCompRunner:
             "question": result.get("question"),
             "answer": result.get("answer"),
             "type": result.get("type"),
+            "image": result.get("image", []),
             "model": result.get("model"),
             "status": result.get("status"),
             "model_response": result.get("model_response"),
             "session_id": result.get("session_id"),
+            "rounds": result.get("rounds", 0),
             "compression_count": result.get("compression_count", 0),
             "compression_stats": result.get("compression_stats", {}),
             "token_usage": result.get("token_usage", {}),
@@ -185,6 +182,7 @@ class BrowseCompRunner:
             "messages": result.get("compressed_session_messages", []),
             "delegate_sessions": result.get("delegate_sessions", []),
             "delegate_token_usage": result.get("delegate_token_usage", {}),
+            "context_image_dir": result.get("context_image_dir", ""),
         }
         tmp = conv_path.with_suffix(conv_path.suffix + ".tmp")
         tmp.write_text(json.dumps(conv_data, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -209,108 +207,6 @@ class BrowseCompRunner:
             "delegate_token_usage": {},
         }
 
-    def _write_compression_snapshots(self, spec: RunSpec, result: dict) -> None:
-        snapshots = result.get("compression_snapshots", [])
-        delegate_snapshots = result.get("delegate_compression_snapshots", {})
 
-        base = self.config.compress_trace_dir / f"iter{spec.repeat_index}" / spec.question_id
-        base.mkdir(parents=True, exist_ok=True)
-
-        # Main agent traces:
-        # - No compression: 1 file (full_trajectory.json)
-        # - N compressions: 2N+1 files (compress_{i}_pre, compress_{i}_summary, compress_{N}_post)
-        #   where compress_{i}_post == compress_{i+1}_pre for consecutive events
-        if not snapshots:
-            self._write_json_atomic(
-                base / "full_trajectory.json",
-                {
-                    "session_id": result.get("session_id"),
-                    "compression_count": 0,
-                    "messages": result.get("history", []),
-                },
-            )
-        else:
-            for snap in snapshots:
-                idx = snap["compress_index"]
-                self._write_json_atomic(
-                    base / f"compress_{idx}_pre.json",
-                    {
-                        "compress_index": idx,
-                        "session_id": snap.get("pre_session_id"),
-                        "messages": snap.get("pre_compress_messages", []),
-                    },
-                )
-                sm = snap.get("summary_message", {})
-                self._write_json_atomic(
-                    base / f"compress_{idx}_summary.json",
-                    {
-                        "compress_index": idx,
-                        "pre_session_id": snap.get("pre_session_id"),
-                        "post_session_id": snap.get("post_session_id"),
-                        "input": sm.get("input", []),
-                        "output": sm.get("output"),
-                    },
-                )
-            # Last post = final session state (from the last compression onward)
-            last = snapshots[-1]
-            self._write_json_atomic(
-                base / f"compress_{last['compress_index']}_post.json",
-                {
-                    "compress_index": last["compress_index"],
-                    "session_id": last.get("post_session_id"),
-                    "messages": last.get("post_compress_messages", []),
-                },
-            )
-
-        # Delegate traces: same logic per delegate
-        for ds in result.get("delegate_sessions", []):
-            child_id = ds.get("session_id", "")
-            dbase = base / f"delegate_{child_id}"
-            dbase.mkdir(parents=True, exist_ok=True)
-            child_snaps = delegate_snapshots.get(child_id, [])
-            if not child_snaps:
-                self._write_json_atomic(
-                    dbase / "full_trajectory.json",
-                    {
-                        "session_id": child_id,
-                        "compression_count": 0,
-                        "messages": ds.get("messages", []),
-                    },
-                )
-            else:
-                for snap in child_snaps:
-                    idx = snap["compress_index"]
-                    self._write_json_atomic(
-                        dbase / f"compress_{idx}_pre.json",
-                        {
-                            "compress_index": idx,
-                            "session_id": snap.get("pre_session_id"),
-                            "messages": snap.get("pre_compress_messages", []),
-                        },
-                    )
-                    sm = snap.get("summary_message", {})
-                    self._write_json_atomic(
-                        dbase / f"compress_{idx}_summary.json",
-                        {
-                            "compress_index": idx,
-                            "pre_session_id": snap.get("pre_session_id"),
-                            "post_session_id": snap.get("post_session_id"),
-                            "input": sm.get("input", []),
-                            "output": sm.get("output"),
-                        },
-                    )
-                last = child_snaps[-1]
-                self._write_json_atomic(
-                    dbase / f"compress_{last['compress_index']}_post.json",
-                    {
-                        "compress_index": last["compress_index"],
-                        "session_id": last.get("post_session_id"),
-                        "messages": last.get("post_compress_messages", []),
-                    },
-                )
-
-    @staticmethod
-    def _write_json_atomic(path: Path, data: dict) -> None:
-        tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp.replace(path)
+def format_run_label(spec: RunSpec) -> str:
+    return f"iter{spec.repeat_index}/{spec.run_id}"

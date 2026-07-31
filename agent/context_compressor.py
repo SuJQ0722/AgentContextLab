@@ -1036,6 +1036,10 @@ class ContextCompressor(ContextEngine):
         # succeeded.  Silent recovery would hide the broken config.
         self._last_aux_model_failure_error: Optional[str] = None
         self._last_aux_model_failure_model: Optional[str] = None
+        # Trajectory capture: store the last compression prompt and response
+        # so session_storage can persist the single-turn compression call.
+        self._last_compression_prompt: Optional[str] = None
+        self._last_compression_summary: Optional[str] = None
 
     def update_from_response(self, usage: Dict[str, Any]):
         """Update tracked token usage from API response."""
@@ -1792,6 +1796,8 @@ Use this exact structure:
 FOCUS TOPIC: "{focus_topic}"
 This compaction should PRIORITISE preserving all information related to the focus topic above. For content related to "{focus_topic}", include full detail — exact values, file paths, command outputs, error messages, and decisions. For content NOT related to the focus topic, summarise more aggressively (brief one-liners or omit if truly irrelevant). The focus topic sections should receive roughly 60-70% of the summary token budget. Even for the focus topic, NEVER preserve API keys, tokens, passwords, or credentials — use [REDACTED]."""
 
+        self._last_compression_prompt = prompt
+
         try:
             call_kwargs = {
                 "task": "compression",
@@ -1848,6 +1854,7 @@ This compaction should PRIORITISE preserving all information related to the focu
             summary = redact_sensitive_text(content.strip())
             # Store for iterative updates on next compaction
             self._previous_summary = summary
+            self._last_compression_summary = summary
             self._clear_compression_failure_cooldown()
             self._summary_model_fallen_back = False
             self._last_summary_error = None

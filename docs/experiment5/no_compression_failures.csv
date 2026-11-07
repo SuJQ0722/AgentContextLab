@@ -1,0 +1,8 @@
+benchmark,model,group,n,history_available,context_limit_evidence,truncation_evidence,api_error_evidence,timeout_evidence,wrong_answer,unscored,wrong_without_observed_runtime_evidence,unscored_without_observed_runtime_evidence
+bc,gemini-3.5-flash-thinking,../hermes-agent/preds_archive/bc/gemini35_flash_no_cc/browsecomp_subset_200,443,443,0,6,0,0,165,1,161,1
+bc_zh,gemini-3.5-flash-thinking,../hermes-agent/preds_archive/bc_zh/gemini-3.5-flash-thinking-no_cc,867,867,0,16,70,0,223,33,215,30
+seal0-64k,gemini-3.5-flash-thinking,../hermes-agent/preds_archive/seal0-64k/gemini-3.5-flash-thinking-no_cc,333,333,0,2,17,0,126,15,123,13
+seal0,gemini-3.5-flash-thinking,../hermes-agent/preds_archive/seal0/gemini-3.5-flash-thinking-no_cc,333,333,0,7,15,0,140,9,131,8
+bc_v3,gemini-3.5-flash-thinking,../hermes-agent/preds_archive/to_upload/bc_v3/gemini-3.5-flash-thinking-no_cc,300,298,0,6,1,0,208,12,204,12
+mmbrowsecomp,gemini-3.5-flash-thinking,../hermes-agent/preds_archive/to_upload/mmbrowsecomp/gemini-3.5-flash-thinking-no_cc,400,400,0,14,0,0,297,10,284,10
+xbench_deepsearch,gemini-3.5-flash-thinking,../hermes-agent/preds_archive/xbench_deepsearch/gemini-3.5-flash-thinking-no_cc,300,296,0,9,14,0,92,4,86,4

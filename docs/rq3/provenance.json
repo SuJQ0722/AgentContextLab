@@ -1,0 +1,18 @@
+{
+  "table5_mapping_verified": false,
+  "sources": [
+    {
+      "path": "/mnt/afs_agents/sujiaqi/workspace/projects/visual_setting_figure.py",
+      "sha256": "c8c6e3dfe1e1b4a18464a4afbdce191883dc5e634d31f3632f1ef78bebf1bb0a",
+      "bytes": 6780
+    },
+    {
+      "path": "/mnt/afs_agents/sujiaqi/workspace/projects/hermes-agent/preds_archive/visual_setting_recovered_common_success_7scale_metrics.csv",
+      "sha256": "8e1407e78f551cd79cc968ae5a26fa76935724651b9a36e96044e068a793fc7f",
+      "bytes": 1715
+    }
+  ],
+  "raw_accuracy_shift_applied": false,
+  "ci_available": false,
+  "new_api_calls": 0
+}

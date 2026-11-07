@@ -1,5 +1,25 @@
 # BC-100: two harnesses, five strategies, three repeats
 
+Current parallel-work status: [rebuttal-status.md](rebuttal-status.md).
+The core retains its 16-worker pool while supplementary work uses separate,
+smaller pools and process admission reserves below 128 visible OS processes.
+
+An audited controller-only resume path is now available:
+
+```bash
+python scripts/resume_bc_plan.py --live --resume --wait-for-lease
+```
+
+It uses the same exclusive coordinator lock and validates the frozen config,
+cohort, task list, implementation hashes and harness pin before dispatching.
+Structurally verified DSH post-compression budget failures remain failed terminal
+observations with their original result files; they are excluded only from the
+unexpected-infrastructure-failure stop counter. Budgets and strategies are not
+changed, and completed/failed/timeout trials are not repeated. Explicit STOP or
+a previous user pause cancels automatic standby takeover. The current standby
+identity is stored in `resume-controller-service.json`; it makes no model calls
+while the original coordinator holds the lease.
+
 The campaign is defined in `configs/experiment.json:bc100_campaign`: 100 frozen
 questions × 3 repeats × 5 strategies × 2 harnesses = **3,000 prediction jobs**.
 The concurrency limit is **16 total**, not 16 per harness. Within each

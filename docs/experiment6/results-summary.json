@@ -1,0 +1,602 @@
+{
+  "status": "completed",
+  "records": [
+    {
+      "key": "s1_original_text",
+      "fact_count": 6,
+      "qa_exact_correct": 6,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "1874",
+        "f2": "84",
+        "f3": "1894",
+        "f4": "Hepzibah",
+        "f5": "Elizabeth",
+        "f6": "https://www.wikitree.com/wiki/Waterhouse-350"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 1.0,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": true
+        },
+        "faithfulness_0_to_1": 1.0
+      },
+      "image_count": 0,
+      "image_dimensions": [],
+      "sample": "s1",
+      "method": "original_text",
+      "distance_steps": 14,
+      "source_step": 1
+    },
+    {
+      "key": "s1_render_1.0",
+      "fact_count": 6,
+      "qa_exact_correct": 6,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "1874",
+        "f2": "84",
+        "f3": "1894",
+        "f4": "Hepzibah",
+        "f5": "Elizabeth",
+        "f6": "https://www.wikitree.com/wiki/Waterhouse-350"
+      },
+      "reconstruction_status": "interrupted_unknown",
+      "reconstruction_finish_reason": null,
+      "reconstruction_exact_fact_recall": null,
+      "judge": null,
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          1014,
+          306
+        ]
+      ],
+      "sample": "s1",
+      "method": "render_1.0",
+      "distance_steps": 14,
+      "source_step": 1
+    },
+    {
+      "key": "s1_render_0.75",
+      "fact_count": 6,
+      "qa_exact_correct": 4,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "1874",
+        "f2": "84 years",
+        "f3": "1894",
+        "f4": "Hepzibah",
+        "f5": "his wife's sister Elizabeth",
+        "f6": "https://www.wikitree.com/wiki/Waterhouse-350"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.6666666666666666,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": false,
+          "f5": true,
+          "f6": false
+        },
+        "faithfulness_0_to_1": 0.67
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          760,
+          230
+        ]
+      ],
+      "sample": "s1",
+      "method": "render_0.75",
+      "distance_steps": 14,
+      "source_step": 1
+    },
+    {
+      "key": "s1_render_0.5",
+      "fact_count": 6,
+      "qa_exact_correct": null,
+      "qa_status": "transport_error",
+      "qa_finish_reason": null,
+      "qa_answers": {},
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.8333333333333334,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": false,
+          "f5": true,
+          "f6": true
+        },
+        "faithfulness_0_to_1": 0.833
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          507,
+          153
+        ]
+      ],
+      "sample": "s1",
+      "method": "render_0.5",
+      "distance_steps": 14,
+      "source_step": 1
+    },
+    {
+      "key": "s1_summary",
+      "fact_count": 6,
+      "qa_exact_correct": 6,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "1874",
+        "f2": "84",
+        "f3": "1894",
+        "f4": "Hepzibah",
+        "f5": "Elizabeth",
+        "f6": "https://www.wikitree.com/wiki/Waterhouse-350"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 1.0,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": true
+        },
+        "faithfulness_0_to_1": 1
+      },
+      "image_count": 0,
+      "image_dimensions": [],
+      "sample": "s1",
+      "method": "summary",
+      "distance_steps": 14,
+      "source_step": 1
+    },
+    {
+      "key": "s2_original_text",
+      "fact_count": 6,
+      "qa_exact_correct": 5,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/",
+        "f2": "11 June 1861",
+        "f3": "105 days",
+        "f4": "five thousand pounds",
+        "f5": "the Mersey",
+        "f6": "Warmington Northhamptonshire"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 1.0,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": true
+        },
+        "faithfulness_0_to_1": 1.0
+      },
+      "image_count": 0,
+      "image_dimensions": [],
+      "sample": "s2",
+      "method": "original_text",
+      "distance_steps": 9,
+      "source_step": 6
+    },
+    {
+      "key": "s2_render_1.0",
+      "fact_count": 6,
+      "qa_exact_correct": 5,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/",
+        "f2": "11 June 1861",
+        "f3": "105 days",
+        "f4": "five thousand pounds",
+        "f5": "Mersey",
+        "f6": "Warrington, Northamptonshire"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.8333333333333334,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": false
+        },
+        "faithfulness_0_to_1": 0.8333333333333334
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          1014,
+          306
+        ]
+      ],
+      "sample": "s2",
+      "method": "render_1.0",
+      "distance_steps": 9,
+      "source_step": 6
+    },
+    {
+      "key": "s2_render_0.75",
+      "fact_count": 6,
+      "qa_exact_correct": 5,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/",
+        "f2": "11 June 1861",
+        "f3": "105 days",
+        "f4": "five thousand pounds",
+        "f5": "Mersey",
+        "f6": "Warrington, Northamptonshire"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.6666666666666666,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": false
+        },
+        "faithfulness_0_to_1": 0.8333333333
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          760,
+          230
+        ]
+      ],
+      "sample": "s2",
+      "method": "render_0.75",
+      "distance_steps": 9,
+      "source_step": 6
+    },
+    {
+      "key": "s2_render_0.5",
+      "fact_count": 6,
+      "qa_exact_correct": 5,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/",
+        "f2": "11 June 1861",
+        "f3": "105 days",
+        "f4": "five thousand pounds",
+        "f5": "Mersey",
+        "f6": "Warrington, Northamptonshire"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.8333333333333334,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": false
+        },
+        "faithfulness_0_to_1": 0.8333333333333334
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          507,
+          153
+        ]
+      ],
+      "sample": "s2",
+      "method": "render_0.5",
+      "distance_steps": 9,
+      "source_step": 6
+    },
+    {
+      "key": "s2_summary",
+      "fact_count": 6,
+      "qa_exact_correct": 3,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": null,
+        "f2": "11 June 1861",
+        "f3": "105 days",
+        "f4": "£5,000",
+        "f5": "Mersey",
+        "f6": "Warmington, Northamptonshire"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.5,
+      "judge": {
+        "facts": {
+          "f1": false,
+          "f2": true,
+          "f3": true,
+          "f4": false,
+          "f5": true,
+          "f6": false
+        },
+        "faithfulness_0_to_1": 0.5
+      },
+      "image_count": 0,
+      "image_dimensions": [],
+      "sample": "s2",
+      "method": "summary",
+      "distance_steps": 9,
+      "source_step": 6
+    },
+    {
+      "key": "s3_original_text",
+      "fact_count": 6,
+      "qa_exact_correct": 5,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/?print=print",
+        "f2": "11 June 1861",
+        "f3": "Mersey",
+        "f4": "812 tons",
+        "f5": "five",
+        "f6": "five thousand pounds"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.16666666666666666,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": false,
+          "f3": false,
+          "f4": false,
+          "f5": false,
+          "f6": false
+        },
+        "faithfulness_0_to_1": 0.16666666666666666
+      },
+      "image_count": 0,
+      "image_dimensions": [],
+      "sample": "s3",
+      "method": "original_text",
+      "distance_steps": 4,
+      "source_step": 11
+    },
+    {
+      "key": "s3_render_1.0",
+      "fact_count": 6,
+      "qa_exact_correct": 5,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/?print=print",
+        "f2": "11 June 1861",
+        "f3": "Mersey",
+        "f4": "812 tons",
+        "f5": "five",
+        "f6": "five thousand pounds"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 1.0,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": true
+        },
+        "faithfulness_0_to_1": 1.0
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          1014,
+          306
+        ]
+      ],
+      "sample": "s3",
+      "method": "render_1.0",
+      "distance_steps": 4,
+      "source_step": 11
+    },
+    {
+      "key": "s3_render_0.75",
+      "fact_count": 6,
+      "qa_exact_correct": 6,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/?print=print",
+        "f2": "11 June 1861",
+        "f3": "Mersey",
+        "f4": "812 tons",
+        "f5": "five children",
+        "f6": "five thousand pounds"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 1.0,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": true
+        },
+        "faithfulness_0_to_1": 1.0
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          760,
+          230
+        ]
+      ],
+      "sample": "s3",
+      "method": "render_0.75",
+      "distance_steps": 4,
+      "source_step": 11
+    },
+    {
+      "key": "s3_render_0.5",
+      "fact_count": 6,
+      "qa_exact_correct": 6,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": "https://talesofthose.com/2021/04/05/the-spencer-family-in-new-zealand/?print=print",
+        "f2": "11 June 1861",
+        "f3": "Mersey",
+        "f4": "812 tons",
+        "f5": "five children",
+        "f6": "five thousand pounds"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 1.0,
+      "judge": {
+        "facts": {
+          "f1": true,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": true
+        },
+        "faithfulness_0_to_1": 1.0
+      },
+      "image_count": 1,
+      "image_dimensions": [
+        [
+          507,
+          153
+        ]
+      ],
+      "sample": "s3",
+      "method": "render_0.5",
+      "distance_steps": 4,
+      "source_step": 11
+    },
+    {
+      "key": "s3_summary",
+      "fact_count": 6,
+      "qa_exact_correct": 3,
+      "qa_status": "completed",
+      "qa_finish_reason": "stop",
+      "qa_answers": {
+        "f1": null,
+        "f2": "11 June 1861",
+        "f3": "Mersey",
+        "f4": "812 tons",
+        "f5": "five",
+        "f6": "£5,000"
+      },
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "stop",
+      "reconstruction_exact_fact_recall": 0.6666666666666666,
+      "judge": {
+        "facts": {
+          "f1": false,
+          "f2": true,
+          "f3": true,
+          "f4": true,
+          "f5": true,
+          "f6": false
+        },
+        "faithfulness_0_to_1": 0.6667
+      },
+      "image_count": 0,
+      "image_dimensions": [],
+      "sample": "s3",
+      "method": "summary",
+      "distance_steps": 4,
+      "source_step": 11
+    },
+    {
+      "key": "original_full_canvas",
+      "fact_count": 18,
+      "qa_exact_correct": null,
+      "qa_status": "transport_error",
+      "qa_finish_reason": null,
+      "qa_answers": {},
+      "reconstruction_status": "completed",
+      "reconstruction_finish_reason": "length",
+      "reconstruction_exact_fact_recall": 0.0,
+      "judge": null,
+      "image_count": 4,
+      "image_dimensions": [
+        [
+          1015,
+          4074
+        ],
+        [
+          1015,
+          4067
+        ],
+        [
+          1015,
+          1188
+        ],
+        [
+          713,
+          5875
+        ]
+      ],
+      "sample": "full_canvas",
+      "method": "original_full_canvas",
+      "distance_steps": null,
+      "note": "Full historical canvas; scores only validated sampled facts; reconstruction can exceed output budget."
+    }
+  ],
+  "limitations": [
+    "One trajectory, three dependent excerpts; not independent statistical samples.",
+    "Excerpt renders are new representations, not full historical VERA canvases.",
+    "Age is original step distance; no controlled temporal decay claim.",
+    "Original text control is not historical Text-only Rendering ablation.",
+    "Summary is newly generated; post-compression budgets are not matched.",
+    "Same-model fact generation and judging can bias scores; exact recall separately reported.",
+    "Original full-canvas reconstruction is output-budget limited."
+  ]
+}

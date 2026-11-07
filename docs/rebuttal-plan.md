@@ -5,6 +5,12 @@ adapter, and pilot launch tools. Capability probes are not scored benchmark resu
 
 ## Execution status (2026-11-07)
 
+The subsequent parallel work is tracked in [the current rebuttal status](rebuttal-status.md):
+core BC remains at 16 workers; fresh multimodal prefix capture and the independent
+DeepSeek RQ3 campaign run at lower concurrency. Text-table statistics and failure
+analysis are offline; the first information-loss pilot is complete. A prepared
+policy or captured prefix is not a completed controlled-baseline result.
+
 - The user stopped the serial pilot and requested a 100 × 3 run of all five
   main policies on both harnesses, with 16 total concurrent jobs. The new
   [campaign protocol and resume instructions](bc100-campaign.md) distinguish

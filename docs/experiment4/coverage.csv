@@ -1,0 +1,47 @@
+model,harness,benchmark,method,questions_union,observed_trajectories,scored_trajectories,observed_repeat_labels,questions_with_three_scored_repeats
+deepseek-v4.1-flash-1017/huoshan/huoshan,dsh,bc100-new,No Compression,100,8,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,dsh,bc100-new,Discard,100,10,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,dsh,bc100-new,Sliding Window,100,10,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,dsh,bc100-new,Summarize,100,10,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,dsh,bc100-new,VERA,100,8,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,hermes,bc100-new,No Compression,100,11,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,hermes,bc100-new,Discard,100,10,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,hermes,bc100-new,Sliding Window,100,11,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,hermes,bc100-new,Summarize,100,11,0,"1,2,3",0
+deepseek-v4.1-flash-1017/huoshan/huoshan,hermes,bc100-new,VERA,100,8,0,"1,2,3",0
+gemini-3.5-flash-thinking,hermes,bc,No Compression,200,443,442,"1,2,3",101
+gemini-3.5-flash-thinking,hermes,bc,Discard,200,459,457,"1,2,3",113
+gemini-3.5-flash-thinking,hermes,bc,Sliding Window,200,439,439,"1,2,3",107
+gemini-3.5-flash-thinking,hermes,bc,Summarize,200,486,478,"1,2,3",119
+gemini-3.5-flash-thinking,hermes,bc,VERA,200,428,393,"1,2,3",88
+gemini-3.5-flash-thinking,hermes,bc_v3,No Compression,300,300,288,1,0
+gemini-3.5-flash-thinking,hermes,bc_v3,Discard,300,300,292,1,0
+gemini-3.5-flash-thinking,hermes,bc_v3,Sliding Window,300,300,287,1,0
+gemini-3.5-flash-thinking,hermes,bc_v3,Summarize,300,300,279,1,0
+gemini-3.5-flash-thinking,hermes,bc_v3,VERA,300,300,268,1,0
+gemini-3.5-flash-thinking,hermes,bc_zh,No Compression,289,867,834,"1,2,3",260
+gemini-3.5-flash-thinking,hermes,bc_zh,Discard,289,867,831,"1,2,3",261
+gemini-3.5-flash-thinking,hermes,bc_zh,Sliding Window,289,867,836,"1,2,3",260
+gemini-3.5-flash-thinking,hermes,bc_zh,Summarize,289,867,770,"1,2,3",220
+gemini-3.5-flash-thinking,hermes,bc_zh,VERA,289,867,823,"1,2,3",256
+gemini-3.5-flash-thinking,hermes,mmbrowsecomp,No Compression,400,400,390,1,0
+gemini-3.5-flash-thinking,hermes,mmbrowsecomp,Discard,400,400,389,1,0
+gemini-3.5-flash-thinking,hermes,mmbrowsecomp,Sliding Window,400,400,391,1,0
+gemini-3.5-flash-thinking,hermes,mmbrowsecomp,Summarize,400,400,383,1,0
+gemini-3.5-flash-thinking,hermes,mmbrowsecomp,VERA,400,400,342,1,0
+gemini-3.5-flash-thinking,hermes,seal0,No Compression,111,333,324,"1,2,3",104
+gemini-3.5-flash-thinking,hermes,seal0,Discard,111,333,321,"1,2,3",101
+gemini-3.5-flash-thinking,hermes,seal0,Sliding Window,111,333,331,"1,2,3",109
+gemini-3.5-flash-thinking,hermes,seal0,Summarize,111,333,322,"1,2,3",102
+gemini-3.5-flash-thinking,hermes,seal0,VERA,111,333,330,"1,2,3",108
+gemini-3.5-flash-thinking,hermes,seal0-64k,No Compression,111,333,318,"1,2,3",97
+gemini-3.5-flash-thinking,hermes,seal0-64k,Discard,111,333,294,"1,2,3",83
+gemini-3.5-flash-thinking,hermes,seal0-64k,Sliding Window,111,333,318,"1,2,3",98
+gemini-3.5-flash-thinking,hermes,seal0-64k,Summarize,111,333,304,"1,2,3",87
+gemini-3.5-flash-thinking,hermes,seal0-64k,VERA,111,333,262,"1,2,3",68
+gemini-3.5-flash-thinking,hermes,xbench_deepsearch,No Compression,100,300,296,"1,2,3",96
+gemini-3.5-flash-thinking,hermes,xbench_deepsearch,Discard,100,300,295,"1,2,3",96
+gemini-3.5-flash-thinking,hermes,xbench_deepsearch,Sliding Window,100,300,293,"1,2,3",97
+gemini-3.5-flash-thinking,hermes,xbench_deepsearch,Summarize,100,300,291,"1,2,3",92
+gemini-3.5-flash-thinking,hermes,xbench_deepsearch,VERA,100,300,288,"1,2,3",92
+gpt-5.4-mini,hermes,bc,Sliding Window,4,4,4,1,0

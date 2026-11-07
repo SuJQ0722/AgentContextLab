@@ -42,3 +42,25 @@ client stream/HTTP耗时不等于供应商内部API延迟，结果还受共享16
 2026-11-07首次live核查：coordinator34179、reporter32978存活；两个新增任务为 `scale_0250/q_001_r01` 与 `scale_0500/q_001_r01`，私有native配置分别是0.25/0.5、font16、keep_rounds1，native policy日志确认visual引擎且已返回真实API usage（含cache counters）。该首次检查时尚未触发压缩，不能仅凭配置声称live图像分辨率干预已经发生。可见进程约76，低于100准入阈值。此为有时间戳的启动快照，不是永久状态保证；后续以monitor/status.json为准。
 
 非敏感启动证据保存在 `outputs/campaigns/rq3-deepseek-bc100-r3/monitor/first-live-evidence.json`。
+
+## Runtime concurrency change (2026-11-07)
+
+At the user's request, `scripts/resume_rq3_plan.py` replaces only the coordinator,
+with a runtime worker cap of 16. The original frozen plan/configuration, renderer,
+model, cohort, budgets, and trial implementation remain unchanged. The old
+coordinator stopped dispatching before its PID exited; independent in-flight
+workers were adopted under the same exclusive coordinator lock. Terminal and
+unknown/interrupted attempts are never automatically retried by this controller.
+
+Shared `experiment_admission.py` serializes dispatch with the controlled baseline,
+reserves worker descendants and core capacity, and leaves capacity for controlled
+validation. Therefore a cap of 16 does not imply 16 simultaneously admitted jobs.
+The runtime override and source hashes are saved in `runtime-scheduling.json`;
+`status.json` reports the effective running count and admission reason. Memory
+checks distinguish reclaimable file cache from estimated working set.
+
+Before expansion, seven new jobs completed with 62/62 returned usage records and
+no token conservation errors. Scale 0.7 had two real compression events followed
+by tool use and a final answer; other scales had passed renderer fixtures but
+had not yet produced live compression evidence. This is a limited validation,
+not a claim that all scales have been fully validated in live trajectories.

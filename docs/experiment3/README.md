@@ -1,5 +1,7 @@
 # 实验 3：原生图像受控 baseline
 
+后续已启动版本化的固定prefix验证与自动预算拟合队列：[v3协议与限制](controlled-v3.md)。目标并发16，实际受共享进程准入约束。旧结果保留在下面；新pilot未过配对gate前不批量展开。token明细见运行目录 `controlled-native-v2/token-accounting.md`，统计口径见 [token-comparison.md](token-comparison.md)。
+
 ## 当前结果：两条 capture 超时，fresh 校准已阻断
 
 截至 2026-11-07，两条原定题目的 `result.json` 均为 `not_reached / 1800s_wall_timeout`。都未达到 32,768 provider prompt 阈值，未生成合格的 `prefix-manifest.json`。没有重跑、延长、改阈值或替换简单题。

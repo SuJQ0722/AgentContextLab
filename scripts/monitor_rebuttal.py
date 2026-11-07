@@ -10,11 +10,12 @@ import time
 from lab import ROOT
 
 SCRIPT_GROUPS={
-    'run_rq3_campaign.py':'rq3','report_rq3_campaign.py':'rq3','rq3_trial.py':'rq3','rq3_hermes_worker.py':'rq3',
+    'run_rq3_campaign.py':'rq3','resume_rq3_plan.py':'rq3','report_rq3_campaign.py':'rq3','rq3_trial.py':'rq3','rq3_hermes_worker.py':'rq3',
     'run_bc_campaign.py':'core_bc','resume_bc_plan.py':'core_bc','run_bc_trial.py':'core_bc',
     'hermes_bc_worker.py':'core_bc','run_dsh_eval.py':'core_bc',
     'monitor_bc_campaign.py':'core_bc','judge_bc_campaign.py':'core_bc','watch_bc_health.py':'core_bc',
     'controlled_native_preflight.py':'experiment3_calibration',
+    'run_controlled_native_v2.py':'experiment3_v2','controlled_native_worker_v2.py':'experiment3_v2','controlled_native_worker_v3.py':'experiment3_v2',
     'capture_multimodal_prefix.py':'experiment3_capture',
     'info_loss_eval.py':'experiment6','info_loss_report.py':'experiment6','info_loss_campaign.py':'experiment6',
     'run_rebuttal_queue.py':'supplement_queue','monitor_rebuttal.py':'resource_monitor','monitor_experiment3.py':'resource_monitor'}
@@ -52,6 +53,20 @@ def read_json(path):
     except (OSError,ValueError):return None
 
 
+def memory_snapshot():
+    base=Path('/sys/fs/cgroup')
+    try:
+        current=int((base/'memory.current').read_text())
+        stat=dict(line.split() for line in (base/'memory.stat').read_text().splitlines())
+        events={k:int(v) for k,v in (line.split() for line in (base/'memory.events').read_text().splitlines())}
+        limit=(base/'memory.max').read_text().strip()
+        inactive=int(stat.get('inactive_file',0))
+        return {'current_bytes':current,'limit_bytes':None if limit=='max' else int(limit),
+            'inactive_file_bytes':inactive,'working_set_estimate_bytes':max(0,current-inactive),
+            'events':events,'note':'Working set subtracts inactive file cache; this is an estimate, not reserved free memory.'}
+    except (OSError,ValueError):return None
+
+
 def census():
     processes=process_snapshot();live={p:v for p,v in processes.items() if v['state']!='Z'}
     experiment={p:v for p,v in live.items() if v['group']}
@@ -64,16 +79,21 @@ def census():
     phase2_started=list(phase2_calls.glob('*/started.json'))
     phase2_pending=sum(not (p.parent/'response.json').exists() for p in phase2_started)
     native=read_json(ROOT/'outputs/experiment3/status.json') or {}
+    controlled=read_json(ROOT/'outputs/experiment3/controlled-native-v2/status.json') or {}
+    from report_controlled_native_v2 import report
+    controlled_tokens=report()
     core_usage=(read_json(ROOT/'outputs/campaigns/bc100-r3-all-strategies/monitor/status.json') or {}).get('prediction_usage_all_attempts')
     return {'as_of':datetime.now(timezone.utc).isoformat(),
         'visible_os_processes':len(processes),'visible_os_live_processes':len(live),
-        'zombie_processes':len(processes)-len(live),
+        'zombie_processes':len(processes)-len(live),'cgroup_memory':memory_snapshot(),
         'experiment_live_processes':len(experiment),
         'by_experiment':dict(collections.Counter(v['group'] for v in experiment.values())),
         'experiment_pids':{str(p):{'name':v['name'],'group':v['group'],'start_identity':v['start_identity']} for p,v in experiment.items()},
         'under_128_visible_live_processes':len(live)<128,
         'under_128_experiment_live_processes':len(experiment)<128,
-        'core_bc_status':bc,'core_trajectory_limit':16,'supplement_trajectory_limit':6,
+        'core_bc_status':bc,'core_trajectory_limit':16,
+        'requested_rq3_limit':16,'requested_controlled_baseline_limit':16,
+        'process_limit_note':'Requested worker limits remain subject to shared process admission below 128.',
         'rq3_status':rq3,'experiment6_status':info.get('status'),
         'experiment6_phase2_status':phase2.get('status','not_started'),
         'experiment6_phase2_frozen_cases':len(phase2_manifest.get('cases',[])),
@@ -81,6 +101,7 @@ def census():
         'experiment6_phase2_calls_without_response':phase2_pending,
         'experiment3_captures':{k:{'result':v.get('result'), 'prefix_captured':bool(v.get('prefix'))} for k,v in native.get('captures',{}).items()},
         'experiment3_formal_baseline_started':native.get('formal_baseline_started',False),
+        'controlled_v2_status':controlled,'controlled_v2_token_accounting':controlled_tokens,
         'core_prediction_usage_known_only':core_usage,
         'scope':'Linux processes visible in this /proc namespace, not host-wide processes or threads. Counts are instantaneous; request concurrency is separate.'}
 
@@ -103,7 +124,8 @@ Visible OS processes: **{row['visible_os_processes']}** ({row['visible_os_live_p
 |---|---|---:|
 | Core DeepSeek × DSH/Hermes, 3,000 trials | {core.get('terminal',0)} terminal, {core.get('running',0)} running | 16 shared |
 | Native-image prefix capture | {json.dumps(row['experiment3_captures'],ensure_ascii=False)} | 2 |
-| New RQ3, 1,800 new + 300 reused controls | {rq.get('terminal',0)} new terminal, {rq.get('running',0)} new running | 2 |
+| New RQ3, 1,800 new + 300 reused controls | {rq.get('terminal',0)} new terminal, {rq.get('running',0)} new running | {(row.get('rq3_status') or {}).get('concurrency_limit',2)} |
+| Controlled native-image v2 (pilot gates expansion) | {json.dumps(row['controlled_v2_status'],ensure_ascii=False)} | 16 requested, shared admission |
 | Information-loss single-trajectory pilot | {row['experiment6_status']} | 0 after completion |
 | Information-loss full-canvas phase 2 | {row['experiment6_phase2_status']}; {row['experiment6_phase2_frozen_cases']} frozen trajectories | 1 |
 | Historical text statistics / failure analysis | Offline outputs available; no new model requests | 0 |

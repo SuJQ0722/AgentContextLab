@@ -50,18 +50,19 @@ def snapshot(root):
                         failure=finish.get('failure') or {};error=call.get('error_type') or failure.get('code') or 'no_error_code'
                         missing[f'{kind}/{error}']+=1
     visible=sum(p.name.isdigit() for p in Path('/proc').iterdir())
+    intended_pause=bool(status.get('pause_requested'))
     alerts=[]
     if visible>=128:alerts.append('visible_process_limit_violated')
     if len([a for a in active if a['identity_alive']])>16:alerts.append('core_worker_limit_violated')
     if monitor['prediction_usage_all_attempts']['conservation_failures']:alerts.append('token_conservation_failure')
     if now-(root/'monitor/status.json').stat().st_mtime>120:alerts.append('monitor_stale')
-    if not lock_busy and status.get('states',{}).get('terminal',0)<status.get('planned_runs',3000):alerts.append('coordinator_lease_free_with_pending_jobs')
-    if any(not r['alive'] for r in identities.values()):alerts.append('controller_or_standby_identity_dead')
+    if not intended_pause and not lock_busy and status.get('states',{}).get('terminal',0)<status.get('planned_runs',3000):alerts.append('coordinator_lease_free_with_pending_jobs')
+    if not intended_pause and any(not r['alive'] for r in identities.values()):alerts.append('controller_or_standby_identity_dead')
     for a in active:
         if not a['identity_alive']:alerts.append('dead_worker:'+a['job_id'])
         elif a['metric_age_seconds']>300:alerts.append('no_metric_5min:'+a['job_id'])
     report={'observed_at':datetime.now(timezone.utc).isoformat(),'visible_process_count':visible,'required_process_limit_exclusive':128,
-        'coordinator_lease_busy':lock_busy,'controller_identities':identities,'controller_reported_states':status['states'],
+        'coordinator_lease_busy':lock_busy,'intentional_pause':intended_pause,'controller_identities':identities,'controller_reported_states':status['states'],
         'terminal_classifications':dict(counts),'failure_details':terminal,'live_core_workers':sum(a['identity_alive'] for a in active),
         'active_workers':active,'prediction_usage_known_only':monitor['prediction_usage_all_attempts'],
         'missing_usage_reasons':dict(missing),'alerts':alerts,

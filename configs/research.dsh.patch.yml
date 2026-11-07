@@ -1,0 +1,23 @@
+# Patch `name` is a match guard, not a replacement. Disable the original
+# provider and insert the research subclass under a distinct entry ID.
+- id: compaction-basic
+  disabled: true
+- insert:
+  - id: acl-research-compaction
+    name: "@ACL_DSH_CONTEXT_PLUGIN@"
+    config:
+      strategy: !!js process.env.ACL_STRATEGY
+      python: !!js process.env.ACL_PYTHON
+      renderer: !!js process.env.ACL_ROOT + '/scripts/render_dsh_history.py'
+      metricsDir: !!js process.env.ACL_WORKSPACE + '/metrics'
+      historyScale: !!js Number(process.env.ACL_VISUAL_HISTORY_SCALE)
+      fontSize: !!js Number(process.env.ACL_VISUAL_FONT_SIZE)
+      postCompressionBudget: !!js Number(process.env.ACL_POST_COMPRESSION_BUDGET)
+      thresholdRatio: !!js Number(process.env.ACL_COMPRESSION_TRIGGER) / Number(process.env.ACL_CONTEXT_WINDOW)
+      headroomTokens: 8192
+      retainTokens: 4096
+      maxTokens: 4096
+      compactionRetries: 0
+      maxOverflowRetries: 0
+- id: tool-result-pruner
+  disabled: true

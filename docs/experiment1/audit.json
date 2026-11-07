@@ -1,0 +1,45 @@
+{
+  "trajectories": 22949,
+  "groups": 57,
+  "priced": 19238,
+  "wall_clock_recovered": 22922,
+  "complete_api_times": 1322,
+  "partial_api_times": 18752,
+  "compression_counts_with_evidence": 7378,
+  "compression_count_quality": {
+    "unknown_zero_export": 15571,
+    "disabled_by_method": 3822,
+    "trace_lower_bound": 81,
+    "recorded_visual_stats": 2844,
+    "stdout_marker_lower_bound": 631
+  },
+  "duplicate_paired_keys": [],
+  "pricing": {
+    "source_url": "https://cloud.google.com/model-garden/pricing",
+    "retrieved_date": "2026-11-07",
+    "official_model": "Gemini 3.5 Flash",
+    "recorded_model_alias": "gemini-3.5-flash-thinking",
+    "alias_mapping": "Name-based assumption for standardized repricing; gateway routing is not an official Google model attestation.",
+    "billing_scenario": "Google Cloud Standard Global, USD per million tokens; same rates on both sides of 200K context",
+    "non_cache_input_per_million": 1.5,
+    "cached_input_per_million": 0.15,
+    "output_per_million": 9.0,
+    "cost_quality": "Hypothetical current official token cost, not historical paid cost or TokenHub invoice",
+    "excluded_costs": [
+      "Serper",
+      "Reader/Jina",
+      "cache storage duration",
+      "compute",
+      "unrecorded retries or usage"
+    ]
+  },
+  "limitations": [
+    "Scored-only paired figures condition on available judge labels; inspect coverage and full-table accuracy bounds.",
+    "Canonical cohorts selected by archive naming, not outcomes; debug/updated/ablation campaigns remain separate in full table.",
+    "API tail sums are incomplete unless all expected numbered calls are present; rounded client latency, not provider latency.",
+    "session_span_seconds is not CLI wall_seconds. Render latency was not instrumented in the examined exports.",
+    "Compression trace counts may be lower bounds. Unknown zero exports are not asserted to mean no compression.",
+    "Official prices are a dated current Standard Global counterfactual; gateway bills and tool charges are unknown.",
+    "No Gemini inference or judging requests were issued."
+  ]
+}

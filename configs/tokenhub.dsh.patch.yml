@@ -11,6 +11,10 @@
             input: !!js JSON.parse(process.env.ACL_INPUT_MODALITIES)
             contextWindow: !!js Number(process.env.ACL_CONTEXT_WINDOW)
             maxTokens: !!js Number(process.env.ACL_MAX_OUTPUT_TOKENS)
+- id: agent-default-model
+  config:
+    provider: tokenhub
+    model: !!js process.env.ACL_MODEL
 - id: agent-loop
   config:
     agents:

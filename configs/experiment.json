@@ -1,7 +1,78 @@
 {
-  "model": "deepseek-flash",
-  "input_modalities": ["text", "image"],
+  "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+  "input_modalities": [
+    "text",
+    "image"
+  ],
   "context_window": 131072,
   "max_output_tokens": 8192,
-  "notes": "Verify the exact TokenHub model ID, image support and limits before running; these are experiment settings, not discovered endpoint capabilities."
+  "notes": "Exact route discovered through TokenHub /models on 2026-11-07. Text, red/blue image probes and tool round trip passed; configured context/output limits remain experimental limits, not verified provider capacity.",
+  "comparison": [
+    {
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "source": "historical"
+    },
+    {
+      "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+      "harness": "dsh",
+      "source": "new"
+    }
+  ],
+  "pilot": {
+    "seed": 20261107,
+    "questions_per_dataset": 10,
+    "repeats": 1,
+    "concurrency": 1,
+    "max_rounds": 60,
+    "compression_trigger_tokens": 32768,
+    "post_compression_budget_tokens": 16384
+  },
+  "bc100": {
+    "source": "../hermes-agent/Browsecomp_eval/data/browsecomp_subset_200/questions_100.jsonl",
+    "strategies": [
+      "summarize",
+      "visual_native"
+    ],
+    "max_rounds": 60,
+    "timeout_seconds": 1800,
+    "concurrency": 1,
+    "search_max_results": 5,
+    "fetch_max_output_chars": 15000
+  },
+  "visual_renderer": {
+    "font_size": 16,
+    "history_scale": 1.0,
+    "notes": "Calibrated only on a separate synthetic six-field recall probe before BC-100; font8/scale0.75 exhausted output budget. This is a DSH legibility variant, not identical to historical Hermes rendering."
+  },
+  "web": {
+    "search_host": "10.120.4.249",
+    "search_port": 80,
+    "fetch_base_url": "http://10.13.64.17:8080",
+    "preferred_fetch_base_url": "http://10.120.7.221:8080",
+    "notes": "2026-11-07: preferred fetch endpoint refused connections; selected working alternate after successful real content retrieval. Serper X-Cached false then true confirmed."
+  },
+  "bc100_campaign": {
+    "name": "bc100-r3-all-strategies",
+    "questions": 100,
+    "repeats": 3,
+    "concurrency": 16,
+    "max_rounds": 60,
+    "timeout_seconds": 1800,
+    "strategies": [
+      "none",
+      "summarize",
+      "sliding_window",
+      "discard",
+      "visual"
+    ],
+    "models": {
+      "dsh": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+      "hermes": "deepseek-v4.1-flash-1017/huoshan/huoshan"
+    },
+    "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "shuffle_seed": 20261107,
+    "resume_policy": "Skip terminal jobs; preserve all interrupted attempts, retry only interrupted jobs on explicit --resume. No native-session continuation claim.",
+    "note": "Hermes uses DeepSeek under standing no-new-Gemini instruction unless user explicitly changes it. 3000 trajectories; two harnesses. Historical Gemini remains separate."
+  }
 }

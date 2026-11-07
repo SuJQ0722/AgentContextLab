@@ -1,0 +1,3 @@
+name: sliding_window_native
+description: Window text tool results while retaining native image payloads.
+version: "1.0"

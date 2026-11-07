@@ -94,6 +94,11 @@ scripts/judge_browsecomp_first5.sh
 ## Context selection and trajectory exports
 
 Use `--context-engine visual|summarize|sliding_window|discard|none`.
+The experimental `summarize_native` and `sliding_window_native` engines retain
+unique native image payloads through text compression. Image bytes and detail
+settings remain unchanged; stable hashes link retained images to source text.
+These engines do not themselves enforce a matched post-compression token budget.
+Budget matching must be checked by the experiment controller before scoring.
 `discard_all` and `discard-all` select the full-history reset baseline: the
 system instructions and original task remain, but no past assistant/tool
 interactions or replacement summary survive. The evaluator sets `keep_rounds=0`.

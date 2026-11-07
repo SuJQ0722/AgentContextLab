@@ -61,6 +61,7 @@ cp configs/deepseekHarness.env.example deepseekHarness/.env
 # Fill in TOKENHUB_BASE_URL and TOKENHUB_API_KEY locally.
 # Verify model ID and capabilities in configs/experiment.json.
 bash scripts/setup.sh hermes python3.11
+bash scripts/setup.sh renderer  # local Poppler, Ubuntu 22.04
 source .venv/bin/activate
 # DSH requires Node >=24.9 and the pnpm version in its package.json.
 bash scripts/setup.sh dsh
@@ -94,9 +95,10 @@ Exact model ID, image support and token limits must be verified at your endpoint
 
 See [the rebuttal plan](docs/rebuttal-plan.md) for experimental order and controls,
 and [Hermes evaluation documentation](hermes-agent/Browsecomp_eval/README.md) for
-existing benchmark runs and trajectory exports. DSH context-strategy plugins and
-the new Native Images baselines are future experiment work, not implemented by
-this directory refactor. No paid runs are started by setup, doctor or dry-run.
+existing benchmark runs and trajectory exports. Experimental DSH context plugins
+and Hermes Native Images baselines are implemented; validation status and remaining
+execution blockers are recorded in the rebuttal plan. No scored pilot results have
+been produced yet. Setup, doctor and dry-run do not start paid runs.
 
 ## Checks
 

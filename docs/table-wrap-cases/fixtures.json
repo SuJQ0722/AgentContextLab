@@ -101,14 +101,14 @@
         "body": "A wide table should take its own row, with no narrow text column.",
         "table_data": [
           [
-            "Field 0",
-            "Field 1",
-            "Field 2",
-            "Field 3",
-            "Field 4",
-            "Field 5",
-            "Field 6",
-            "Field 7"
+            "Field 0 name",
+            "Field 1 name",
+            "Field 2 name",
+            "Field 3 name",
+            "Field 4 name",
+            "Field 5 name",
+            "Field 6 name",
+            "Field 7 name"
           ],
           [
             "item0-0",

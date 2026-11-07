@@ -26,8 +26,22 @@ from .session_reader import (
     load_token_usage,
 )
 
+
+API_USAGE_RE = re.compile(
+    r"API call #(\d+):.*?\bin=(\d+)\s+out=(\d+)\s+total=(\d+)"
+    r"(?:\s+system=(\d+))?"
+)
+COMPRESSION_DONE_RE = re.compile(
+    r"\[ContextEngine\]\s+compression done.*?"
+    r"strategy=([^|]+).*?tokens=([\d,]+)->([\d,]+)"
+    r"(?:\s*\|\s*accounting_tokens=([\d,]+)"
+    r"\s*\|\s*system_tokens=([\d,]+))?"
+)
+
 _API_ERROR_RE = re.compile(r"Error code:\s*(\d+)\s*-\s*(.+?)(?:\n\s*\n|\Z)", re.DOTALL)
 _FAIL_REASON_PATTERNS = [
+    re.compile(r"The model declined to respond to this request.*?Model's explanation:\s*(.+?)(?:\n\s*\n|\Z)", re.DOTALL),
+    re.compile(r"Model declined to respond \(finish_reason=content_filter\).*?refusal=(.+?)(?:\n|$)", re.DOTALL),
     re.compile(r"API call failed after \d+ retries[.:]\s*(.+)", re.IGNORECASE),
     re.compile(r"Error code:\s*\d+\s*-\s*\{[^}]*'message':\s*'([^']+)'", re.DOTALL),
     re.compile(r"(insufficient_quota|rate_limit_exceeded|context_length_exceeded|Connection error)", re.IGNORECASE),
@@ -107,6 +121,8 @@ class HermesClient:
         profile = profile_name(self.config.save_name, spec.question_id, spec.repeat_index, attempt)
         context_image_dir = self._context_image_dir(spec, attempt)
         self._setup_profile(profile, workspace_dir, context_image_dir)
+        agent_log_path = profile_agent_log_path(profile)
+        agent_log_offset = agent_log_path.stat().st_size if agent_log_path.exists() else 0
 
         query = build_query(spec, enable_delegate=has_delegation_tool(self.config.toolsets))
         cmd = self._build_chat_command(profile, query)
@@ -140,6 +156,8 @@ class HermesClient:
             error = str(exc)
 
         wall_seconds = round(time.time() - started, 2)
+        full_run_agent_log = read_profile_agent_log_since(profile, agent_log_offset)
+        context_accounting = parse_context_accounting(full_run_agent_log)
         session_id = extract_session_id(stdout, stderr) or find_session_id_from_storage(
             self.config.save_name,
             self.config.dataset,
@@ -153,10 +171,10 @@ class HermesClient:
         delegate_sessions = load_child_sessions(session_id, profile) if session_id else []
         model_response, final_assistant_error = extract_final_assistant_message(session)
         compression_stats = _load_compression_stats(context_image_dir or workspace_dir.parent)
-        compression_count = max(
-            int((session_full or {}).get("compression_count", 0) or 0),
-            _compression_count_from_stats(compression_stats),
-        )
+        # Count only completed ContextEngine events from this run's full log.
+        # Session counters and visual sidecars are retained as diagnostics, but
+        # are not authoritative: older non-visual engines could over/under-count.
+        compression_count = int(context_accounting.get("compression_count", 0) or 0)
         compression_snapshots = load_compression_snapshots(session_id, profile) if session_id else []
 
         delegate_token_usage = _empty_token_usage()
@@ -179,8 +197,12 @@ class HermesClient:
         status = "success"
         api_code, api_msg = parse_api_error(stderr)
         if reached_round_limit:
-            status = "failed"
-            error = f"reached max rounds ({api_call_count}/{self.config.max_rounds})"
+            if model_response:
+                status = "success"
+                error = ""
+            else:
+                status = "failed"
+                error = f"reached max rounds ({api_call_count}/{self.config.max_rounds})"
         elif api_code is not None:
             status = "failed"
             error = f"HTTP {api_code}: {api_msg}"
@@ -212,6 +234,7 @@ class HermesClient:
             "status": status,
             "error": error,
             "error_code": api_code,
+            "round_limit_reached": reached_round_limit,
             "returncode": returncode,
             "timed_out": timed_out,
             "model_response": model_response,
@@ -239,6 +262,9 @@ class HermesClient:
             "compressed_session_messages": (session or {}).get("messages", []),
             "compression_count": compression_count,
             "compression_stats": compression_stats,
+            "context_accounting": context_accounting,
+            "compression_aware_tokens": context_accounting.get("effective_tokens", 0),
+            "_agent_log_full": full_run_agent_log,
             "compression_snapshots": compression_snapshots,
             "delegate_sessions": delegate_sessions,
             "delegate_token_usage": delegate_token_usage,
@@ -298,7 +324,9 @@ class HermesClient:
             configs.append(("tool_output.max_bytes", str(self.config.max_tool_response_tokens)))
         if self.config.api_mode:
             configs.append(("model.api_mode", self.config.api_mode))
-        context_engine = (self.config.context_engine or "").strip()
+        context_engine = (self.config.context_engine or "").strip().lower().replace("-", "_")
+        context_engine = {"discard_all": "discard", "summary": "summarize",
+                          "sm": "summarize", "sw": "sliding_window"}.get(context_engine, context_engine)
         compression_disabled = context_engine.lower() in {"none", "off", "false", "0"}
         if compression_disabled:
             configs.append(("compression.enabled", "false"))
@@ -313,6 +341,8 @@ class HermesClient:
             configs.append(("compression.threshold", str(threshold)))
         if context_engine and not compression_disabled:
             configs.append(("context.engine", context_engine))
+            if context_engine == "discard":
+                configs.append(("context.strategy_config.keep_rounds", "0"))
 
         for key, value in configs:
             self._run_hermes(["--profile", profile, "config", "set", key, value])
@@ -384,6 +414,13 @@ class HermesClient:
 
     def _build_env(self, spec: RunSpec, workspace_dir: Path) -> dict[str, str]:
         env = os.environ.copy()
+        # The isolated profile owns strategy selection; inherited CM must not
+        # override --context-engine, including aliases and disabled compression.
+        if self.config.context_engine:
+            env.pop("CM", None)
+            env.pop("COMPRESS_STRATEGY", None)
+            if self.config.context_engine.lower().replace("-", "_") in {"discard", "discard_all"}:
+                env["HERMES_DISCARD_KEEP_ROUNDS"] = "0"
         env["ANTHROPIC_API_KEY"] = self.config.api_key
         env["OPENAI_API_KEY"] = self.config.api_key
         if self.config.base_url:
@@ -643,6 +680,83 @@ def read_profile_agent_log_tail(profile: str, limit: int = 8000) -> str:
         return tail(log_path.read_text(encoding="utf-8", errors="replace"), limit)
     except Exception:
         return ""
+
+
+def profile_agent_log_path(profile: str) -> Path:
+    return Path.home() / ".hermes" / "profiles" / profile / "logs" / "agent.log"
+
+
+def read_profile_agent_log_since(profile: str, offset: int) -> str:
+    path = profile_agent_log_path(profile)
+    try:
+        with path.open("rb") as handle:
+            handle.seek(min(offset, path.stat().st_size))
+            return handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def parse_context_accounting(agent_log: str) -> dict[str, Any]:
+    """Compute cumulative live-context tokens from the complete run log.
+
+    Each successful compression closes the current context segment at its
+    pre-compression size.  The compacted context starts a new segment; that
+    segment grows normally until the next compression (or trajectory end).
+    Consequently a later ``tokens_before`` is the *new* segment total, not an
+    increment to subtract from the previous engine's ``tokens_after`` value.
+    """
+    api_calls = [
+        {
+            "call_index": int(match.group(1)),
+            "prompt_tokens": int(match.group(2)),
+            "response_tokens": int(match.group(3)),
+            "total_tokens": int(match.group(4)),
+            "system_tokens": int(match.group(5) or 0),
+        }
+        for match in API_USAGE_RE.finditer(agent_log)
+    ]
+    compressions = [
+        {
+            "index": index,
+            "strategy": match.group(1).strip(),
+            "tokens_before": int(match.group(2).replace(",", "")),
+            "tokens_after_messages_only": int(match.group(3).replace(",", "")),
+            "accounting_tokens_before": int(
+                (match.group(4) or match.group(2)).replace(",", "")
+            ),
+            "system_tokens": int((match.group(5) or "0").replace(",", "")),
+        }
+        for index, match in enumerate(COMPRESSION_DONE_RE.finditer(agent_log), start=1)
+    ]
+    terminal_prompt = api_calls[-1]["prompt_tokens"] if api_calls else 0
+    terminal_response = api_calls[-1]["response_tokens"] if api_calls else 0
+    completed_segments = [event["accounting_tokens_before"] for event in compressions]
+    active_segment = terminal_prompt + terminal_response
+    # The first segment owns the fixed system prompt. Every subsequent
+    # completed segment and the terminal active segment must remove its copy.
+    repeated_system = sum(event["system_tokens"] for event in compressions[1:])
+    if compressions and api_calls:
+        repeated_system += api_calls[-1]["system_tokens"]
+    return {
+        "definition": (
+            "sum(completed_context_segments) + terminal_active_context_segment "
+            "- repeated_fixed_system_prompt"
+        ),
+        "compression_count": len(compressions),
+        "completed_context_segments": completed_segments,
+        "completed_context_segments_sum": sum(completed_segments),
+        "terminal_active_context_segment_tokens": active_segment,
+        "repeated_system_tokens_removed": repeated_system,
+        # Backward-compatible diagnostics; these are the components used to
+        # recover the terminal active segment, not a billing-token sum.
+        "pre_compression_tokens_sum": sum(completed_segments),
+        "final_prompt_tokens": terminal_prompt,
+        "final_response_tokens": terminal_response,
+        "effective_tokens": sum(completed_segments) + active_segment - repeated_system,
+        "api_call_count_from_log": len(api_calls),
+        "compressions": compressions,
+        "api_calls": api_calls,
+    }
 
 
 def find_session_id_from_storage(save_name: str, dataset: str, question_id: str, started: float) -> str | None:

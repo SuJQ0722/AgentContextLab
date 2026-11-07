@@ -4,11 +4,7 @@ Implements the Discard strategy from BrowseComp/DeepSeek:
   Once the running context exceeds a preset threshold, drop all earlier
   ``(thought, action, observation)`` tool-call turns and leave only:
 
-    [system] + [first_user] + [omission placeholder] + last ``keep_rounds`` rounds
-
-  The omission placeholder is a single ``user`` message carrying the literal
-  string ``"[previous tool call history has been omitted]"``. It is idempotent
-  — re-running compaction never appends a second placeholder.
+    [system] + [first_user] + last ``keep_rounds`` rounds
 
   Unlike ``sliding_window`` (which keeps every role frame and only blanks tool
   *content*), discard removes the assistant/tool frames entirely so cumulative
@@ -19,7 +15,7 @@ Threshold: 32k tokens.
 Config (context section in config.yaml):
   engine: discard
   strategy_config:
-    keep_rounds: 2   # number of most-recent (assistant + tool*) rounds to keep
+    keep_rounds: 0   # default: discard all history; keep system + original task
 
 Env override (local-only, takes precedence over config when set):
   HERMES_DISCARD_KEEP_ROUNDS=<int>   # e.g. 0 to discard every prior round
@@ -36,7 +32,6 @@ from agent.context_engine import ContextEngine
 logger = logging.getLogger(__name__)
 
 _THRESHOLD_TOKENS = 32768
-OMISSION_PLACEHOLDER = "[previous tool call history has been omitted]"
 
 
 class DiscardEngine(ContextEngine):
@@ -160,25 +155,16 @@ class DiscardEngine(ContextEngine):
         if current_round:
             rounds.append(current_round)
 
-        if not rounds:
-            return messages
-
         # 4. Decide which rounds to keep.
         n_rounds = len(rounds)
         keep = min(self._keep_rounds, n_rounds) if self._keep_rounds > 0 else 0
         n_discard = n_rounds - keep
         kept_rounds = rounds[n_discard:] if keep > 0 else []
 
-        # 5. Assemble: system + first_user + [placeholder if anything dropped]
-        #              + kept rounds (assistant+tool pairs).
+        # 5. Preserve instructions and original task, but no synthetic memory.
+        # Remaining assistant/tool rounds (if requested) stay paired.
         result: List[Dict[str, Any]] = list(head)
         result.append(first_user)
-
-        if n_discard > 0:
-            result.append({
-                "role": "user",
-                "content": OMISSION_PLACEHOLDER,
-            })
 
         for round_msgs in kept_rounds:
             result.extend(round_msgs)

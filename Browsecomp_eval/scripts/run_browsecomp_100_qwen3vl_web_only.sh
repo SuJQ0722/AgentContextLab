@@ -112,10 +112,11 @@ fi
 export HERMES_API_KEY
 export HERMES_BASE_URL
 export HERMES_SESSION_STORAGE_ROOT
-export SAVE_TRAJECTORIES=1
-export TRAJECTORY_DIR=output/trajectories/${SAVE_NAME}/${DATASET}
+TRAJECTORY_DIR=output/trajectories/${SAVE_NAME}/${DATASET}
 
 python -m browsecomp_eval.run \
+  --save-trajectories \
+  --trajectory-dir "${TRAJECTORY_DIR}" \
   --dataset "${DATASET}" \
   --data-path "${DATA_PATH}" \
   --model "${MODEL}" \

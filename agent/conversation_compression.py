@@ -37,7 +37,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
-from agent.model_metadata import estimate_request_tokens_rough, estimate_messages_tokens_rough
+from agent.model_metadata import (
+    estimate_messages_tokens_rough,
+    estimate_request_tokens_rough,
+    estimate_tokens_rough,
+)
 from agent.session_storage import SESSION_KIND_COMPRESSION, sync_agent_session_storage
 
 logger = logging.getLogger(__name__)
@@ -497,6 +501,37 @@ def compress_context(
     compacted_in_place = False
     _engine_name = getattr(agent.context_compressor, "name", "compressor")
     _pre_token_str = f"{approx_tokens:,}" if approx_tokens else "unknown"
+    # Accounting uses provider prompt usage as its baseline, preserving the
+    # provider's real valuation of summary text and visual input. Compression
+    # normally fires immediately after an assistant tool action, so add that
+    # completion plus the trailing tool result(s), neither of which is present
+    # in the preceding prompt usage. Keep the fixed system prompt separate so
+    # cohort statistics can count it once across all compression segments.
+    _fixed_system_prompt = getattr(agent, "_cached_system_prompt", None) or ""
+    if not _fixed_system_prompt:
+        _fixed_system_prompt = agent._build_system_prompt(system_message)
+    _fixed_system_tokens = estimate_tokens_rough(_fixed_system_prompt)
+    _trailing_tool_messages = []
+    for _message in reversed(messages):
+        if isinstance(_message, dict) and _message.get("role") == "tool":
+            _trailing_tool_messages.append(_message)
+            continue
+        break
+    _trailing_tool_messages.reverse()
+    if approx_tokens and _trailing_tool_messages:
+        _accounting_pre_tokens = (
+            int(approx_tokens)
+            + max(0, int(getattr(agent.context_compressor, "last_completion_tokens", 0) or 0))
+            + estimate_messages_tokens_rough(_trailing_tool_messages)
+        )
+        _accounting_source = "provider_prompt+completion+tool_results"
+    else:
+        _accounting_pre_tokens = estimate_request_tokens_rough(
+            messages,
+            system_prompt=_fixed_system_prompt,
+            tools=agent.tools or None,
+        )
+        _accounting_source = "rough_full_request"
     logging.info(
         f"\033[32m[ContextEngine] tokens={_pre_token_str} | "
         f"strategy={_engine_name} | compressing...\033[0m"
@@ -993,7 +1028,10 @@ def compress_context(
             f"\033[32m[ContextEngine] compression done | "
             f"strategy={_engine_name} | "
             f"messages={_pre_msg_count}->{len(compressed)} | "
-            f"tokens={_pre_token_str}->{_compressed_messages_only:,}\033[0m"
+            f"tokens={_pre_token_str}->{_compressed_messages_only:,} | "
+            f"accounting_tokens={_accounting_pre_tokens:,} | "
+            f"system_tokens={_fixed_system_tokens:,} | "
+            f"accounting_source={_accounting_source}\033[0m"
         )
         return compressed, new_system_prompt
     finally:

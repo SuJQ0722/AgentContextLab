@@ -36,11 +36,11 @@ def _env_float(name: str):
 
 def _resolve_provider(provider: str, model: str) -> str:
     raw = (provider or "").strip()
-    if raw and raw.lower() != "custom":
+    if raw:
         return raw
     if "gemini" in (model or "").lower():
         return "gemini"
-    return raw or "custom"
+    return "custom"
 
 
 def _read_global_config() -> dict[str, Any]:
@@ -160,7 +160,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-tool-response", type=int, default=None, help="Max tool response size in bytes (hermes tool_output.max_bytes)")
     parser.add_argument("--api-mode", default=os.getenv("API_MODE", ""), help="Hermes API mode: chat_completions|codex_responses|anthropic_messages")
     parser.add_argument("--compression-threshold", type=float, default=_env_float("COMPRESS_THRESHOLD"), help="Compression trigger threshold: absolute token count (>=1, e.g. 65536) or fraction of context (0.0-1.0)")
-    parser.add_argument("--context-engine", default=os.getenv("CONTEXT_ENGINE", ""), help="Hermes context engine: compressor|visual|summarize|sliding_window|discard_all")
+    parser.add_argument("--context-engine", default=os.getenv("CONTEXT_ENGINE") or os.getenv("CM") or os.getenv("COMPRESS_STRATEGY", ""), help="Hermes context engine: compressor|visual|summarize|sliding_window|discard (discard_all is an alias)")
+    parser.add_argument("--save-trajectories", action=argparse.BooleanOptionalAction,
+                        default=os.getenv("SAVE_TRAJECTORIES", "").lower() in {"1", "true", "yes", "on"},
+                        help="Export per-attempt JSONL histories, including pre-compression sessions")
+    parser.add_argument("--trajectory-dir", type=Path, default=os.getenv("TRAJECTORY_DIR") or None,
+                        help="Trajectory export directory (default: output run directory / trajectories)")
     parser.add_argument("--local-workspace-root", default="/root", help="Local root for isolated scratch workspace outside /mnt. Set to empty string to disable.")
     return parser
 
@@ -274,6 +279,9 @@ def main(argv: list[str] | None = None) -> int:
             skip_statuses=skip_statuses,
             allowed_tools=allowed_tools,
             conv_dir=output_base / "conv",
+            log_dir=output_base / "logs",
+            trajectory_dir=(args.trajectory_dir or output_base / "trajectories").resolve()
+            if args.save_trajectories else None,
         ),
     )
     stats = runner.run(runs)

@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATA_PATH = "/mnt/afs_agents/sujiaqi/workspace/projects/hermes-agent/Browsecomp_eval/data/BrowseComp_full.jsonl"
 DEFAULT_OUTPUT_DIR = ROOT / "output" / "single_turn"
 
-DEFAULT_JUDGE_API_KEY = "REDACTED_API_KEY"
+DEFAULT_JUDGE_API_KEY = ""
 DEFAULT_JUDGE_BASE_URL = "https://tokenhub.sensetime.com/v1"
 DEFAULT_JUDGE_MODEL = "gpt-5-mini"
 

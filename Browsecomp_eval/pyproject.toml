@@ -17,4 +17,4 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["browse_comp_eval"]
+packages = ["browsecomp_eval"]

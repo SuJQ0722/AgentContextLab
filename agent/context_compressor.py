@@ -926,6 +926,7 @@ class ContextCompressor(ContextEngine):
         api_mode: str = "",
         abort_on_summary_failure: bool = False,
         max_tokens: int | None = None,
+        max_compressions: int | None = None,
     ):
         self.model = model
         self.base_url = base_url
@@ -965,6 +966,11 @@ class ContextCompressor(ContextEngine):
             self.context_length, threshold_percent, self.max_tokens,
         )
         self.compression_count = 0
+        self.max_compressions = (
+            int(max_compressions)
+            if max_compressions is not None and int(max_compressions) > 0
+            else None
+        )
 
         # Derive token budgets: ratio is relative to the threshold, not total context
         target_tokens = int(self.threshold_tokens * self.summary_target_ratio)
@@ -1106,6 +1112,13 @@ class ContextCompressor(ContextEngine):
         """
         tokens = prompt_tokens if prompt_tokens is not None else self.last_prompt_tokens
         if tokens < self.threshold_tokens:
+            return False
+        if self.max_compressions is not None and self.compression_count >= self.max_compressions:
+            if not self.quiet_mode:
+                logger.warning(
+                    "Compression skipped — maximum compression count (%d) reached",
+                    self.max_compressions,
+                )
             return False
         # Do not trigger compression while the summary LLM is in cooldown.
         # On a 429/transient failure _generate_summary() sets a cooldown and
@@ -2656,6 +2669,14 @@ This compaction should PRIORITISE preserving all information related to the focu
                 running so a manual ``/compress`` can retry immediately after
                 an auto-compression abort.  Auto-compress callers pass False.
         """
+        if self.max_compressions is not None and self.compression_count >= self.max_compressions:
+            if not self.quiet_mode:
+                logger.warning(
+                    "Compression skipped — maximum compression count (%d) reached",
+                    self.max_compressions,
+                )
+            return messages
+
         # Reset per-call summary failure state — callers inspect these fields
         # after compress() returns to decide whether to surface a warning.
         self._last_summary_dropped_count = 0

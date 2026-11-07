@@ -111,13 +111,16 @@ esac
 MODEL_SAFE="${MODEL//\//_}"
 SAVE_NAME="${SAVE_NAME:-${DATASET}/${MODEL_SAFE}-${STRATEGY_SUFFIX}}"
 
-# Toolsets enabled here cover browser/web/terminal/process/file/code tools:
+# Toolsets enabled here cover browser/web/image tools:
 # browser_navigate, browser_snapshot, browser_click, browser_type,
 # browser_press, browser_scroll, browser_back, browser_console,
 # browser_get_images, browser_vision, browser_dialog, browser_cdp,
 # web_search, web_extract, vision_analyze, image_search, image_crop, image_zoom_in,
-# terminal, process, read_file, write_file, search_files, patch, execute_code.
-TOOL_WHITELIST="${TOOL_WHITELIST:-web,browser,vision,code_execution}"
+# terminal, process, read_file, write_file, search_files, patch.
+# Keep code_execution opt-in for this eval: strict filesystem isolation depends on
+# tools/execute_code_fs_sandbox.py, and failures there can trap the agent in tool
+# retry loops. Override TOOL_WHITELIST if a benchmark truly needs execute_code.
+TOOL_WHITELIST="${TOOL_WHITELIST:-web,browser,vision}"
 SKILL_WHITELIST="${SKILL_WHITELIST:-}"
 
 if [[ ! -x "${HERMES_BIN}" ]]; then

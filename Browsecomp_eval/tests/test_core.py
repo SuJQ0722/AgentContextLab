@@ -1,18 +1,23 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from browsecomp_eval.dataset import DatasetItem, RunSpec, expand_repeats, load_dataset
+import browsecomp_eval.hermes_client as hermes_client_module
 from browsecomp_eval.hermes_client import (
     HermesClient,
     HermesConfig,
     _compression_count_from_stats,
+    _extract_fail_reason,
     _reached_round_limit,
     build_query,
     configured_web_backend_hosts,
     has_delegation_tool,
     merge_no_proxy,
+    parse_context_accounting,
 )
 from browsecomp_eval.judge import (
     BrowseCompJudge,
@@ -103,6 +108,78 @@ class CoreTests(unittest.TestCase):
         self.assertFalse(has_delegation_tool(["web", "browser", "file"]))
         self.assertTrue(has_delegation_tool(["web", "delegation"]))
 
+    def test_content_filter_reason_is_extracted(self):
+        reason = _extract_fail_reason(
+            "⚠️  The model declined to respond to this request (safety refusal — not a Hermes/gateway failure).\n\n"
+            'Model\'s explanation: call:default_api:web_search{query:"example"}\n\n'
+            "Try rephrasing the request.\n",
+            "",
+            "",
+        )
+
+        self.assertIn("web_search", reason)
+        self.assertIn("example", reason)
+
+    def test_max_rounds_with_final_answer_is_success(self):
+        spec = self._spec()
+        client = HermesClient(
+            HermesConfig(
+                hermes_bin="hermes",
+                api_key="test-key",
+                base_url="https://example.test/v1",
+                model="gemini-3.5-flash-thinking",
+                provider="custom",
+                save_name="save",
+                dataset="data",
+                max_rounds=2,
+                timeout_seconds=120,
+                toolsets=[],
+                skills=[],
+            )
+        )
+        client._setup_profile = lambda profile, workspace_dir, context_image_dir=None: None
+        client._build_chat_command = lambda profile, query: ["hermes", "chat"]
+        client._build_env = lambda spec, workspace_dir: {}
+
+        with tempfile.TemporaryDirectory() as td, mock.patch.object(
+            hermes_client_module.subprocess,
+            "run",
+            return_value=subprocess.CompletedProcess(["hermes", "chat"], 0, stdout="session_id: sid\n", stderr=""),
+        ), mock.patch.object(hermes_client_module, "load_session") as load_session, mock.patch.object(
+            hermes_client_module, "extract_final_assistant_message", return_value=("final answer", "")
+        ), mock.patch.object(
+            hermes_client_module, "extract_trace",
+            return_value={"tool_calls": {}, "rounds": 2, "total_tokens_estimate": 0, "duration_seconds": 1.0},
+        ), mock.patch.object(
+            hermes_client_module, "load_child_sessions", return_value=[]
+        ), mock.patch.object(
+            hermes_client_module, "load_compression_snapshots", return_value=[]
+        ), mock.patch.object(
+            hermes_client_module, "load_token_usage",
+            return_value={
+                "input_tokens": 10,
+                "output_tokens": 2,
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "reasoning_tokens": 0,
+                "api_call_count": 2,
+                "total_tokens": 12,
+                "cache_total_tokens": 0,
+                "noncached_total_tokens": 12,
+                "prompt_tokens_including_cache": 10,
+                "total_tokens_including_cache": 12,
+                "session_count": 1,
+            },
+        ), mock.patch.object(
+            hermes_client_module, "read_profile_agent_log_tail", return_value=""
+        ):
+            load_session.return_value = {"messages": []}
+            result = client.run(spec, Path(td), attempt=1)
+
+        self.assertEqual(result["status"], "success")
+        self.assertTrue(result["round_limit_reached"])
+        self.assertEqual(result["model_response"], "final answer")
+
     def test_progress_log_labels_include_iter(self):
         spec = self._spec()
         self.assertEqual(format_run_label(spec), "iter1/q_001")
@@ -148,10 +225,71 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(totals["prompt_tokens_including_cache"], 440)
         self.assertEqual(totals["total_tokens_including_cache"], 460)
 
+    def test_context_tokens_only_include_successful_predictions(self):
+        metrics = compute_metrics(
+            [
+                {
+                    "question_id": "q_success",
+                    "status": "judged",
+                    "pred_status": "success",
+                    "score": 1,
+                    "type": "simple",
+                    "compression_aware_tokens": 100,
+                },
+                {
+                    "question_id": "q_failed",
+                    "status": "judged",
+                    "pred_status": "failed",
+                    "score": 0,
+                    "type": "simple",
+                    "compression_aware_tokens": 900,
+                },
+            ]
+        )
+
+        context = metrics["context_tokens"]
+        self.assertEqual(context["runs_with_usage"], 1)
+        self.assertEqual(context["total_tokens"], 100)
+        self.assertEqual(context["avg_tokens"], 100.0)
+        self.assertEqual(metrics["tokens_distribution"]["values"], [100])
+
     def test_visual_compression_count_comes_from_stats_sidecar(self):
         self.assertEqual(_compression_count_from_stats({"compressions": 2}), 2)
         self.assertEqual(_compression_count_from_stats({"compressions": "3"}), 3)
         self.assertEqual(_compression_count_from_stats({}), 0)
+
+    def test_context_accounting_counts_only_completed_compressions(self):
+        log = """
+API call #1: model=x provider=custom in=100 out=10 total=110
+[ContextEngine] tokens=110 | strategy=discard | compressing...
+[ContextEngine] compression done | strategy=discard | messages=3->2 | tokens=110->20
+API call #2: model=x provider=custom in=40 out=5 total=45
+[ContextEngine] tokens=45 | strategy=discard | compressing...
+[ContextEngine] compression done | strategy=discard | messages=4->2 | tokens=45->20
+API call #3: model=x provider=custom in=30 out=7 total=37
+"""
+        accounting = parse_context_accounting(log)
+
+        self.assertEqual(accounting["compression_count"], 2)
+        self.assertEqual(accounting["pre_compression_tokens_sum"], 155)
+        self.assertEqual(accounting["final_prompt_tokens"], 30)
+        self.assertEqual(accounting["final_response_tokens"], 7)
+        self.assertEqual(accounting["effective_tokens"], 192)
+
+    def test_context_accounting_counts_system_prompt_once(self):
+        log = """
+API call #1: model=x provider=custom in=100 out=10 total=110 system=20 latency=1.0s
+[ContextEngine] compression done | strategy=summarize | messages=3->2 | tokens=100->25 | accounting_tokens=120 | system_tokens=20
+API call #2: model=x provider=custom in=70 out=5 total=75 system=20 latency=1.0s
+[ContextEngine] compression done | strategy=summarize | messages=4->2 | tokens=70->30 | accounting_tokens=80 | system_tokens=20
+API call #3: model=x provider=custom in=50 out=7 total=57 system=20 latency=1.0s
+"""
+        accounting = parse_context_accounting(log)
+
+        self.assertEqual(accounting["completed_context_segments"], [120, 80])
+        self.assertEqual(accounting["terminal_active_context_segment_tokens"], 57)
+        self.assertEqual(accounting["repeated_system_tokens_removed"], 40)
+        self.assertEqual(accounting["effective_tokens"], 217)
 
     def test_configured_web_backend_hosts_are_added_to_no_proxy(self):
         with tempfile.TemporaryDirectory() as td:
@@ -308,8 +446,8 @@ web:
             root / "output" / "preds" / "seal0" / "model-vis",
         )
 
-    def test_gemini_model_defaults_to_native_provider(self):
-        self.assertEqual(_resolve_provider("custom", "gemini-3.5-flash-thinking"), "gemini")
+    def test_explicit_provider_takes_precedence_over_model_name(self):
+        self.assertEqual(_resolve_provider("custom", "gemini-3.5-flash-thinking"), "custom")
         self.assertEqual(_resolve_provider("", "google/gemini-2.5-flash"), "gemini")
         self.assertEqual(_resolve_provider("custom", "qwen3.5-72b"), "custom")
         self.assertEqual(_resolve_provider("openrouter", "gemini-3.5-flash-thinking"), "openrouter")

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Hermes checks for updates in the background; never let that fetch prompt in batch runs.
+export GIT_TERMINAL_PROMPT=0
+
 cd "$(dirname "$0")/.."
 PROJECT_ROOT="$(cd .. && pwd)"
 export PYTHONPATH="${PROJECT_ROOT}${PYTHONPATH:+:${PYTHONPATH}}"
@@ -33,8 +36,8 @@ case "${BENCHMARK}" in
   bc_v3|bcv3|bc-v3)
     DEFAULT_DATA_SOURCE="${PROJECT_ROOT}/Browsecomp_eval/data/bc_v3/questions.jsonl"
     DEFAULT_DATASET="bc_v3"
-    DEFAULT_FIRST_N="300"
-    DEFAULT_EXPECTED_TOTAL="300"
+    DEFAULT_FIRST_N="299"
+    DEFAULT_EXPECTED_TOTAL="299"
     ;;
   mmbrowsecomp|mmbc|mm-browsecomp)
     DEFAULT_DATA_SOURCE="${PROJECT_ROOT}/Browsecomp_eval/data/mmbrowsecomp/questions.jsonl"
@@ -99,8 +102,11 @@ esac
 MODEL_SAFE="${MODEL//\//_}"
 SAVE_NAME="${SAVE_NAME:-${DATASET}/${MODEL_SAFE}-${STRATEGY_SUFFIX}}"
 
-# Image search requires vision toolset (vision_analyze, image_search, image_crop, image_zoom_in)
-TOOL_WHITELIST="${TOOL_WHITELIST:-web,browser,vision,code_execution}"
+# Image search requires vision toolset (vision_analyze, image_search, image_crop, image_zoom_in).
+# Keep code_execution opt-in for this eval: strict filesystem isolation depends on
+# tools/execute_code_fs_sandbox.py, and failures there can trap the agent in tool
+# retry loops. Override TOOL_WHITELIST if a benchmark truly needs execute_code.
+TOOL_WHITELIST="${TOOL_WHITELIST:-web,browser,vision}"
 SKILL_WHITELIST="${SKILL_WHITELIST:-}"
 
 if [[ ! -x "${HERMES_BIN}" ]]; then

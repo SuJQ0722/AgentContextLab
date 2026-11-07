@@ -44,6 +44,18 @@ class TestShouldCompress:
         assert compressor.should_compress(prompt_tokens=90000) is True
         assert compressor.should_compress(prompt_tokens=50000) is False
 
+    def test_max_compressions_stops_automatic_compression(self, compressor):
+        compressor.max_compressions = 10
+        compressor.compression_count = 10
+        compressor.last_prompt_tokens = 90000
+        assert compressor.should_compress() is False
+
+    def test_compress_is_noop_at_max_compressions(self, compressor):
+        compressor.max_compressions = 10
+        compressor.compression_count = 10
+        messages = [{"role": "user", "content": "keep me"}]
+        assert compressor.compress(messages, current_tokens=90000) is messages
+
 
 
 class TestUpdateFromResponse:

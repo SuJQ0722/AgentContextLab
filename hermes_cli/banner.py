@@ -181,6 +181,7 @@ def _check_via_rev(local_rev: str) -> Optional[int]:
         result = subprocess.run(
             ["git", "ls-remote", _UPSTREAM_REPO_URL, "refs/heads/main"],
             capture_output=True, text=True, timeout=10,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
         )
     except Exception:
         return None
@@ -222,6 +223,7 @@ def _check_via_local_git(repo_dir: Path) -> Optional[int]:
             fetch_args,
             capture_output=True, timeout=10,
             cwd=str(repo_dir),
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
         )
     except Exception:
         pass  # Offline or timeout — use stale refs, that's fine

@@ -248,7 +248,7 @@ def _detect_table(text: str) -> Optional[List[List[str]]]:
                 continue
             rows.append(cells)
         if len(rows) >= 2:
-            return rows[:20]
+            return rows[:30]
 
     if _TABLE_TRAILER_RE.search(text) or re.search(r"^.+\s{3,}\S+", text, re.MULTILINE):
         lines = text.split("\n")
@@ -519,19 +519,19 @@ def _render_table_flowable(table_data: List[List[str]], font_name: str, font_siz
     if not table_data:
         return None
     max_cols = max(len(r) for r in table_data)
-    cell_font_size = max(5, font_size - 1)
+    cell_font_size = max(9, font_size + 2)
     # Wide tables (many cols) can use more page width; narrow tables stay compact
-    max_table_frac = min(0.85, 0.25 + max_cols * 0.08)
-    max_cell_chars = max(8, int(page_pt_width * max_table_frac / (max_cols * cell_font_size * 0.4)))
+    max_table_frac = min(0.98, 0.55 + max_cols * 0.12)
+    max_cell_chars = max(16, int(page_pt_width * max_table_frac / (max_cols * cell_font_size * 0.30)))
     truncated = []
-    for row in table_data[:8]:
+    for row in table_data[:15]:
         truncated.append([c[:max_cell_chars] for c in row])
 
     try:
         col_widths = []
         for col_idx in range(max_cols):
             max_len = max((len(truncated[r][col_idx]) if col_idx < len(truncated[r]) else 0) for r in range(len(truncated)))
-            col_widths.append(max(cell_font_size * 2, min(max_len * cell_font_size * 0.55 + 4, page_pt_width * max_table_frac / max_cols)))
+            col_widths.append(max(cell_font_size * 3, min(max_len * cell_font_size * 0.65 + 6, page_pt_width * max_table_frac / max_cols)))
         total_w = sum(col_widths)
         if total_w > page_pt_width * max_table_frac:
             scale = page_pt_width * max_table_frac / total_w
@@ -541,17 +541,17 @@ def _render_table_flowable(table_data: List[List[str]], font_name: str, font_siz
         style_cmds = [
             ("FONTNAME", (0, 0), (-1, -1), font_name),
             ("FONTSIZE", (0, 0), (-1, -1), cell_font_size),
-            ("LEADING", (0, 0), (-1, -1), cell_font_size + 1),
-            ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#CCCCCC")),
+            ("LEADING", (0, 0), (-1, -1), cell_font_size + 3),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#AAAAAA")),
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EAEAEA")),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 1),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 1),
-            ("TOPPADDING", (0, 0), (-1, -1), 0),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ("TOPPADDING", (0, 0), (-1, -1), 2),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
         ]
         t.setStyle(TableStyle(style_cmds))
-        t.hAlign = "RIGHT"
+        t.hAlign = "LEFT"
         return t
     except Exception:
         return None
@@ -573,7 +573,7 @@ def _blocks_to_pdf_bytes(
     from reportlab.lib import colors
     from reportlab.lib.enums import TA_LEFT
     from reportlab.lib.styles import ParagraphStyle
-    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
     from reportlab.platypus.flowables import ImageAndFlowables
     from xml.sax.saxutils import escape
 
@@ -641,8 +641,25 @@ def _blocks_to_pdf_bytes(
     def _make_img_flowable(img_path):
         return _render_image_flowable(img_path, max_height_pt=120.0, max_width_pt=200.0)
 
+    class _TableFloat(Table):
+        """A captioned table implementing ImageAndFlowables' size protocol.
+
+        Unlike an image, text must not shrink to fit the remaining page height.
+        Returning its real size lets the surrounding flowable move to the next
+        page when necessary.
+        """
+
+        def _restrictSize(self, availWidth, availHeight):
+            return self._width, self._height
+
+        def _unRestrictSize(self):
+            pass
+
+    # SimpleDocTemplate's frame has 6pt padding on each side.
+    frame_width = page_pt_width - 12
+
     def _make_captioned_table(table_data, table_source):
-        table_f = _render_table_flowable(table_data, font_name, font_size, page_pt_width)
+        table_f = _render_table_flowable(table_data, font_name, font_size, frame_width)
         if not table_f:
             return None
         caption_text = table_source.replace("_", " ") if table_source else "output"
@@ -662,7 +679,7 @@ def _blocks_to_pdf_bytes(
         block_paras.append((para, images, table_data, table_source))
 
     if text_only:
-        block_paras = [(p, [], td, ts) for p, _, td, ts in block_paras]
+        block_paras = [(p, [], None, "") for p, _, td, ts in block_paras]
 
     i = 0
     while i < len(block_paras):
@@ -688,16 +705,9 @@ def _blocks_to_pdf_bytes(
                     for p, _ in (next_imgs or [])
                     if p
                 )
-                if has_own_imgs:
+                if has_own_imgs or next_td:
                     break
                 all_wrap.append(next_para)
-                if next_td:
-                    result = _make_captioned_table(next_td, next_ts)
-                    if result:
-                        cap, tf = result
-                        all_wrap.append(Spacer(1, 1))
-                        all_wrap.append(cap)
-                        all_wrap.append(tf)
                 all_wrap.append(Spacer(1, spacer_height))
                 j += 1
 
@@ -736,17 +746,53 @@ def _blocks_to_pdf_bytes(
             i = j
             continue
 
-        # No images — just add paragraph
-        story.append(para)
-
-        # Table below text with caption
+        # No images — check if there's a table to wrap text around
         if table_data:
             result = _make_captioned_table(table_data, table_source)
             if result:
                 cap, tf = result
-                story.append(Spacer(1, 1))
-                story.append(cap)
-                story.append(tf)
+                # Wrap only beside the caption/table height; remaining text
+                # returns to the full frame width, including on later pages.
+                wrap_flowables = [para, Spacer(1, spacer_height)]
+                j = i + 1
+                while j < len(block_paras):
+                    next_para, next_imgs, next_td, next_ts = block_paras[j]
+                    if next_td or any(
+                        _resolve_image_path(p, image_cache_dir) is not None
+                        for p, _ in (next_imgs or []) if p
+                    ):
+                        break
+                    wrap_flowables.extend([next_para, Spacer(1, spacer_height)])
+                    j += 1
+                tw, _ = tf.wrap(frame_width, 10_000_000)
+                side_table = _TableFloat([[cap], [tf]], colWidths=[tw])
+                side_table.setStyle(TableStyle([
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                ]))
+                _, side_height = side_table.wrap(frame_width, 10_000_000)
+                min_text_width = max(font_size * 12, frame_width * 0.25)
+                if (frame_width - tw - 4 >= min_text_width
+                        and side_height + 2 <= max_page_pt_height - 12):
+                    story.append(ImageAndFlowables(
+                        side_table, wrap_flowables,
+                        imageLeftPadding=4, imageRightPadding=0,
+                        imageTopPadding=0, imageBottomPadding=2,
+                        imageSide="right",
+                    ))
+                else:
+                    # Wide or page-tall tables remain ordinary, splittable
+                    # flowables rather than overflowing a narrow side column.
+                    story.extend([para, Spacer(1, 1), cap, tf])
+                    j = i + 1
+                i = j
+                continue
+            else:
+                story.append(para)
+        else:
+            story.append(para)
 
         story.append(Spacer(1, spacer_height))
         i += 1
@@ -757,8 +803,11 @@ def _blocks_to_pdf_bytes(
     page_pt_height = max_page_pt_height
     if fit_to_content_height and story:
         try:
+            from reportlab.pdfgen.canvas import Canvas
+
+            measure_canvas = Canvas(io.BytesIO())
             story_height = sum(
-                float(flowable.wrap(page_pt_width, 10_000_000.0)[1])
+                float(flowable.wrapOn(measure_canvas, frame_width, 10_000_000.0)[1])
                 for flowable in story
             )
             padding = max(24.0, float(body_style.leading) * 3.0)

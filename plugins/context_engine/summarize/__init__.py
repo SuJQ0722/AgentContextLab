@@ -261,6 +261,7 @@ class SummarizeEngine(ContextEngine):
         self.last_prompt_tokens = 0
         self.last_completion_tokens = 0
         self.compression_count = 0
+        self.max_compressions: int | None = None
 
         self._protect_first_n = 3
         self._protect_last_n = 20
@@ -298,6 +299,8 @@ class SummarizeEngine(ContextEngine):
 
     def should_compress(self, prompt_tokens: Optional[int] = None) -> bool:
         tokens = prompt_tokens if prompt_tokens is not None else self.last_prompt_tokens
+        if self.max_compressions is not None and self.compression_count >= self.max_compressions:
+            return False
         return tokens >= self.threshold_tokens
 
     def on_session_reset(self) -> None:
@@ -313,6 +316,12 @@ class SummarizeEngine(ContextEngine):
         current_tokens: int = None,
         focus_topic: str = None,
     ) -> List[Dict[str, Any]]:
+        if self.max_compressions is not None and self.compression_count >= self.max_compressions:
+            logger.warning(
+                "Compression skipped — maximum compression count (%d) reached",
+                self.max_compressions,
+            )
+            return messages
         n_messages = len(messages)
         head_end = self._protect_head_size(messages)
         if n_messages <= head_end + 4:

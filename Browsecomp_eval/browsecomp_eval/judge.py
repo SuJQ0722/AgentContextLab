@@ -290,7 +290,10 @@ class BrowseCompJudge:
             "prediction": record.pred,
             "token_usage": record.token_usage,
             "rounds": coerce_int(record.raw.get("rounds")) or 0,
+            "compression_count": coerce_int(record.raw.get("compression_count")) or 0,
             "compression_stats": record.raw.get("compression_stats", {}),
+            "context_accounting": record.raw.get("context_accounting", {}),
+            "compression_aware_tokens": coerce_int(record.raw.get("compression_aware_tokens")) or 0,
             "pred_path": str(record.path),
         }
 
@@ -411,6 +414,35 @@ def _aggregate_token_usage(results: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _aggregate_context_tokens(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate the experiment's live-context token metric.
+
+    This is intentionally separate from cumulative provider billing usage:
+    sum each successful pre-compression live context, then add the last API
+    prompt and response for the final live segment.
+    """
+    values: list[int] = []
+    for result in results:
+        if result.get("pred_status") != "success":
+            continue
+        value = coerce_int(result.get("compression_aware_tokens"))
+        if value is None or value <= 0:
+            accounting = result.get("context_accounting")
+            if isinstance(accounting, dict):
+                value = coerce_int(accounting.get("effective_tokens"))
+        if value is not None and value > 0:
+            values.append(value)
+    return {
+        "definition": (
+            "sum(completed_context_segments) + terminal_active_context_segment "
+            "- repeated_fixed_system_prompt"
+        ),
+        "runs_with_usage": len(values),
+        "total_tokens": sum(values),
+        "avg_tokens": round(sum(values) / len(values), 2) if values else 0.0,
+    }
+
+
 _COMPRESSION_FIELDS = (
     "total_text_tokens",
     "total_image_tokens",
@@ -517,7 +549,14 @@ def load_prediction_records(conv_dir: Path) -> list[PredictionRecord]:
         question_id = str(raw.get("question_id") or infer_question_id(run_id, path))
         raw_slim = {
             k: raw[k]
-            for k in ("rounds", "compression_stats", "delegate_sessions")
+            for k in (
+                "rounds",
+                "compression_count",
+                "compression_stats",
+                "context_accounting",
+                "compression_aware_tokens",
+                "delegate_sessions",
+            )
             if k in raw
         }
         records.append(
@@ -612,15 +651,20 @@ def compute_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
             majority_correct += 1
 
     token_usage = _aggregate_token_usage(results)
+    context_tokens = _aggregate_context_tokens(results)
     turns_list: list[int] = []
     tokens_list: list[int] = []
     per_question_stats: list[dict[str, Any]] = []
     for result in results:
         rounds = coerce_int(result.get("rounds")) or 0
-        tu = result.get("token_usage")
-        total_tok = int((tu or {}).get("total_tokens", 0) or 0) if isinstance(tu, dict) else 0
+        total_tok = coerce_int(result.get("compression_aware_tokens")) or 0
+        if total_tok <= 0:
+            accounting = result.get("context_accounting")
+            if isinstance(accounting, dict):
+                total_tok = coerce_int(accounting.get("effective_tokens")) or 0
         turns_list.append(rounds)
-        tokens_list.append(total_tok)
+        if result.get("pred_status") == "success" and total_tok > 0:
+            tokens_list.append(total_tok)
         per_question_stats.append(
             {
                 "question_id": result.get("question_id"),
@@ -650,6 +694,7 @@ def compute_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
         "accuracy": safe_ratio(correct, len(scored)),
         "accuracy_by_total": safe_ratio(correct, total),
         "token_usage": token_usage,
+        "context_tokens": context_tokens,
         "compression": _aggregate_compression_stats(results, token_usage),
         "run_level_accuracy_scored": safe_ratio(correct, len(scored)),
         "turns_distribution": _compute_distribution(turns_list),
@@ -1003,7 +1048,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     metrics = runner.run()
     print("done")
-    hidden_keys = ("by_type", "token_usage", "compression", "turns_distribution", "tokens_distribution", "per_question_stats", "contamination")
+    hidden_keys = ("by_type", "token_usage", "context_tokens", "compression", "turns_distribution", "tokens_distribution", "per_question_stats", "contamination")
     print("  " + " ".join(f"{key}={value}" for key, value in metrics.items() if key not in hidden_keys))
     ct_info = metrics.get("contamination", {})
     if isinstance(ct_info, dict):
@@ -1034,6 +1079,16 @@ def main(argv: list[str] | None = None) -> int:
             tu_avg.get("avg_api_call_count", 0),
         )
     )
+    context_tokens = metrics.get("context_tokens", {})
+    if isinstance(context_tokens, dict):
+        print(
+            "  context_tokens: runs=%s total=%s avg=%s"
+            % (
+                context_tokens.get("runs_with_usage", 0),
+                context_tokens.get("total_tokens", 0),
+                context_tokens.get("avg_tokens", 0),
+            )
+        )
     comp = metrics.get("compression", {})
     if isinstance(comp, dict) and comp.get("runs_with_compression", 0) > 0:
         ct = comp.get("total", {})

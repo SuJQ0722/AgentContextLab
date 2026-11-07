@@ -115,12 +115,12 @@ class TestDiscard:
         tool_msgs = [m for m in result if m.get("role") == "tool"]
         assert len(tool_msgs) == 0
 
-    def test_discard_75_percent(self):
+    def test_keep_one_complete_round(self):
         engine = self._make_engine()
-        engine.configure({"strategy_config": {"discard_ratio": 0.75}})
+        engine.configure({"strategy_config": {"keep_rounds": 1}})
         msgs = _make_messages(n_tool_rounds=4)
         result = engine.compress(msgs)
-        # 4 rounds, discard 75% = 3 rounds discarded, 1 kept
+        # 4 rounds, keep the last complete assistant/tool round
         assert result[0]["role"] == "system"
         assert result[1]["role"] == "user"
         assert any(m.get("role") == "assistant" for m in result[2:])
@@ -133,8 +133,8 @@ class TestDiscard:
         assert engine._keep_rounds == 0
         msgs = _make_messages(n_tool_rounds=3)
         result = engine.compress(msgs)
-        # keep_rounds=0 -> system + first_user + omission placeholder, no rounds.
-        assert [m["role"] for m in result] == ["system", "user", "user"]
+        # keep_rounds=0 -> system + original task, no replacement memory.
+        assert [m["role"] for m in result] == ["system", "user"]
         assert not any(m.get("role") in ("assistant", "tool") for m in result)
 
     def test_env_invalid_falls_back_to_config(self, monkeypatch):
@@ -202,6 +202,16 @@ class TestSummarize:
         engine.on_session_reset()
         assert engine._previous_summary is None
         assert engine.compression_count == 0
+
+    def test_max_compressions_stops_compression(self):
+        engine = self._make_engine()
+        engine.max_compressions = 10
+        engine.compression_count = 10
+        engine.last_prompt_tokens = engine.threshold_tokens
+        msgs = _make_messages(n_tool_rounds=5)
+
+        assert engine.should_compress() is False
+        assert engine.compress(msgs) is msgs
 
 
 # ---------------------------------------------------------------------------

@@ -1704,6 +1704,18 @@ def init_agent(
         except (TypeError, ValueError):
             pass
 
+    # Optional per-session hard cap. This is primarily useful for summarizing
+    # engines, where an ineffective summary can otherwise retrigger every turn.
+    _env_max_compressions = os.getenv("COMPRESS_MAX_COUNT")
+    if _env_max_compressions:
+        try:
+            _max_compressions = int(_env_max_compressions)
+            agent.context_compressor.max_compressions = (
+                _max_compressions if _max_compressions > 0 else None
+            )
+        except (TypeError, ValueError):
+            pass
+
     # Reject models whose context window is below the minimum required
     # for reliable tool-calling workflows (64K tokens).
     _ctx = getattr(agent.context_compressor, "context_length", 0)

@@ -2307,7 +2307,7 @@ def cmd_chat(args):
     # Start update check in background (runs while other init happens).
     # On Termux this imports rich/prompt_toolkit in the foreground and then
     # competes for CPU on single-core devices, so keep it opt-in there.
-    if _termux_should_prefetch_update_check():
+    if not getattr(args, "quiet", False) and _termux_should_prefetch_update_check():
         try:
             from hermes_cli.banner import prefetch_update_check
 

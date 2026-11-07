@@ -23,6 +23,8 @@ class RunnerConfig:
     skip_statuses: set[str]
     allowed_tools: set[str]
     conv_dir: Path | None = None
+    log_dir: Path | None = None
+    trajectory_dir: Path | None = None
 
 
 class BrowseCompRunner:
@@ -37,6 +39,8 @@ class BrowseCompRunner:
         self.config.summary_path.parent.mkdir(parents=True, exist_ok=True)
         if self.config.conv_dir:
             self.config.conv_dir.mkdir(parents=True, exist_ok=True)
+        if self.config.log_dir:
+            self.config.log_dir.mkdir(parents=True, exist_ok=True)
 
         all_specs = list(specs)
         pending = [spec for spec in all_specs if self._should_run(spec)]
@@ -121,8 +125,33 @@ class BrowseCompRunner:
         path = self._result_path(spec)
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        persisted = dict(result)
+        full_agent_log = str(persisted.pop("_agent_log_full", "") or "")
+        tmp.write_text(json.dumps(persisted, ensure_ascii=False, indent=2), encoding="utf-8")
         tmp.replace(path)
+
+        if self.config.trajectory_dir:
+            # Separate files avoid interleaving workers and preserve retry attempts.
+            trajectory_path = (self.config.trajectory_dir / f"iter{spec.repeat_index}"
+                               / spec.question_id / f"attempt_{result.get('attempt', 1)}.jsonl")
+            trajectory_path.parent.mkdir(parents=True, exist_ok=True)
+            trajectory = {
+                "session_id": result.get("session_id"),
+                "question_id": spec.question_id,
+                "repeat_index": spec.repeat_index,
+                "attempt": result.get("attempt", 1),
+                "model": result.get("model"),
+                "status": result.get("status"),
+                "messages": result.get("history", []),
+            }
+            trajectory_tmp = trajectory_path.with_suffix(".jsonl.tmp")
+            trajectory_tmp.write_text(json.dumps(trajectory, ensure_ascii=False) + "\n", encoding="utf-8")
+            trajectory_tmp.replace(trajectory_path)
+
+        if self.config.log_dir:
+            log_path = self.config.log_dir / f"iter{spec.repeat_index}" / f"{spec.question_id}.log"
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path.write_text(full_agent_log, encoding="utf-8")
 
         if self.config.conv_dir:
             self._write_conv(spec, result)
@@ -134,6 +163,8 @@ class BrowseCompRunner:
             "type": result.get("type"),
             "status": result.get("status"),
             "error": result.get("error", ""),
+            "final_assistant_valid": result.get("final_assistant_valid", False),
+            "round_limit_reached": result.get("round_limit_reached", False),
             "session_id": result.get("session_id"),
             "profile": result.get("profile"),
             "duration_seconds": result.get("duration_seconds", 0),
@@ -144,6 +175,9 @@ class BrowseCompRunner:
             "total_tokens": result.get("total_tokens", 0),
             "api_call_count": result.get("api_call_count", 0),
             "compression_stats": result.get("compression_stats", {}),
+            "compression_count": result.get("compression_count", 0),
+            "compression_aware_tokens": result.get("compression_aware_tokens", 0),
+            "context_accounting": result.get("context_accounting", {}),
             "delegate_token_usage": result.get("delegate_token_usage", {}),
             "result_path": str(path),
             "workspace_dir": result.get("workspace_dir"),
@@ -170,10 +204,14 @@ class BrowseCompRunner:
             "model": result.get("model"),
             "status": result.get("status"),
             "model_response": result.get("model_response"),
+            "final_assistant_valid": result.get("final_assistant_valid", False),
+            "round_limit_reached": result.get("round_limit_reached", False),
             "session_id": result.get("session_id"),
             "rounds": result.get("rounds", 0),
             "compression_count": result.get("compression_count", 0),
             "compression_stats": result.get("compression_stats", {}),
+            "context_accounting": result.get("context_accounting", {}),
+            "compression_aware_tokens": result.get("compression_aware_tokens", 0),
             "token_usage": result.get("token_usage", {}),
             "input_tokens": result.get("input_tokens", 0),
             "output_tokens": result.get("output_tokens", 0),

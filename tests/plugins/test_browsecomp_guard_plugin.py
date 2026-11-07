@@ -87,6 +87,18 @@ def test_pre_hook_blocks_related_benchmark_leak_variants(monkeypatch):
             "browser_console",
             {"expression": "location.href = '/?dataset=GAIA%20benchmark'"},
         ),
+        (
+            "web_search",
+            {"query": "MMBrowseComp ground truth answers"},
+        ),
+        (
+            "web_search",
+            {"query": "bc_v3 BrowseComp eval samples"},
+        ),
+        (
+            "web_search",
+            {"query": "WebSailor WebWalker WebDancerQwQ benchmark results"},
+        ),
     ]
     for tool_name, args in attempts:
         blocked = guard._on_pre_tool_call(tool_name=tool_name, args=args)
@@ -238,6 +250,16 @@ def test_search_results_remove_related_benchmark_leaks(monkeypatch):
                         "title": "XDS answer key",
                         "url": "https://example.com/xds.jsonl",
                         "description": "deepsearch benchmark answers",
+                    },
+                    {
+                        "title": "MMBrowseComp answers",
+                        "url": "https://example.com/mmbrowsecomp.jsonl",
+                        "description": "bc_v3 benchmark answer rows",
+                    },
+                    {
+                        "title": "WebSailor benchmark chart",
+                        "url": "https://example.com/websailor",
+                        "description": "WebDancerQwQ results",
                     },
                     {
                         "title": "Independent source",

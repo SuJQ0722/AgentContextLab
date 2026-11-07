@@ -15,11 +15,11 @@ Put JSONL files under `data/{dataset}/`. Each row must contain:
 ## Run
 
 ```bash
-cd /root/Browse_comp_eval
+cd Browsecomp_eval
 export HERMES_API_KEY="..."
 export HERMES_BASE_URL="https://your-endpoint/v1"
 
-python -m browse_comp_eval.run \
+python -m browsecomp_eval.run \
   --dataset simple_search \
   --data-path data/example/questions.jsonl \
   --model claude-opus-4-7-thinking \
@@ -67,7 +67,7 @@ After inference, run an answer-equivalence judge over `conv/**/*.json`:
 export JUDGE_API_KEY="..."
 export JUDGE_BASE_URL="https://your-resource.openai.azure.com"
 
-python -m browse_comp_eval.judge \
+python -m browsecomp_eval.judge \
   --pred-root output/preds/bailian_deepseek-v4-pro/browsecomp_subset_first5 \
   --judge-provider azure \
   --judge-model gpt-5-mini \
@@ -90,3 +90,22 @@ scripts/judge_browsecomp_first5.sh
 `--tool-whitelist` is a comma-separated Hermes toolset allowlist. The runner passes it to Hermes as `--toolsets`, then parses the saved session and marks a run as `policy_violation` if any actual tool call is outside the resolved allowlist.
 
 `--skill-whitelist` is passed to Hermes as `--skills`. The default tool whitelist does not include the `skills` toolset, so the model cannot dynamically browse/load extra skills unless you explicitly allow it.
+
+## Context selection and trajectory exports
+
+Use `--context-engine visual|summarize|sliding_window|discard|none`.
+`discard_all` and `discard-all` select the full-history reset baseline: the
+system instructions and original task remain, but no past assistant/tool
+interactions or replacement summary survive. The evaluator sets `keep_rounds=0`.
+Explicit CLI selection overrides inherited strategy variables in the child.
+For older launchers, defaults are read from `CONTEXT_ENGINE`, then `CM`, then
+`COMPRESS_STRATEGY`; prefer the CLI option for new experiments.
+
+`--save-trajectories --trajectory-dir PATH` exports one JSONL record per attempt
+at `PATH/iterN/question_id/attempt_A.jsonl`. Without an explicit path, enabled
+exports go under the run's `trajectories/` directory. Each record includes
+`messages` from available session ancestry, model, status, and run identifiers;
+it is not the separate ShareGPT training export format. Attempts and parallel
+workers use separate files. Historical `SAVE_TRAJECTORIES=1` and `TRAJECTORY_DIR`
+settings remain accepted by this evaluator; `--no-save-trajectories` overrides
+them. These variables are not global Hermes settings.

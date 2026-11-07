@@ -1,0 +1,18 @@
+{
+  "hermes": {
+    "path": "hermes-agent",
+    "upstream": "https://github.com/NousResearch/hermes-agent",
+    "upstream_base": "v0.18.0",
+    "upstream_base_commit": "7c1a029553d87c43ecff8a3821336bc95872213b",
+    "research_snapshot": "4312924d177d0b0b746b0ebde97f4095bc2a5e7c",
+    "note": "Customized paper implementation; preserved rather than replaced with upstream."
+  },
+  "deepseek": {
+    "path": "deepseekHarness",
+    "upstream": "https://github.com/deepseek-ai/deepseek-harness.git",
+    "tag": "dsh-v0.2.2-rc.1",
+    "commit": "66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db",
+    "prerelease": true,
+    "note": "No non-prerelease release exists as checked on 2026-11-07. Pinned RC, not a stable-release claim."
+  }
+}

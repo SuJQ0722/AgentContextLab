@@ -1,0 +1,16 @@
+{
+  "compressions": 1,
+  "total_text_tokens": 184,
+  "total_image_tokens": 1332,
+  "total_token_savings": 0,
+  "per_compression": [
+    {
+      "index": 1,
+      "text_tokens": 184,
+      "image_tokens": 1332,
+      "token_savings": 0,
+      "image_count": 1,
+      "messages_rendered": 6
+    }
+  ]
+}

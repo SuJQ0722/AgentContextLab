@@ -56,4 +56,4 @@ python scripts/render_table_wrap_cases.py \
   --case single-paragraph --prefix comparison-
 ```
 
-Automated checks in `tests/agent/test_visual_table_render.py` verify PDF text coordinates, full-width continuation, cross-page text preservation, wide/tall table handling, and tables following images.
+Automated checks in `hermes-agent/tests/agent/test_visual_table_render.py` verify PDF text coordinates, full-width continuation, cross-page text preservation, wide/tall table handling, and tables following images.

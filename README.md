@@ -16,7 +16,7 @@ The project combines a common evaluation harness, context-engine baselines, and 
 
 See the [table wrapping gallery](docs/table-wrap-cases/README.md) for generated rendering examples and reproduction instructions.
 
-This repository extends [Hermes Agent](https://github.com/NousResearch/hermes-agent) with context-engine plugins, visual tools, and an evaluation harness. The original Hermes documentation is preserved in [README.hermes.md](README.hermes.md).
+This repository extends [Hermes Agent](https://github.com/NousResearch/hermes-agent) with context-engine plugins, visual tools, and an evaluation harness. The original Hermes documentation is preserved in [Hermes README](hermes-agent/README.md).
 
 ## Context strategies
 
@@ -30,67 +30,81 @@ This repository extends [Hermes Agent](https://github.com/NousResearch/hermes-ag
 
 `discard_all` and `discard-all` are accepted legacy names for the discard engine. The optional `keep_rounds` setting supports partial retention; use zero for the Discard-All baseline.
 
+## Repository layout
+
+```text
+AgentContextLab/
+├── .env.example              # clean shared TokenHub template
+├── .env                      # local shared URL/key, ignored
+├── configs/                  # model settings and DSH provider overlay
+├── scripts/                  # setup, launchers, evaluation entrypoints
+├── docs/                     # rebuttal plan and rendered table cases
+├── harness-lock.json          # exact harness revisions and release status
+├── hermes-agent/              # customized Hermes source and its own .env
+└── deepseekHarness/           # official DSH submodule and its own .env
+```
+
+The `dev` branch is the multi-harness research workspace. The original flat
+paper-code layout remains on `main`. Local development now lives in an
+`AgentContextLab` directory; the earlier `hermes-agent` checkout and its logs are
+retained as a migration backup.
+
 ## Setup
 
-Use Python 3.11–3.13 and install this checkout:
-
 ```bash
-python -m venv .venv
+git clone --recurse-submodules https://github.com/SuJQ0722/AgentContextLab.git
+cd AgentContextLab
+git switch dev
+git submodule update --init deepseekHarness
+cp .env.example .env
+cp configs/deepseekHarness.env.example deepseekHarness/.env
+# Fill in TOKENHUB_BASE_URL and TOKENHUB_API_KEY locally.
+# Verify model ID and capabilities in configs/experiment.json.
+bash scripts/setup.sh hermes python3.11
 source .venv/bin/activate
-pip install -e .
-pip install -e ./Browsecomp_eval
-pip install reportlab pymupdf Pillow
-hermes setup
+# DSH requires Node >=24.9 and the pnpm version in its package.json.
+bash scripts/setup.sh dsh
+python scripts/lab.py doctor
 ```
 
-Configure a vision-capable model for visual context and the tool backends required by your experiment. Provider credentials and datasets must be supplied separately. The optional `local_web` integration requires its own search/fetch services; it is not a public hosted service bundled with this repository.
+DSH is locked to `dsh-v0.2.2-rc.1`. Upstream has no stable release as of
+2026-11-07; this is a reproducible release candidate, not a stability claim.
+Hermes preserves the paper's customized v0.18.0-based code. Its ordinary setup
+instructions remain in [hermes-agent/README.md](hermes-agent/README.md).
 
-Example configuration in the selected Hermes profile:
+Root `.env` holds shared TokenHub settings. Optional harness-specific overrides
+stay in `hermes-agent/.env` and `deepseekHarness/.env`. Shared gateway values take
+precedence in the launchers; credentials are passed through the environment and
+never embedded in the generated provider config or printed dry-run commands.
+The DSH local-env template is [configs/deepseekHarness.env.example](configs/deepseekHarness.env.example).
 
-```yaml
-context:
-  engine: visual
-  strategy_config:
-    history_scale: 0.75
-    layout: highlight
-```
-
-For the reset baseline:
-
-```yaml
-context:
-  engine: discard
-  strategy_config:
-    keep_rounds: 0
-```
-
-## Evaluation
-
-The bundled runner accepts JSONL datasets and creates isolated per-question runs:
+## Run and inspect
 
 ```bash
-cd Browsecomp_eval
-python -m browsecomp_eval.run \
-  --dataset example \
-  --data-path data/example/questions.jsonl \
-  --model YOUR_VISION_MODEL \
-  --provider YOUR_PROVIDER \
-  --context-engine visual \
-  --save-name visual-example \
-  --save-trajectories \
-  --trajectory-dir output/trajectories/visual-example
+python scripts/lab.py run hermes --prompt 'Your task' --dry-run
+python scripts/lab.py run dsh --prompt 'Your task' --dry-run
+# Remove --dry-run only when ready to call the configured model.
+python scripts/eval_hermes.py -- --help
+python scripts/render_table_wrap_cases.py
 ```
 
-See [Browsecomp_eval/README.md](Browsecomp_eval/README.md) for input/output details. Paper-wide reproduction also requires the corresponding benchmark data and external task environments; the AgenticDataBench environment is maintained separately.
+The DSH overlay selects a custom OpenAI Chat Completions route for TokenHub's
+`/v1` gateway. DSH's official DeepSeek adapter uses a different Messages protocol.
+Exact model ID, image support and token limits must be verified at your endpoint.
 
-Trajectory exports contain session history in `messages` format, including available pre-compression ancestors. Each question, repeat, and retry attempt has its own JSONL file. These are evaluation exports, not Hermes's separate ShareGPT training export format.
+See [the rebuttal plan](docs/rebuttal-plan.md) for experimental order and controls,
+and [Hermes evaluation documentation](hermes-agent/Browsecomp_eval/README.md) for
+existing benchmark runs and trajectory exports. DSH context-strategy plugins and
+the new Native Images baselines are future experiment work, not implemented by
+this directory refactor. No paid runs are started by setup, doctor or dry-run.
 
-## Code map
+## Checks
 
-- `plugins/context_engine/visual/`: visual memory construction and PDF/image rendering.
-- `plugins/context_engine/{discard,sliding_window,summarize}/`: comparison strategies.
-- `tools/image_{search,crop,zoom_in}_tool.py`: visual evidence acquisition and inspection.
-- `Browsecomp_eval/`: parallel evaluation, session traces, judging, and analysis.
+```bash
+python -m unittest discover -s tests -v
+cd hermes-agent
+scripts/run_tests.sh tests/agent/test_eval_context_compat.py tests/agent/test_visual_table_render.py
+```
 
 ## Citation
 

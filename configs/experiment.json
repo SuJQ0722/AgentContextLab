@@ -1,0 +1,7 @@
+{
+  "model": "deepseek-flash",
+  "input_modalities": ["text", "image"],
+  "context_window": 131072,
+  "max_output_tokens": 8192,
+  "notes": "Verify the exact TokenHub model ID, image support and limits before running; these are experiment settings, not discovered endpoint capabilities."
+}

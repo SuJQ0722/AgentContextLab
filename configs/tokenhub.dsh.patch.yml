@@ -1,0 +1,25 @@
+# TokenHub /v1 uses OpenAI Chat Completions, not DSH's official Messages route.
+- id: llm-pi-ai
+  config:
+    providers:
+      tokenhub:
+        apiKeyEnv: TOKENHUB_API_KEY
+        api: openai-completions
+        baseURL: !!js process.env.TOKENHUB_BASE_URL
+        models:
+          - id: !!js process.env.ACL_MODEL
+            input: !!js JSON.parse(process.env.ACL_INPUT_MODALITIES)
+            contextWindow: !!js Number(process.env.ACL_CONTEXT_WINDOW)
+            maxTokens: !!js Number(process.env.ACL_MAX_OUTPUT_TOKENS)
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: tokenhub
+        model: !!js process.env.ACL_MODEL
+        cwd: !!js process.env.ACL_WORKSPACE
+- id: sandbox-policy
+  config:
+    mode: workspace-write
+    workspaceRoot: !!js process.env.ACL_WORKSPACE
+    additionalWritableRoots: !!js ctx.headlessStartup.additionalWritableRoots

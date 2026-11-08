@@ -1,5 +1,7 @@
 # Rebuttal work and supervision
 
+**2026-11-08: user explicitly requested all experiments remain paused.** Core/RQ3 STOP markers and `outputs/PAUSED_BY_USER.json` are present; the waiting judge process was stopped. Only requested web checks and offline audits are authorized during this pause. Do not interpret successful diagnostics as permission to resume evaluations.
+
 Updated 2026-11-07. New inference uses the exact configured DeepSeek route;
 no new Gemini calls, no fourth repeats, and no pinned-harness changes.
 

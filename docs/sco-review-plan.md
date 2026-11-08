@@ -1,6 +1,6 @@
-# SCO 实例与并发方案（待验收，未启动）
+# SCO 实例与并发方案（已授权，待云登录配置）
 
-2026-11-08。用户要求先修复、push `dev`、检查 DSH/Hermes 图表环绕与 web 服务，确认后才开始实验。本文件和 [配置](../configs/sco-review-plan.json) 只准备部署，不解除暂停。
+2026-11-08。用户要求先修复、push `dev`、检查 DSH/Hermes 图表环绕与 web 服务，确认后才开始实验。用户随后明确回复“没问题，resume目前运行结果，开始吧”，已授权启动；授权记录位于 `outputs/authorization/resume-v3.json`。本文件和 [配置](../configs/sco-review-plan.json) 记录部署范围，云实例尚未创建。
 
 | 组别 | 实例划分 | 实例数 | 每台配置 | worker 并发上限合计 |
 |---|---|---:|---|---:|
@@ -12,7 +12,7 @@
 
 核心优先；前两组 16 台、512 worker。受控实验完整三 benchmark 的正式 protocol 与 cohort 尚需冻结，现有两 benchmark 固定前缀 pilot 不能代替。信息损失须先有新版有效源轨迹和可用 probe protocol，不能把旧失败 pilot 当作已就绪。计费、配额、完成时长未测，表中并发是配置上限，不是吞吐测量。
 
-这是按最新“每实验每策略一台、每台 32”展开的**待确认方案**，全局 worker 数超过先前单机 128 进程限制。worker、OS 进程（含 Node/Python/renderer 子进程）、API in-flight、线程必须分别监测。8 核 32 GiB 是否承受 32 个最坏渲染轨迹尚未负载验证；不把这项配置写成已测容量。渲染峰值应排队并记录等待时间，CPU 线程数限制为 1，避免 32 个 worker 各自扩张线程池。
+这是按最新“每实验每策略一台、每台 32”展开的**已获用户授权的方案**，全局 worker 数超过先前单机 128 进程限制。worker、OS 进程（含 Node/Python/renderer 子进程）、API in-flight、线程必须分别监测。8 核 32 GiB 是否承受 32 个最坏渲染轨迹尚未负载验证；不把这项配置写成已测容量。渲染峰值应排队并记录等待时间，CPU 线程数限制为 1，避免 32 个 worker 各自扩张线程池。
 
 ## CLI 与账号状态
 
@@ -41,7 +41,7 @@ sco ssp jobs create job-acl-review \
 
 每条请求保存 cached input、non-cache input、output、total 与缺失字段，单列 compaction、budget calibration、judge 消耗；逐调用检查 token 守恒。保存 search/fetch cache hit、压缩次数、原生图与渲染图哈希、最终 HTTP image ledger。客户端 API elapsed、端到端时间、渲染/排队时间分别记录；provider 内部延迟与未提供的图片 token 拆分保持缺失。实际美元成本需 TokenHub 对应 route 费率，不能假装 Gemini 价格是 DeepSeek 实付。
 
-部署前先在各实例网络执行真实 search/fetch/Lens 检查，再检查 shared policy、图像最终 payload、native baseline 的匹配预算。用户验收截图和确切实例清单后才能解除暂停；成功离线测试本身不授权启动。
+部署前先在各实例网络执行真实 search/fetch/Lens 检查，再检查 shared policy、图像最终 payload、native baseline 的匹配预算。用户已验收并授权启动。云部署仍必须取得登录 profile 并完成资源与实例网络校验；不能把缺凭据的计划写成已运行。
 
 本地展开可审查矩阵（只写 JSON，不调用 SCO 或模型）：
 

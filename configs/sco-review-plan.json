@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "state": "awaiting_user_review",
+  "state": "authorized_waiting_cloud_configuration",
   "source_experiment": "configs/experiment.json",
-  "launch_authorized": false,
+  "launch_authorized": true,
   "instance": {
     "cpu_count": 8,
     "memory_gib": 32,
@@ -121,5 +121,6 @@
     "filesystem_shell_code_execution": false,
     "automatic_workspace_context": false,
     "scope": "Repaired BC-100 entrypoints; other dataset protocols remain blocked pending isolated input/answer policy."
-  }
+  },
+  "user_authorized_at": "2026-11-08T07:00:48.626082+00:00"
 }

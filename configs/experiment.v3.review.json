@@ -79,11 +79,11 @@
     },
     "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
     "shuffle_seed": 20261107,
-    "resume_policy": "Skip terminal jobs; preserve all interrupted attempts, retry only interrupted jobs on explicit --resume. No native-session continuation claim.",
+    "resume_policy": "Skip matching terminal jobs; resume pending jobs only. Preserve interrupted and unknown attempts; never automatically retry them, even with --resume. No native-session continuation claim.",
     "note": "New reviewed implementation; 32 workers per harness/strategy instance, not a global cap. Old results remain separate."
   },
   "execution_version": "hermes-parity-v3",
-  "review_approved": false,
+  "review_approved": true,
   "source_experiment_sha256": "f08b1762e5c7df6c85de7c91000c977fa311828174e8ee722d1df4bcbd4d9a5e",
   "shared_policy": {
     "version": "hermes-shared-context-v1",

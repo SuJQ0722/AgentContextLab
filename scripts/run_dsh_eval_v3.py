@@ -62,6 +62,8 @@ def main():
     parser.add_argument('--offline-fixture', action='store_true')
     parser.add_argument('--config', type=Path, default=ROOT / 'configs/experiment.v3.review.json')
     parser.add_argument('--question-id')
+    parser.add_argument('--cohort-file',type=Path,help='Explicit campaign-frozen cohort; requires --cohort-sha256')
+    parser.add_argument('--cohort-sha256',help='Expected SHA256 of explicit frozen cohort')
     parser.add_argument('--repeat', type=int, default=1)
     parser.add_argument('--output-root', type=Path)
     parser.add_argument('--web-prevalidated', action='store_true', help='Coordinator already checked frozen web configuration')
@@ -78,6 +80,11 @@ def main():
     manifest_name = 'bc100-manifest.json' if args.dataset == 'bc100' else 'manifest.json'
     manifest = json.loads((ROOT / 'outputs/cohorts' / manifest_name).read_text())
     dataset = manifest['datasets'][args.dataset]
+    if bool(args.cohort_file)!=bool(args.cohort_sha256):
+        raise ValueError('Explicit cohort file and SHA256 must be provided together')
+    if args.cohort_file:
+        dataset={**dataset,'cohort_path':str(args.cohort_file.resolve()),'cohort_sha256':args.cohort_sha256,
+                 'dataset_sha256':None,'source':'explicit frozen campaign cohort; full upstream dataset hash not asserted'}
     raw = Path(dataset['cohort_path']).read_bytes()
     if hashlib.sha256(raw).hexdigest() != dataset['cohort_sha256']:
         raise ValueError('Frozen cohort changed')

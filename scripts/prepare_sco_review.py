@@ -8,8 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def expand(plan):
-    if plan.get('launch_authorized') is not False:
-        raise ValueError('This review-only planner requires launch_authorized=false')
+    if not isinstance(plan.get('launch_authorized'), bool):
+        raise ValueError('Explicit launch authorization state is required')
     resource = plan['instance']
     if resource != dict(cpu_count=8, memory_gib=32, gpu_count=0, worker_concurrency=32):
         raise ValueError('Resource request differs from the user review plan')
@@ -23,7 +23,8 @@ def expand(plan):
                                   **resource))
     if len({c['id'] for c in cells}) != len(cells):
         raise ValueError('Duplicate instance assignment')
-    return dict(state='review_only_not_submittable', cloud=plan['cloud'], cells=cells,
+    return dict(state='authorized_not_submittable' if plan['launch_authorized'] else 'review_only_not_submittable',
+                launch_authorized=plan['launch_authorized'], cloud=plan['cloud'], cells=cells,
                 working_directory=plan.get('working_directory'),
                 output_root=plan.get('output_root'), output_policy=plan.get('output_policy'),
                 tool_policy=plan.get('tool_policy'),

@@ -1,6 +1,6 @@
-# Hermes / DSH 修复验收（v3，实验暂停）
+# Hermes / DSH 修复验收（v3，已验收并授权启动）
 
-本轮只修复代码、检查真实 web 服务和运行 localhost 模型 fixture；未恢复付费模型评测，未创建 SCO 实例。用户要求先 push `dev`，查看图像与部署方案，再决定开始实验。所有旧 STOP 和 `outputs/PAUSED_BY_USER.json` 保留。
+下文记录修复阶段的离线验收和真实 web 检查。用户查看 dev 后已回复“没问题，resume目前运行结果，开始吧”，授权新版启动。旧 STOP 保留，全局暂停标记归档到 `outputs/authorization/`，运行状态见 [总进度](rebuttal-status.md)。SCO 仍缺登录 profile，尚未创建云实例。
 
 ## 图像与表格
 
@@ -50,7 +50,7 @@ Reader 仅启用 text 模式并拒绝 LLM 字段。它读取固定 SHA 的共享
 
 ## 待用户验收的运行入口
 
-- [实验配置](../configs/experiment.v3.review.json)，`review_approved=false`。
+- [实验配置](../configs/experiment.v3.review.json)，`review_approved=true`（用户已验收）。
 - [Hermes worker](../scripts/hermes_bc_worker_v3.py) 与 [DSH worker](../scripts/run_dsh_eval_v3.py)：默认 dry-run；暂停 marker 与版本边界在任何付费调用前检查。已有 attempt 不覆盖，不自动重发未知调用。
 - [SCO 部署清单](sco-review-plan.md)：核心 10 台，每台 8 核/32 GiB/32 worker；所有条件组展开最多 22 台/704 worker，需先对齐总规模。尚未实现/验收跨主机分片锁的正式云调度，不应直接复用单机 PID 恢复逻辑。
 
@@ -67,7 +67,7 @@ Reader 仅启用 text 模式并拒绝 LLM 字段。它读取固定 SHA 的共享
 - Hermes 实际 agent loop 和摘要 SDK/HTTP 路由 localhost 验收通过，包括错误模型、endpoint 和异步绕行的拒绝检查。
 - [DSH 正式新入口验收](visual-integrity/repair-v3/dsh-entry-validation.json)：`none`、`visual_native` 各 5 次 localhost 模型请求，第一轮起均只有指定五工具；实际执行 search/fetch/crop/zoom，40k synthetic provider usage 触发真实共享压缩。新画布全部进入最终 HTTP，SHA 与 image detail 一致；测试前后实现文件 hash 相同。
 
-这些检查不产生付费模型调用，不提供 benchmark accuracy 或真实模型视觉理解结论。所有实验仍暂停；正式 SCO 分布式运行仍待部署参数、分片恢复验收及用户检查。
+这些检查不产生付费模型调用，不提供 benchmark accuracy 或真实模型视觉理解结论。这些验收发生于暂停阶段；用户之后已授权启动。正式 SCO 分布式运行仍待云登录配置、部署参数与跨实例恢复校验。
 
 ## 文件读取隔离（用户追加要求）
 

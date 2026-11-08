@@ -1,13 +1,12 @@
 # Rebuttal work and supervision
 
-**2026-11-08: user explicitly requested all experiments remain paused.** Core/RQ3 STOP markers and `outputs/PAUSED_BY_USER.json` are present; the waiting judge process was stopped. Web/tool/render repairs, offline validation, dev push and SCO deployment preparation are authorized; cloud instances and paid evaluations await user review of the repaired evidence and exact deployment plan. See [repair review](repair-review-v3.md) and [SCO review plan](sco-review-plan.md). Do not interpret successful diagnostics as permission to resume evaluations.
+**2026-11-08: user approved the repaired version and requested resume/start.** Approval is recorded in `outputs/authorization/resume-v3.json`; the previous global pause marker is archived there. Legacy core/RQ3 STOP markers remain, and legacy trajectories/costs are preserved separately. New core execution uses `bc100-r3-hermes-parity-v3`; same-version terminal jobs are reusable, pending jobs can resume, unknown/interrupted requests are not automatically retried. SCO launch is authorized but currently blocked by missing login profile and unresolved cloud resource IDs. See [repair review](repair-review-v3.md) and [SCO plan](sco-review-plan.md).
 
-Updated 2026-11-08 (paused; historical counts remain in the cited reports). New inference uses the exact configured DeepSeek route;
-no new Gemini calls, no fourth repeats, and no pinned-harness changes.
+Updated 2026-11-08 (resume authorized; actual new worker activity is recorded under the new campaign, not inferred from old counts). New inference uses the exact configured DeepSeek route; no new Gemini calls, no fourth repeats, and no pinned-harness changes.
 
 | Work | Scope | Execution and evidence |
 |---|---|---|
-| Core transfer experiment | BC-100 × 3 × 5 strategies × 2 harnesses = 3,000 | Held for native-image routing validation. Original core coordinator pause interrupted 16 in-flight attempts; originals and usage are preserved, no automatic retries. Previous worker cap was 16. [Protocol](bc100-campaign.md). |
+| Core transfer experiment | BC-100 × 3 × 5 strategies × 2 harnesses = 3,000 | Repaired native-image routing and file-tool isolation passed; approved new-version campaign is being initialized. Two local visual trials (one per harness) are the initial dispatch; 10 cloud cells × 32 workers await SCO credentials. Original 16 interrupted attempts and usage remain separate, without automatic retries. [Protocol](bc100-campaign.md). |
 | Experiment 3 | Summary + native images, window + native images, visual control | Historical-prefix budget calibration finished but failed formal gates. The original capture protocol timed out. The versioned fixed-prefix continuation pilot ended with failed readiness gates; no continuation workers are running. A frozen 180-arm small-cohort queue remains gated on six paired pilot outcomes; requested cap 16, shared process admission. [New protocol](experiment3/controlled-v3.md). This is not the original full-trajectory three-benchmark evaluation. [Status and blockers](experiment3/README.md). |
 | Existing text-table statistics | Reuse historical avg@3 records | Offline reconstruction and paired statistics completed. No extra inference. [Candidate Table 1 audit](paper-table1/audit.md); exact full submitted-table mapping remains unverified. |
 | Broad Experiment 4 expansion | Extra repeats across Table 1/2/5 | Skipped at the user's request. Earlier generic statistical drafts remain in `experiment4/` but are not the submitted Table 1. No avg@4 queue exists. |
@@ -22,7 +21,7 @@ image controls, and information-loss/RQ3 work. Durable local observers continue
 when a conversational subagent is idle; this does not promise unsolicited future
 chat messages.
 
-The earlier single-machine allocation required fewer than 128 concurrent visible OS processes. The new requested multi-instance allocation (32 workers per method instance) is prepared separately in [the review plan](sco-review-plan.md); its aggregate exceeds 128 and is awaiting explicit review before launch. Process counts
+The earlier single-machine allocation required fewer than 128 concurrent visible OS processes. The new requested multi-instance allocation (32 workers per method instance) is prepared separately in [the review plan](sco-review-plan.md); its aggregate exceeds 128 and has user authorization; cloud resource discovery remains blocked on credentials. Process counts
 are not model-request counts or thread counts. `scripts/monitor_rebuttal.py`
 records a 30-second census in `outputs/rebuttal-monitor/status.json` and
 `history.jsonl`, with totals for this `/proc` namespace and experiment process

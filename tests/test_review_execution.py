@@ -21,9 +21,15 @@ class ReviewExecutionTests(unittest.TestCase):
 
     def test_review_plan_is_only_a_matrix(self):
         plan = json.loads((ROOT/'configs/sco-review-plan.json').read_text())
+        plan['launch_authorized'] = False
         result = expand(plan)
         self.assertEqual(result['totals'], dict(instances=22, vcpus=176, memory_gib=704, worker_slots=704))
         self.assertEqual(result['state'], 'review_only_not_submittable')
         plan['launch_authorized'] = True
+        authorized = expand(plan)
+        self.assertEqual(authorized['state'], 'authorized_not_submittable')
+        self.assertTrue(authorized['launch_authorized'])
+        self.assertEqual(authorized['cells'], result['cells'])
+        plan['launch_authorized'] = 'yes'
         with self.assertRaises(ValueError):
             expand(plan)

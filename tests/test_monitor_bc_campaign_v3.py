@@ -294,6 +294,27 @@ class CloudTelemetryTests(unittest.TestCase):
         value=json.loads(status.read_text());value['active_local']=1;status.write_text(json.dumps(value))
         cloud,_=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],2)
 
+    def test_final_ops4_replaces_ops3_once_and_records_actual_one(self):
+        self.rate_replacement()
+        node=self.node('old-ops3',hostname='old-ops3',age=1000)
+        marker={'hostname':'old-ops3','boot_id':'boot-remote','pid_namespace':'pid:[3]','job_name':'one-ops3'}
+        telemetry=json.loads(node.read_text());telemetry['pid_namespace']='pid:[3]';node.write_text(json.dumps(telemetry))
+        (node.parent/'retired.json').write_text(json.dumps(marker))
+        exit_path=node.parent/'exit.json';exit_path.write_text(json.dumps({'controller_exit_code':0,'stopped':True}))
+        directory=self.registry.parent/'final-rate-replacements/one-ops4';directory.mkdir(parents=True)
+        request={'name':'one-ops4','replaces':'one-ops3','original_name':'one','generation':'ops4',
+            'argv':['sco','--worker-nodes','1'],'active_workers_this_cell':1,
+            'operational_dispatch':{'active_workers_per_cloud_instance':1,'local_target_workers':2},'worker_ceiling':32,
+            'evidence':{'acp_state':'SUCCEEDED','node_directory':str(node.parent),'bootstrap_exit':str(exit_path),
+                'hostname':'old-ops3','retired_boot_id':'boot-remote','retired_pid_namespace':'pid:[3]'}}
+        (directory/'request.json').write_text(json.dumps(request));(directory/'response.json').write_text(json.dumps({'state':'submitted'}))
+        self.node('new-ops4',hostname='new-ops4',pid_namespace='pid:[4]')
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'],1);self.assertEqual(len(cloud['retired_generations']),3)
+        self.assertEqual(cloud['active_submissions'][0]['name'],'one-ops4')
+        self.assertEqual(cloud['active_submissions'][0]['active_workers_per_instance'],1)
+        self.assertEqual(cloud['active_submissions'][0]['worker_ceiling'],32);self.assertTrue(total['complete'])
+
 
 class TerminalCacheTests(unittest.TestCase):
     def setUp(self):

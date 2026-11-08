@@ -359,17 +359,20 @@ def _retired_generation_proven(root, name, evidence):
 def _rate_generations(root, rate_root, active, retired, planned, issues):
     by_name = {row['name']:row for row in active}
     candidates = []
-    for directory in sorted(rate_root.iterdir()) if rate_root.is_dir() else []:
-        if not directory.is_dir(): continue
+    sources=[(rate_root,'ops3','ops2'),(rate_root.parent/'visual-rate-replacements','ops4','ops3'),
+             (rate_root.parent/'final-rate-replacements','ops4','ops3')]
+    directories=[(directory,generation,parent) for folder,generation,parent in sources if folder.is_dir()
+                 for directory in sorted(folder.iterdir()) if directory.is_dir()]
+    for directory,generation,parent in directories:
         request = read_json(directory/'request.json')
         response = read_json(directory/'response.json') or {'state':'unknown'}
         if not isinstance(request, dict):
             issues.append({'kind':'unknown_rate_replacement_request','path':str(directory)}); continue
-        candidates.append((request.get('requested_at_unix',0),directory,request,response))
+        candidates.append((request.get('requested_at_unix',0),directory,request,response,generation,parent))
     replaced = set()
-    for _,directory,request,response in sorted(candidates,key=lambda item:item[0]):
+    for _,directory,request,response,generation,parent in sorted(candidates,key=lambda item:(int(item[4][3:]),item[0])):
         name, previous, original = request.get('name'), request.get('replaces'), request.get('original_name')
-        if not (isinstance(original,str) and name == original+'-ops3' and previous == original+'-ops2'
+        if not (isinstance(original,str) and name == original+'-'+generation and previous == original+'-'+parent
                 and directory.name == name and previous not in replaced):
             issues.append({'kind':'invalid_rate_generation_binding','path':str(directory)}); continue
         replaced.add(previous)
@@ -391,8 +394,8 @@ def _rate_generations(root, rate_root, active, retired, planned, issues):
         if state not in ('submitted','unknown'):
             issues.append({'kind':'unknown_rate_replacement_state','name':name}); state = 'unknown'
         if state == 'unknown': issues.append({'kind':'rate_replacement_submission_outcome_unknown','name':name})
-        by_name[name] = {'name':name,'replaces':previous,'original_name':original,'generation':'ops3','state':state,
-                        'expected_nodes':nodes,'active_workers_per_instance':request.get('operational_dispatch',{}).get('active_workers_per_cloud_instance'),
+        by_name[name] = {'name':name,'replaces':previous,'original_name':original,'generation':generation,'state':state,
+                        'expected_nodes':nodes,'active_workers_per_instance':request.get('active_workers_this_cell',request.get('operational_dispatch',{}).get('active_workers_per_cloud_instance')),
                         'worker_ceiling':request.get('worker_ceiling'),'receipt':str(directory)}
     return list(by_name.values())
 
@@ -572,6 +575,7 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
 def snapshot(root):
     scan_started = datetime.now(timezone.utc).isoformat()
     monitor_rebuttal.SCRIPT_GROUPS.update({
+        'run_bc_campaign_v3_capacity_ops.py':'core_bc_v3',
         'run_bc_campaign_v3_capacity1.py': 'core_bc_v3', 'run_bc_trial_v3_capacity1.py': 'core_bc_v3',
         'run_dsh_eval_v3_capacity1.py': 'core_bc_v3',
         'run_bc_campaign_v3_io2.py': 'core_bc_v3', 'run_bc_trial_v3_io2.py': 'core_bc_v3',

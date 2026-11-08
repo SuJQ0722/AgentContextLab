@@ -115,7 +115,7 @@ def recovery_rows(rows, binding, cutoff, visual=False):
 
 def discover_cloud(root, local_hostname, replacements_root):
     cloud_nodes, cell_nodes, generations, earliest = {}, {}, {}, {}
-    candidate_dirs=list(replacements_root.glob('*'))+list((replacements_root.parent/'rate-replacements').glob('*'))
+    candidate_dirs=list(replacements_root.glob('*'))+list((replacements_root.parent/'rate-replacements').glob('*'))+list((replacements_root.parent/'visual-rate-replacements').glob('*'))+list((replacements_root.parent/'final-rate-replacements').glob('*'))
     for directory in candidate_dirs:
         if not directory.is_dir(): continue
         request=read(directory/'request.json') or {};response=read(directory/'response.json') or {}
@@ -149,7 +149,7 @@ def discover_cloud(root, local_hostname, replacements_root):
 
 
 def conditional_projection(cells, dispatch, now):
-    """Transparent planning scenarios before a stable four-worker throughput window.
+    """Transparent planning scenarios before a stable target-concurrency throughput window.
 
     The timeout scenario is conditional on successful provisioning and continued
     dispatch, not an unconditional upper bound on an external provider outage.
@@ -185,7 +185,7 @@ def conditional_projection(cells, dispatch, now):
         'maximum_native_completed_from_known_work_without_retry':completed+known_remaining,
         'all_planned_terminal_guaranteed':False,
         'assumptions':['Each cloud cell maintains the new target concurrency; no extra speedup is credited to the shared local pool.',
-            'Optimistic scenario uses early post-repair completed medians and may reuse the preceding 8-worker sample for calibration only; it is not measured stable 4-worker throughput.',
+            'Optimistic scenario uses early post-repair completed medians and may reuse the preceding 8-worker sample for calibration only; it is not measured stable current-concurrency throughput.',
             'Slow scenario assigns every remaining run the declared native timeout plus at least five minutes startup allowance per wave, and one hour for rollover/provisioning. Startup or gateway outages can exceed this allowance.',
             'No failed/timeout/unknown attempts are automatically retried. Unknown claims are excluded from the time target and reported separately.',
             'Early completion favors short questions. These scenarios are neither confidence intervals nor guaranteed earliest/latest completion times.',
@@ -210,7 +210,7 @@ def snapshot(root,now=None):
         c['rows'].append(row);all_rows.append(row)
     now=time.time() if live_clock else now
     stability=[];cloud_cells=[]
-    desired_dispatch=read(ROOT/'configs/cloud-dispatch-ops-v2.json') or {}
+    desired_dispatch=read(ROOT/'configs/cloud-dispatch-ops-v3.json') or {}
     desired_workers=desired_dispatch.get('active_workers_per_cloud_instance')
     desired_effective=instant(desired_dispatch.get('effective_at'))
     for name,c in cells.items():
@@ -225,7 +225,7 @@ def snapshot(root,now=None):
         binding=cell_nodes.get(name);status={'cell':name,'eligible':False}
         generation=generations.get(name)
         c['cloud_generation']=(generation or {}).get('name')
-        c['configured_cloud_workers']=(generation or {}).get('operational_dispatch',{}).get('active_workers_per_cloud_instance')
+        c['configured_cloud_workers']=(generation or {}).get('active_workers_this_cell',(generation or {}).get('operational_dispatch',{}).get('active_workers_per_cloud_instance'))
         c['worker_ceiling']=(generation or {}).get('worker_ceiling')
         c['recovery_cutoff']=None
         calibration_since=(generation or {}).get('calibration_not_before_unix')
@@ -238,7 +238,8 @@ def snapshot(root,now=None):
         if binding:
             node=(read(binding['telemetry_path']) if live_clock else None) or binding['node'];age=now-(instant(node.get('timestamp')) or 0);roles=(node.get('processes') or {}).get('core_v3_roles',{})
             boot=binding['bootstrap'];commands=boot.get('commands',{}).get('controller',[])
-            capacity_ok=name.split('/')[1]!='visual' or any(Path(value).name=='run_bc_campaign_v3_capacity1.py' for value in commands)
+            c['configured_cloud_workers']=boot.get('operational_dispatch',{}).get('active_workers_per_cloud_instance',c['configured_cloud_workers'])
+            capacity_ok=name.split('/')[1]!='visual' or any(Path(value).name in ('run_bc_campaign_v3_capacity1.py','run_bc_campaign_v3_capacity_ops.py') for value in commands)
             cutoff=max(instant(boot.get('started_at_unix')) or 0,instant(binding['generation'].get('requested_at_unix')) or 0,
                        instant(boot.get('operational_dispatch',{}).get('effective_at')) or 0)
             c['recovery_cutoff']=stamp(cutoff);c['visual_capacity1_controller']=capacity_ok if name.endswith('/visual') else None

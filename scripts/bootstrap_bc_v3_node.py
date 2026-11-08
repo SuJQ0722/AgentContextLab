@@ -169,9 +169,9 @@ def commands(args):
     return {'reader': [args.reader_python, str(ROOT/'scripts/local_reader_text_service.py'), '--config', str(ROOT/'configs/reader-text-v1-workers32.json')],
             'telemetry': [sys.executable,str(ROOT/'scripts/monitor_bc_v3_node.py'),'--watch','--root',str(args.root)],
             'web_preflight': [sys.executable, str(ROOT/'scripts/preflight_bc_v3_web.py'), '--root', str(args.root)],
-            'controller': [sys.executable, str(ROOT/('scripts/run_bc_campaign_v3_capacity1.py' if args.harness=='dsh' or args.strategy=='visual' else 'scripts/run_bc_campaign_v3_io2.py')), '--root', str(args.root),
+            'controller': [sys.executable, str(ROOT/'scripts/run_bc_campaign_v3_capacity_ops.py'), '--root', str(args.root),
                            '--config', str(args.root/'experiment.json'), '--harness', args.harness, '--strategy', args.strategy,
-                           '--concurrency', str(getattr(args,'controller_concurrency',32)), '--resume', '--live']}
+                           '--concurrency', str(getattr(args,'controller_concurrency',32)), '--dispatch-role', 'cloud', '--resume', '--live']}
 
 
 def main():
@@ -187,7 +187,7 @@ def main():
     mode.add_argument('--check', action='store_true', help='Hash/import checks only, no network or service/model start')
     mode.add_argument('--capture-runtime-reference', type=Path, help='Offline reference capture; never launches services/models')
     args = parser.parse_args();args.root=args.root.resolve()
-    dispatch=json.loads((ROOT/'configs/cloud-dispatch-ops-v2.json').read_text())
+    dispatch=json.loads((ROOT/'configs/cloud-dispatch-ops-v3.json').read_text())
     args.controller_concurrency=dispatch['active_workers_per_cloud_instance']
     if not 1 <= args.controller_concurrency <= 32:raise ValueError('Operational dispatch must stay within approved worker ceiling')
     plan = {'mode':'live' if args.live else 'offline_check' if args.check else 'capture_reference' if args.capture_runtime_reference else 'dry_run',

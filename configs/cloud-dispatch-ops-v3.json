@@ -1,9 +1,10 @@
 {
   "version": "cloud-dispatch-ops-v3",
   "worker_ceiling_per_instance": 32,
-  "active_workers_per_cloud_instance": 1,
-  "local_target_workers": 2,
+  "active_workers_per_cloud_instance": 0,
+  "local_target_workers": 0,
   "effective_at": "2026-11-08T10:08:41.894332+00:00",
-  "reason": "Full fleet at four workers per node again caused measured RPM/TPM rejections (34% recent five-minute window). Reduce to cloud1/local2 and use dynamic operational dispatch, preserving all scientific parameters.",
-  "ramp_policy": "Observe completed requests and trajectories before a separately recorded increase; no automatic ramp to 32"
+  "reason": "Stop new claims and drain original-route controllers before immutable pair-matched route-plan freeze; existing native trajectories continue unchanged.",
+  "ramp_policy": "Observe completed requests and trajectories before a separately recorded increase; no automatic ramp to 32",
+  "effective_at_unix": 1794137010.0746372
 }

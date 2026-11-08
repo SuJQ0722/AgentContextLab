@@ -315,6 +315,111 @@ class CloudTelemetryTests(unittest.TestCase):
         self.assertEqual(cloud['active_submissions'][0]['active_workers_per_instance'],1)
         self.assertEqual(cloud['active_submissions'][0]['worker_ceiling'],32);self.assertTrue(total['complete'])
 
+    def test_routes1_ops5_retires_ops4_with_original_receipts_preserved(self):
+        self.rate_replacement()
+        # Exercise the generic generation overlay directly with an already
+        # validated ops4 parent; preceding generation-chain tests cover its origin.
+        node=self.node('old-ops4',hostname='old-ops4',age=1000,pid_namespace='pid:[4]')
+        marker={'hostname':'old-ops4','boot_id':'boot-remote','pid_namespace':'pid:[4]','job_name':'one-ops4'}
+        (node.parent/'retired.json').write_text(json.dumps(marker))
+        exit_path=node.parent/'exit.json';exit_path.write_text(json.dumps({'controller_exit_code':0,'stopped':True}))
+        directory=self.registry.parent/'routes1-replacements/one-ops5';directory.mkdir(parents=True)
+        request={'name':'one-ops5','replaces':'one-ops4','original_name':'one','generation':'ops5',
+            'argv':['sco','--worker-nodes','1'],'operational_dispatch':{'active_workers_per_cloud_instance':16},'worker_ceiling':32,
+            'evidence':{'acp_state':'SUCCEEDED','node_directory':str(node.parent),'bootstrap_exit':str(exit_path),
+                'hostname':'old-ops4','retired_boot_id':'boot-remote','retired_pid_namespace':'pid:[4]'}}
+        (directory/'request.json').write_text(json.dumps(request));(directory/'response.json').write_text(json.dumps({'state':'submitted'}))
+        retired=[];planned=[];issues=[]
+        active=monitor._rate_generations(self.root,self.registry.parent/'absent-rate-dir',
+            [{'name':'one-ops4','state':'submitted','expected_nodes':1}],retired,planned,issues)
+        self.assertEqual([r['name'] for r in active],['one-ops5'])
+        self.assertEqual(active[0]['active_workers_per_instance'],16)
+        self.assertEqual(active[0]['worker_ceiling'],32);self.assertEqual(issues,[])
+
+    def test_routes2_ops6_retires_ops5_with_original_receipts_preserved(self):
+        self.rate_replacement()
+        # Exercise the generic generation overlay directly with an already
+        # validated ops5 parent; preceding generation-chain tests cover its origin.
+        node=self.node('old-ops5',hostname='old-ops5',age=1000,pid_namespace='pid:[5]')
+        marker={'hostname':'old-ops5','boot_id':'boot-remote','pid_namespace':'pid:[5]','job_name':'one-ops5'}
+        (node.parent/'retired.json').write_text(json.dumps(marker))
+        exit_path=node.parent/'exit.json';exit_path.write_text(json.dumps({'controller_exit_code':0,'stopped':True}))
+        directory=self.registry.parent/'routes2-replacements/one-ops6';directory.mkdir(parents=True)
+        request={'name':'one-ops6','replaces':'one-ops5','original_name':'one','generation':'ops6',
+            'argv':['sco','--worker-nodes','1'],'operational_dispatch':{'active_workers_per_cloud_instance':16},'worker_ceiling':32,
+            'evidence':{'acp_state':'SUCCEEDED','node_directory':str(node.parent),'bootstrap_exit':str(exit_path),
+                'hostname':'old-ops5','retired_boot_id':'boot-remote','retired_pid_namespace':'pid:[5]'}}
+        (directory/'request.json').write_text(json.dumps(request));(directory/'response.json').write_text(json.dumps({'state':'submitted'}))
+        retired=[];planned=[];issues=[]
+        active=monitor._rate_generations(self.root,self.registry.parent/'absent-rate-dir',
+            [{'name':'one-ops5','state':'submitted','expected_nodes':1}],retired,planned,issues)
+        self.assertEqual([r['name'] for r in active],['one-ops6'])
+        self.assertEqual(active[0]['active_workers_per_instance'],16)
+        self.assertEqual(active[0]['worker_ceiling'],32);self.assertEqual(issues,[])
+
+
+class FailedNamespaceEvidenceTests(unittest.TestCase):
+    def setUp(self):
+        import hashlib
+        self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name) / 'campaign'; self.root.mkdir()
+        self.node = self.root / 'runtime/nodes/pt-uid-worker-0-boot'
+        self.cell = self.node / 'hermes-summarize'; self.cell.mkdir(parents=True)
+        self.proofs = Path(self.temp.name) / 'proofs'; self.proofs.mkdir()
+        identity = {'hostname':'pt-uid-worker-0','boot_id':'boot','pid_namespace':'pid:[8]'}
+        self.marker = {**identity,'job_name':'one-ops5','reason':'failed_startup_namespace_terminated'}
+        (self.node/'retired.json').write_text(json.dumps(self.marker))
+        data = {'describe': {'name':'one-ops5','uid':'uid','workspace_name':'rl','state':'FAILED'},
+                'bootstrap': {**identity,'cell':'hermes/summarize','started_at_unix':10},
+                'exit': {'controller_exit_code':1,'stopped':False,'finished_at_unix':20},
+                'inventory': {'cell':'hermes/summarize','claims':[]}}
+        proof = {'schema':'acp-terminated-namespace-v1','platform_state':'FAILED',
+                 'namespace_terminated':True,'name':'one-ops5','uid':'uid',**identity,'observed_at_unix':30}
+        for name, value in data.items():
+            path = (self.cell if name in ('bootstrap','exit') else self.proofs) / (name+'.json')
+            path.write_text(json.dumps(value));proof[name+'_path']=str(path)
+            proof[name+'_sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+        self.proof = self.proofs/'terminated-namespace.json';self.proof.write_text(json.dumps(proof))
+        self.evidence = {'kind':'failed_startup_namespace_terminated','acp_state':'FAILED',
+            'terminated_namespace_evidence_path':str(self.proof),
+            'terminated_namespace_evidence_sha256':hashlib.sha256(self.proof.read_bytes()).hexdigest(),
+            'node_directory':str(self.node),'bootstrap_exit':proof['exit_path'],
+            'hostname':identity['hostname'],'retired_boot_id':'boot','retired_pid_namespace':'pid:[8]'}
+
+    def test_failed_proof_replaces_once_without_claiming_successful_drain(self):
+        self.assertTrue(monitor._retired_generation_proven(self.root,'one-ops5',self.evidence))
+        registry = self.proofs/'routes2-replacements/one-ops6';registry.mkdir(parents=True)
+        request = {'name':'one-ops6','replaces':'one-ops5','original_name':'one','generation':'ops6',
+                   'argv':['sco','--worker-nodes','1'],'active_workers_this_cell':16,
+                   'worker_ceiling':32,'evidence':self.evidence}
+        (registry/'request.json').write_text(json.dumps(request))
+        (registry/'response.json').write_text(json.dumps({'state':'submitted'}))
+        retired=[];planned=[];issues=[]
+        active=monitor._rate_generations(self.root,self.proofs/'rate-replacements',
+            [{'name':'one-ops5','expected_nodes':1}],retired,planned,issues)
+        self.assertEqual([x['name'] for x in active],['one-ops6'])
+        self.assertEqual(retired[0]['state'],'failed_namespace_terminated')
+        self.assertEqual(issues,[])
+
+    def test_mutated_platform_proof_and_namespace_are_rejected(self):
+        self.evidence['retired_pid_namespace']='pid:[other]'
+        self.assertFalse(monitor._retired_generation_proven(self.root,'one-ops5',self.evidence))
+        self.evidence['retired_pid_namespace']='pid:[8]'
+        proof=json.loads(self.proof.read_text());path=Path(proof['describe_path'])
+        description=json.loads(path.read_text());description['state']='RUNNING'
+        path.write_text(json.dumps(description))
+        self.assertFalse(monitor._retired_generation_proven(self.root,'one-ops5',self.evidence))
+        # Even consistently rehashed evidence cannot turn a running namespace into a terminal one.
+        import hashlib
+        proof['describe_sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+        self.proof.write_text(json.dumps(proof))
+        self.evidence['terminated_namespace_evidence_sha256']=hashlib.sha256(self.proof.read_bytes()).hexdigest()
+        self.assertFalse(monitor._retired_generation_proven(self.root,'one-ops5',self.evidence))
+
+    def test_exit_one_without_full_namespace_proof_cannot_retire(self):
+        del self.evidence['terminated_namespace_evidence_sha256']
+        self.assertFalse(monitor._retired_generation_proven(self.root,'one-ops5',self.evidence))
+
 
 class TerminalCacheTests(unittest.TestCase):
     def setUp(self):

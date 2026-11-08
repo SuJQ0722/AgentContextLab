@@ -16,6 +16,11 @@ import monitor_rebuttal
 
 DEFAULT_ROOT = ROOT / 'outputs/campaigns/bc100-r3-hermes-parity-v3'
 ROLE_SCRIPTS = {
+    'run_bc_campaign_v3_routes2_io3.py':'controller','run_bc_trial_v3_routes2_io3.py':'trial',
+    'run_dsh_eval_v3_routes2_io3.py':'dsh_worker',
+    'run_bc_campaign_v3_routes2.py':'controller','run_bc_trial_v3_routes2.py':'trial',
+    'run_bc_campaign_v3_routes1.py':'controller','run_bc_trial_v3_routes1.py':'trial',
+    'hermes_bc_worker_routes1.py':'hermes_worker','run_dsh_eval_v3_routes1.py':'dsh_worker',
     'run_bc_campaign_v3_capacity_ops.py': 'controller',
     'run_bc_campaign_v3_capacity1.py': 'controller',
     'run_bc_trial_v3_capacity1.py': 'trial',

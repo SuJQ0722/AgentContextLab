@@ -15,7 +15,7 @@
     "deepseek-v4.1-flash-1017/huoshan/sfc": 0,
     "deepseek-v4.1-flash-1017/zijian/sfc": 0
   },
-  "reason": "Large-image acceptance: zijian/sfb HTTP200 with unchanged full eight canvases via direct and proxy; both sfc routes return system_memory_limit429 and remain held (cap0). Fixed pair assignments are not changed. First single-cell 16-trial canary before wider rollout.",
+  "reason": "Restore target cloud16/local2 after acknowledged stop-and-drain of all predecessor dispatchers. io3 repairs only claim publication and CLI argument transport; routes2 pair assignments remain fixed. Original1+sfb15 per cloud, two failed sfc channels disabled.",
   "measurement_note": "These are trial caps, not provider RPM/TPM. Actual active trials can be below target as route-specific pending queues drain.",
-  "effective_at_unix": 1794137288.2510836
+  "effective_at_unix": 1794140569.6322796
 }

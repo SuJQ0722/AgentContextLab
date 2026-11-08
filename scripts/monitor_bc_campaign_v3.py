@@ -182,7 +182,7 @@ _TERMINAL_CACHE = {}
 _TERMINAL_STATES = {'completed', 'failed', 'timeout', 'interrupted', 'not_started'}
 _METRIC_NAMES = ('calls.jsonl', 'call-starts.jsonl', 'web.jsonl',
                  'shared-policy.jsonl', 'compression.jsonl', 'render.jsonl',
-                 'wire/raw-usage.jsonl', 'wire/requests.jsonl')
+                 'wire/raw-usage.jsonl', 'wire/requests.jsonl', 'route-attribution.jsonl', 'wire/route-attribution.jsonl')
 
 
 def _known_metric_path(attempt, harness):
@@ -213,7 +213,7 @@ def _metric_directories(attempt, harness=None):
 
 
 def _cache_metadata_paths(attempt,harness,metric_dirs):
-    paths={attempt/'result.json',attempt/'heartbeat.json',attempt}
+    paths={attempt/'result.json',attempt/'heartbeat.json',attempt/'route-lineage.json',attempt/'runtime-lineage.json',attempt}
     known=_known_metric_path(attempt,harness)
     directories=set(metric_dirs)
     if known is not None: directories.add(known)
@@ -267,6 +267,58 @@ def inspect_attempt(attempt, harness):
     return value
 
 
+def attribute_usage_rows(rows, metrics, harness, attempt, issues):
+    """Join attribution by authoritative usage ID; never count sidecar records."""
+    path=metrics/('wire/route-attribution.jsonl' if harness=='dsh' else 'route-attribution.jsonl')
+    sidecars={}
+    if path.exists():
+        for item in jsonl(path,issues):
+            identity=item.get('request_id') if harness=='dsh' else item.get('call_id')
+            if identity is not None: sidecars[identity]=item  # Last revision annotates one usage record.
+    lineage_path=attempt/'route-lineage.json'
+    parsed_lineage=read_json(lineage_path)
+    route_lineage=parsed_lineage or {}
+    if lineage_path.exists() and parsed_lineage is None:
+        issues.append({'kind':'unreadable_route_lineage','file':str(lineage_path)})
+    transport_lineage=read_json(attempt/'runtime-lineage.json') or {}
+    default_generation=(route_lineage.get('generation') or route_lineage.get('runtime_route_version')
+                        or transport_lineage.get('runtime_version') or ('unknown-route-lineage' if lineage_path.exists() else 'hermes-parity-v3-original-route'))
+    attributed=[]
+    for raw in rows:
+        row=dict(raw);identity=row.get('request_id') if harness=='dsh' else row.get('call_id')
+        sidecar=sidecars.get(identity,{})
+        request_route=row.get('request_model') or row.get('model')
+        if not isinstance(request_route,str) or not request_route: request_route=None
+        observed=sidecar.get('actual_route')
+        if observed is not None and request_route is not None and observed!=request_route:
+            issues.append({'kind':'route_attribution_conflict','request_id':identity,'file':str(path)})
+        # An assignment is not proof that a request used it. Missing request route
+        # stays unknown even when a runtime lineage declares a selected route.
+        row.update(_actual_route=request_route,_assigned_route=route_lineage.get('actual_route'),
+                   _runtime_generation=sidecar.get('generation') or default_generation,
+                   _returned_model=sidecar.get('returned_model'),
+                   _returned_model_presence=sidecar.get('returned_model_presence',False),
+                   _route_attribution_source='sidecar_and_request' if sidecar and request_route else 'legacy_request_model' if request_route else 'unknown')
+        attributed.append(row)
+    return attributed
+
+
+def route_accounting(rows):
+    by_route=defaultdict(list);by_combination=defaultdict(list);returned=Counter()
+    for row in rows:
+        route=row.get('_actual_route') or 'unknown';generation=row.get('_runtime_generation') or 'unknown'
+        by_route[route].append(row);by_combination[(route,generation)].append(row)
+        returned[(route,row.get('_returned_model') or 'unknown')]+=1
+    return {'usage_by_route':{route:aggregate(group) for route,group in by_route.items()},
+            'route_generation_groups':[{'actual_route':None if route=='unknown' else route,'runtime_generation':generation,
+                'request_observations':len(group),'incomplete_observations':sum(bool(r.get('_incomplete')) for r in group),
+                'usage':aggregate(group)} for (route,generation),group in sorted(by_combination.items())],
+            'returned_model_counts':[{'actual_route':None if route=='unknown' else route,
+                'returned_model':None if model=='unknown' else model,'observations':n} for (route,model),n in sorted(returned.items())],
+            'route_unknown_observations':sum(row.get('_actual_route') is None for row in rows),
+            'note':'Sidecars only annotate authoritative raw usage rows by call_id/request_id; they never add token observations. Runtime generation is the route/transport lineage, separately from cloud deployment generation.'}
+
+
 def _inspect_attempt_uncached(attempt, harness, metric_dirs=None):
     issues, all_rows, counts = [], [], Counter()
     by_purpose = defaultdict(list)
@@ -275,6 +327,7 @@ def _inspect_attempt_uncached(attempt, harness, metric_dirs=None):
     if metric_dirs is None: metric_dirs = _metric_directories(attempt, harness)
     for metrics in metric_dirs:
         rows, states, _, latency = accounting(metrics, harness, issues)
+        rows=attribute_usage_rows(rows,metrics,harness,attempt,issues)
         all_rows += rows
         counts.update(states)
         sdk_known += latency['sdk_client_seconds_known_subtotal']
@@ -324,8 +377,58 @@ def _inspect_attempt_uncached(attempt, harness, metric_dirs=None):
            'render_seconds_missing_count': sum(not numeric(v) for v in rendering),
            'sdk_client_seconds_known_subtotal': sdk_known, 'sdk_client_seconds_missing_count': sdk_missing,
            'end_to_end_seconds': (result or {}).get('end_to_end_seconds'), 'usd': None,
-           'heartbeat_present': heartbeat is not None, 'issues': issues}
+           'heartbeat_present': heartbeat is not None, 'issues': issues, 'route_accounting':route_accounting(all_rows)}
     return row, all_rows
+
+
+
+def _failed_namespace_proven(root, name, evidence, marker):
+    """A platform-terminated failed namespace is not a successful clean drain."""
+    if evidence.get('kind') != 'failed_startup_namespace_terminated' or evidence.get('acp_state') != 'FAILED':
+        return False
+    try:
+        proof_path = Path(evidence['terminated_namespace_evidence_path'])
+        if hashlib.sha256(proof_path.read_bytes()).hexdigest() != evidence['terminated_namespace_evidence_sha256']:
+            return False
+        proof = read_json(proof_path) or {}
+        if (proof.get('schema') != 'acp-terminated-namespace-v1' or proof.get('platform_state') != 'FAILED'
+                or proof.get('namespace_terminated') is not True or proof.get('name') != name):
+            return False
+        identity = ('hostname', 'boot_id', 'pid_namespace')
+        if not all(isinstance(proof.get(k), str) and proof[k] and marker.get(k) == proof[k] for k in identity):
+            return False
+        if (marker.get('job_name') != name or evidence.get('hostname') != proof['hostname']
+                or evidence.get('retired_boot_id') != proof['boot_id']
+                or evidence.get('retired_pid_namespace') != proof['pid_namespace']):
+            return False
+        artifacts = {}
+        for kind in ('describe', 'bootstrap', 'exit', 'inventory'):
+            path = Path(proof[kind + '_path'])
+            if not path.is_absolute() or hashlib.sha256(path.read_bytes()).hexdigest() != proof[kind + '_sha256']:
+                return False
+            artifacts[kind] = read_json(path) or {}
+        description, boot, exited, inventory = (artifacts[k] for k in ('describe','bootstrap','exit','inventory'))
+        node = Path(evidence['node_directory']).resolve()
+        node.relative_to((root / 'runtime/nodes').resolve())
+        Path(proof['bootstrap_path']).resolve().relative_to(node)
+        Path(proof['exit_path']).resolve().relative_to(node)
+        if Path(evidence['bootstrap_exit']).resolve() != Path(proof['exit_path']).resolve():
+            return False
+        if (description.get('state') != 'FAILED' or description.get('workspace_name') != 'rl'
+                or description.get('name') != name or not proof.get('uid') or description.get('uid') != proof['uid']
+                or proof['hostname'] != 'pt-' + proof['uid'] + '-worker-0'):
+            return False
+        if not all(boot.get(k) == proof[k] for k in identity):
+            return False
+        started, finished = boot.get('started_at_unix'), exited.get('finished_at_unix')
+        if (exited.get('controller_exit_code') != 1 or not numeric(started) or not numeric(finished)
+                or finished < started or not numeric(proof.get('observed_at_unix'))
+                or proof['observed_at_unix'] < finished):
+            return False
+        return bool(isinstance(inventory.get('claims'), list) and inventory.get('cell') == boot.get('cell')
+                    and isinstance(boot.get('cell'), str) and boot['cell'])
+    except (OSError, ValueError, TypeError, KeyError):
+        return False
 
 
 def _retired_generation_proven(root, name, evidence):
@@ -333,6 +436,8 @@ def _retired_generation_proven(root, name, evidence):
     try: node.relative_to(root / 'runtime/nodes')
     except ValueError: return False
     marker = read_json(node / 'retired.json') or {}
+    if evidence.get('kind') == 'failed_startup_namespace_terminated':
+        return _failed_namespace_proven(root, name, evidence, marker)
     exited = read_json(Path(evidence.get('bootstrap_exit') or '/missing')) or {}
     drained = exited.get('controller_exit_code') == 0 and exited.get('stopped') is True
     clean = evidence.get('clean_drain', {})
@@ -360,7 +465,9 @@ def _rate_generations(root, rate_root, active, retired, planned, issues):
     by_name = {row['name']:row for row in active}
     candidates = []
     sources=[(rate_root,'ops3','ops2'),(rate_root.parent/'visual-rate-replacements','ops4','ops3'),
-             (rate_root.parent/'final-rate-replacements','ops4','ops3')]
+             (rate_root.parent/'final-rate-replacements','ops4','ops3'),
+             (rate_root.parent/'routes1-replacements','ops5','ops4'),
+             (rate_root.parent/'routes2-replacements','ops6','ops5')]
     directories=[(directory,generation,parent) for folder,generation,parent in sources if folder.is_dir()
                  for directory in sorted(folder.iterdir()) if directory.is_dir()]
     for directory,generation,parent in directories:
@@ -381,7 +488,7 @@ def _rate_generations(root, rate_root, active, retired, planned, issues):
             issues.append({'kind':'rate_parent_retirement_unproven','name':name})
         else:
             del by_name[previous]
-            retired.append({'name':previous,'state':'succeeded_rate_rollover',
+            retired.append({'name':previous,'state':('failed_namespace_terminated' if evidence.get('kind') == 'failed_startup_namespace_terminated' else 'succeeded_rate_rollover'),
                             'retirement_path':str(Path(evidence['node_directory'])/'retired.json')})
         state = response.get('state')
         if state in ('rejected','not_sent_stopping','not_sent_source_changed'):
@@ -516,7 +623,9 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
             issues.append({'kind': 'missing_node_identity', 'path': str(path)}); nodes.append(row); continue
         retired = read_json(path.parent / 'retired.json')
         identity_fields = ('hostname', 'boot_id', 'pid_namespace')
-        if (isinstance(retired, dict)
+        failed_marker = isinstance(retired, dict) and ('failed' in str(retired.get('reason', '')).lower() or retired.get('platform_state') == 'FAILED')
+        failed_marker_proven = any(r.get('state') == 'failed_namespace_terminated' and r.get('retirement_path') == str(path.parent / 'retired.json') for r in retired_generations)
+        if (isinstance(retired, dict) and (not failed_marker or failed_marker_proven)
                 and all(isinstance(item.get(field), str) and item[field]
                         and retired.get(field) == item[field] for field in identity_fields)):
             row.update(status='retired_namespace', retired_at=retired.get('retired_at'),
@@ -575,6 +684,11 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
 def snapshot(root):
     scan_started = datetime.now(timezone.utc).isoformat()
     monitor_rebuttal.SCRIPT_GROUPS.update({
+        'run_bc_campaign_v3_routes2_io3.py':'core_bc_v3','run_bc_trial_v3_routes2_io3.py':'core_bc_v3',
+        'run_dsh_eval_v3_routes2_io3.py':'core_bc_v3',
+        'run_bc_campaign_v3_routes2.py':'core_bc_v3','run_bc_trial_v3_routes2.py':'core_bc_v3',
+        'run_bc_campaign_v3_routes1.py':'core_bc_v3','run_bc_trial_v3_routes1.py':'core_bc_v3',
+        'hermes_bc_worker_routes1.py':'core_bc_v3','run_dsh_eval_v3_routes1.py':'core_bc_v3',
         'run_bc_campaign_v3_capacity_ops.py':'core_bc_v3',
         'run_bc_campaign_v3_capacity1.py': 'core_bc_v3', 'run_bc_trial_v3_capacity1.py': 'core_bc_v3',
         'run_dsh_eval_v3_capacity1.py': 'core_bc_v3',
@@ -615,6 +729,8 @@ def snapshot(root):
             'render_seconds_missing_count': sum(r['render_seconds_missing_count'] for r in attempts),
             'sdk_client_seconds_known_subtotal': sum(r['sdk_client_seconds_known_subtotal'] for r in attempts),
             'sdk_client_seconds_missing_count': sum(r['sdk_client_seconds_missing_count'] for r in attempts),
+            'route_accounting':route_accounting(rows),
+            'route_accounting_by_cell':{k:route_accounting(v) for k,v in cells.items()},
             'usage': aggregate(rows), 'usage_by_cell': {k: aggregate(v) for k, v in cells.items()},
             'usage_by_purpose': {k: aggregate(v) for k, v in purposes.items()}, 'attempts': attempts,
             'controllers':controller_rows,

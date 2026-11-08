@@ -15,7 +15,7 @@ TokenHub `/models` 实测返回 218 个模型条目，其中以下四个请求�
 
 证据：`outputs/preflight/tokenhub-routes-20261108T110747Z/` 中的 `routes.json`、`capability/`、`large-canvas/`、`large-upload-network/summary.json`。这批工程探针不计入 benchmark 准确率，真实成本独立保留；失败且没有 usage 的调用记为 unknown。
 
-## 并发与实验定义
+## 并发与实验定义（初始 routes1）
 
 核心实验为两个 harness（Hermes、DSH）× 五种策略（No Compression、Summarization、Sliding Window、Discard-All、Visual Rendering），BC100 × avg@3，共 3,000 条计划轨迹。目标为每云单元 16 个题目任务，10 个单元合计 160，加本机 2 共 162。题目任务数量不等于操作系统 PID 数量，也不等于每分钟 API 请求数。
 
@@ -28,3 +28,27 @@ route plan SHA256：`79268981295a292896c320e6447b010ce5ca390908f93019413ea8d321e
 新入口先通过原始配置与源码验证，再生成仅 model/config 指针变化的 runtime 输入；claim、lineage、请求边界和实际响应分别记录渠道。DSH 原始 usage observer 仍为唯一计数来源，新增 returned-model sidecar 通过 request_id 关联，不重复累计 token；Hermes 保留原 SDK/HTTP/辅助请求 guard。
 
 成本按 cached input、non-cache input、output、total 分列，缺失值保留 unknown。TokenHub 实际美元价格尚未验证，不套用 Gemini 价格。端到端与客户端 API 耗时可测，provider 内部耗时未知。最终分析应按实际渠道分层，并保持同题配对。
+
+## 更新：routes2 显式修订与扩容
+
+16-trial Hermes visual 原生 canary 已验证：首批16条均启动，155次已完成API记录无SDK错误，28次压缩后请求/56张图像完整性通过；已完成调用 cached 1,650,688 + non-cache 836,758 + output 164,167 = total 2,651,613，字段完整且守恒。此快照并非完整成本或准确率。随后8.23分钟独立窗口，sfb每分钟16.03次实际HTTP发送、128次SDK成功返回；窗口前开始的请求可能在窗口内完成，发送数与完成数不可混用。
+
+确认两sfc暂不适合真实大图后，创建独立 `route-plan-v2.json`，而非覆盖v1。全部49历史controller都有停派快照或本机精确进程身份已退出的证明；迁移时120个受影响pair没有任何claim或attempt。因此这120对只从sfc改到已通过验证的sfb，既有119对原route和61对sfb保持不变。新的分配为原route119对、sfb181对；没有因sfc预分配而长期搁置的1,200条任务。
+
+v2 SHA256：`2ab0bcf2d3c745909ebfa9e72751e29de71b10ed1353aa7e0695c38a6c7c8153`。父v1 SHA及binding原样保留；已有v1数据仍记v1 lineage，新数据记v2。受影响pair已有任何历史claim则修订会拒绝；同route父代尚未完成runtime准备时，新同题任务会暂缓，避免跨代竞态。
+
+其余9个云单元的ops5创建已返回submitted，使用routes2入口，每单元目标16。Hermes visual canary自然收尾后，由独立watcher在ACP SUCCEEDED与clean drain都确认后创建ops6，同样16；不会中断其在途题目。原本机池已完全退出，新的本机routes2池目标2，支持DSH visual，共用永久claim与每cell32硬槽。目标总数160+2=162；submitted、supervisor启动、native启动、真实API成功是不同阶段，实时数以监控为准。
+
+代码检查：根目录261项unittest通过，另5项Node归因/图像guard测试通过。镜像、8核32GiB规格、afs_agents和workspace路径保持不变。实际云端计量与稳定窗口仍需持续监测。
+
+## 更新：共享目录发布竞态与安全续跑（io3）
+
+大规模派题实测暴露共享AFS的短暂可见性窗口：claim目录可见时，其owner.json尚未可读。四个旧调度器因此退出，并非模型限流。新io3独立入口只对该明确情况等待/暂缓派题；冲突或损坏的owner仍拒绝。其他调度异常会停止新增派题，并等待已经跟踪的原生子任务自然结束，避免控制器异常连带终止付费轨迹。
+
+四个ACP FAILED节点已核官方终态、节点UID、boot、namespace与exit证据。只批准30条完全没有worker-started、command、native、API或terminal证据的旧claim续跑：DSH摘要15、Hermes摘要6、Hermes窗口6、Hermes丢弃3。原spec、claim、slot与原worker-started独占保护不变，恢复与新pending共用16并发及1/15路由配额。Hermes丢弃另7条已启动但无结果轨迹保留unknown/interrupted及已发生费用，不自动重跑。
+
+DSH另发现前导连字符题文被CLI当作参数：独立新入口在原始题目前插入参数终止符 `--`，所有permission/patch参数仍在其前，题文逐字节保持不变。实际两层CLI解析离线验证通过；旧q043失败结果未覆盖或重跑。
+
+新的ops6使用io3 bootstrap，6个具备终态证明的节点已提交，剩余4个旧DSH节点等待自然收尾后按相同规格替换。每节点16、本机2的目标不变；此时仍处替换阶段，不将submitted误称为162实际运行。原v1/v2冻结源码没有修改，维护代码来源与哈希写独立sidecar。
+
+最新根目录检查289项通过（包含部署证据链检查）；四份真实恢复manifest逐条校验通过。记录目录为 `outputs/cloud-runtime/io3-recovery/`。新流量的持续稳定性仍以实时监测为准；gateway `system_memory_limit` 的作用域和实际美元价格仍未知。

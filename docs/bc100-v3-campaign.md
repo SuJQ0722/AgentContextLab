@@ -18,13 +18,19 @@ tools and accounting changed. Existing historical analysis remains available.
 
 The first dispatch consists of two local visual trials, one per harness, using
 the same plan and immutable attempt directories intended for the cloud run.
-This is an initial subset, not a claim that the 320-worker cloud allocation is
-already active. Actual activity is reported in `monitor/status.json`.
+The user subsequently confirmed that the current machine should also run the study.
+A persistent local pool now advances pending jobs across both harnesses and all
+five methods, ramping toward 32 workers while monitoring memory and process
+counts. Cloud workers are not yet active. Actual activity is reported in
+`monitor/status.json`; do not confuse configured pool capacity with measured
+in-flight requests.
 
 ```bash
 python scripts/run_bc_campaign_v3.py --harness hermes --strategy visual --concurrency 1 --limit 1 --resume --live
 python scripts/run_bc_campaign_v3.py --harness dsh --strategy visual --concurrency 1 --limit 1 --resume --live
 python scripts/monitor_bc_campaign_v3.py --watch
+# Fresh web readiness on each future host, before starting its controller:
+python scripts/preflight_bc_v3_web.py --root outputs/campaigns/bc100-r3-hermes-parity-v3
 ```
 
 Each future SCO instance owns one harness/method selection and a controller
@@ -58,3 +64,12 @@ usage, cached/non-cache/output tokens, compression and rendering, and web-cache
 observations. Judge costs remain separate. Missing counters and actual USD are
 unknown; client elapsed time is not provider-internal latency. A completed
 trajectory is not an accuracy measurement until graded.
+
+Implementation details and exact ownership rules: [scheduler and resume](bc-campaign-v3-resume.md).
+
+The first real Hermes trial demonstrated native output-limit recovery: after an
+8,192-token reasoning-only length stop, its next request used 16,384 max_tokens,
+then returned to 8,192. This was native behavior within the same trial, not a
+manual retry or configuration edit. The configured output value must not be
+reported as a hard per-request cap for both harnesses. Evidence is preserved in
+`monitor/hermes-native-output-budget.json`; charge actual returned usage.

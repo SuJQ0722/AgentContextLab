@@ -52,3 +52,27 @@ DSH另发现前导连字符题文被CLI当作参数：独立新入口在原始�
 新的ops6使用io3 bootstrap，6个具备终态证明的节点已提交，剩余4个旧DSH节点等待自然收尾后按相同规格替换。每节点16、本机2的目标不变；此时仍处替换阶段，不将submitted误称为162实际运行。原v1/v2冻结源码没有修改，维护代码来源与哈希写独立sidecar。
 
 最新根目录检查289项通过（包含部署证据链检查）；四份真实恢复manifest逐条校验通过。记录目录为 `outputs/cloud-runtime/io3-recovery/`。新流量的持续稳定性仍以实时监测为准；gateway `system_memory_limit` 的作用域和实际美元价格仍未知。
+
+## 全节点运行验收：2026-11-08 12:49 UTC / 北京时间20:49
+
+10/10新云节点及本机均运行；最后启动节点已观察至少5分钟真实调用，早批节点观察超过十分钟。配置为每云cell16、本机2，共162个题目任务槽位。以下为同一轮独立采样的实测进程数，任务完成与初始化时会短暂低于目标；所有controller仍正常补位或满额，没有stop/deferred/OOM。
+
+| 策略 | Hermes目标 / trial / native | DSH目标 / trial / native |
+|---|---:|---:|
+| No Compression | 16 / 12 / 11 | 16 / 16 / 16 |
+| Summarization | 16 / 15 / 14 | 16 / 14 / 13 |
+| Sliding Window | 16 / 16 / 16 | 16 / 16 / 16 |
+| Discard-All | 16 / 14 / 13 | 16 / 12 / 12 |
+| Visual Rendering | 16 / 16 / 16 | 16 / 16 / 16 |
+| 本机辅助DSH Visual | — | 2 / 2 / 2 |
+| 全部合计 | 目标162 / 实际trial149 / native145 | 含本机 |
+
+native按Hermes Python与DSH Node计数；75个DSH Python launcher另列，不重复视为模型执行引擎。11个namespace实测OS活跃PID共511，不能把162个题目任务槽位当作全部系统进程数。
+
+最终五分钟窗口12:44:19–12:49:19 UTC：1,362个SDK返回中5个失败（约0.37%），分别为3次网关system_memory_limit和2次连接/传输错误，未把HTTP状态再次重复计入SDK失败。没有新增ModelAccount RPM/TPM限流证据；上游memory保护仍偶发，不能声称完全无错误或四渠道有独立配额。DSH visual q060的memory429原生重试在审计截止时仍在途；不提前记为成功。
+
+所有已知raw token守恒检查通过，窗口9条usage未知保留unknown；美元成本缺可核实的实际渠道价格。新IO3 Hermes的199次压缩canvas请求无缺图/像素校验失败，DSH图像guard未报错。原生completed不代表答案正确，准确率仍待评分。
+
+30条明确从未启动的claim已全部续跑：每题单一worker-started/native，原spec/claim及启动前slot SHA匹配授权。恢复审计截止14 completed、0 failed；另7条已启动但中断的Hermes discard轨迹保留unknown与原费用，不自动重跑或覆盖。
+
+正式证据：campaign `monitor/fleet-io3-load-final-20261108T1249Z.json`、`fleet-io3-health-final-20261108T1249Z.json`、`final-io3-processes-final-20261108T1249Z.json`，以及 `outputs/preflight/io3-recovery-live-audit-20261108/` 与 `io3-last4-flow-audit-20261108/`。所有10个ops6创建回执成功后，provisioning watcher已停止；实验controller、成本监控与ETA只读observer继续运行。由于两条有效路由配额为1/15且仍缺充分分路由尾部校准，旧单渠道完工日期估算已失效，当前不提供伪精确完工日期。

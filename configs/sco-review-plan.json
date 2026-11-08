@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "state": "awaiting_user_review",
+  "source_experiment": "configs/experiment.json",
+  "launch_authorized": false,
+  "instance": {"cpu_count": 8, "memory_gib": 32, "gpu_count": 0, "worker_concurrency": 32},
+  "cloud": {"profile": null, "region": null, "workspace": null, "queue_id": null, "image": null, "afs_volume_id": null},
+  "groups": [
+    {"experiment": "bc100", "harnesses": ["dsh", "hermes"], "methods": ["none", "summarize", "sliding_window", "discard", "visual"], "questions": 100, "repeats": 3, "priority": 1, "status": "new_version_required"},
+    {"experiment": "rq3", "harnesses": ["hermes"], "methods": ["scale_0000", "scale_0125", "scale_0250", "scale_0500", "scale_0700", "scale_0800"], "questions": 100, "repeats": 3, "priority": 2, "status": "new_version_required", "reuse": "1x from the NEW matching core Hermes visual cell only"},
+    {"experiment": "controlled", "harnesses": ["hermes"], "methods": ["visual", "summarize_native", "sliding_window_native"], "questions": null, "repeats": 3, "priority": 2, "status": "full_trajectory_protocol_and_budget_gate_required", "benchmarks": ["browsecomp_v3", "mmbrowsecomp", "agenticdatabench"]},
+    {"experiment": "information_loss", "harnesses": ["analysis"], "methods": ["visual", "summarize", "text_only"], "questions": null, "repeats": null, "priority": 3, "status": "conditional_new_valid_sources_and_probe_protocol_required"}
+  ],
+  "required_gates": [
+    "user_review_of_committed_Hermes_and_DSH_image_table_crop_zoom_canvases",
+    "user_approval_of_exact_instance_and_global_concurrency_plan",
+    "working_search_fetch_and_image_search_from_each_instance_network",
+    "shared_policy_and_native_image_wire_contract_verified",
+    "provider_request_rate_quota_checked",
+    "frozen_new_implementation_cohorts_and_versioned_output_paths",
+    "cross_host_resume_ownership_and_usage_accounting_verified",
+    "cloud_profile_queue_image_and_AFS_mount_verified"
+  ]
+}

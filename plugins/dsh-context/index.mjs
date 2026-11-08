@@ -3,7 +3,7 @@ import { BasicCompactionEngine } from '../../deepseekHarness/packages/compaction
 import { spawn } from 'node:child_process';
 import { appendFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { separateImages, originalTask } from './content.mjs';
+import { separateImages, originalTask, inlineImagesForRenderer } from './content.mjs';
 
 export function apply(ctx, config) {
   const { strategy, python, renderer, historyScale, fontSize = 8, metricsDir, postCompressionBudget, ...policy } = config;
@@ -87,7 +87,9 @@ export function apply(ctx, config) {
       if (images.some(block => block.offloaded)) throw new Error('Native evidence has been offloaded; invalid controlled run');
       let task = this.tasks.get(agent.session);
       if (!task) {
-        task = originalTask(strategy === 'discard' ? input.messages : text);
+        task = originalTask(['discard', 'visual_native'].includes(strategy) ? input.messages : text);
+        // Visual evidence belongs inside its history canvas, not a second native copy.
+        if (strategy === 'visual_native') task = task.filter(block => block.type !== 'image');
         this.tasks.set(agent.session, task);
       }
       const target = agent.session.requestHeader()?.config;
@@ -103,8 +105,10 @@ export function apply(ctx, config) {
           throw new Error('Visual rendering requires python, renderer, metricsDir and historyScale');
         }
         const previous = this.histories.get(agent.session) ?? [];
-        const history = [...previous, ...text.filter(message =>
-          message.role !== 'system' && message.source?.kind !== 'compact-checkpoint')];
+        const selected = input.messages.filter(message =>
+          message.role !== 'system' && message.source?.kind !== 'compact-checkpoint');
+        const inline = await inlineImagesForRenderer(selected, this.ctx.attachments, signal, previous.length);
+        const history = [...previous, ...inline];
         const rendered = await renderHistory(python, renderer, { messages: history, history_scale: historyScale, font_size: fontSize }, signal);
         const refs = await this.ctx.attachments.saveImages(rendered.images.map(url => ({
           data: Buffer.from(url.split(',')[1], 'base64'), mediaType: 'image/png',
@@ -115,9 +119,11 @@ export function apply(ctx, config) {
         await appendFile(join(metricsDir, 'render.jsonl'), JSON.stringify({
           session_id: agent.session.id, render_seconds: rendered.render_seconds,
           renderer: rendered.renderer, font_size: fontSize, history_scale: historyScale,
+          presentation_version: 'hermes-inline-evidence-v2',
+          evidence_policy: 'selected evidence embedded beside its text; no duplicate native append; uncompressed tail unchanged',
           stats: rendered.stats, native_image_ids: images.map(block => block.attachment.attachmentId),
         }) + '\n');
-        return { summary: [...task, ...refs.map(attachment => ({ type: 'image', attachment })), ...images],
+        return { summary: [...task, ...refs.map(attachment => ({ type: 'image', attachment }))],
           provider: target.provider, model: target.model };
       }
       const result = await super.summarize({ ...input, messages: text }, agent, signal);

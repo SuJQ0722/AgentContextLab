@@ -1,0 +1,148 @@
+{
+  "source_result": "outputs/preflight/dsh-multimodal-compaction-v2-1794116192949807380/result.json",
+  "scope": "Preview from real DSH native compaction using captured real Hermes tool results and synthetic repeated table records. Not a semantic or full five-policy parity claim. image_search resources explicitly replaced with captured local source to avoid network.",
+  "canvas": {
+    "index": 0,
+    "path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/dsh-multimodal-compaction-v2-1794116192949807380/raw-canvas/1794116220297231899/canvas-1.png",
+    "sha256": "66041c6506f62761dbc31f9e9fff773c51f85a6cc00ac0b4b01fbec5390362b3",
+    "bytes": 1913946,
+    "width": 1015,
+    "height": 4067
+  },
+  "stats": {
+    "renderer_version": "multimodal-wrap-v2",
+    "source_images": [
+      {
+        "label": "user_image",
+        "content_index": 1,
+        "source_attachment_id": "sha256:0b09c5bb1cb32eb2e488c9e527c532ba895efc00312131619802c458af5e1d6f",
+        "source_occurrence": "ba508c18-cc05-4c27-ab41-b90023771f6b:block-1",
+        "source_kind": "returned_or_native_image",
+        "message_index": 0,
+        "resolved_path": "/tmp/acl-render-8hyf20k1/source_images/0b09c5bb1cb32eb2e488c9e527c532ba895efc00312131619802c458af5e1d6f.image",
+        "source_ref_sha256": "21c3c6c4f244893389c0ab47cf175f249991c18cc5964f46a9f386caffc94b6f",
+        "file_sha256": "0b09c5bb1cb32eb2e488c9e527c532ba895efc00312131619802c458af5e1d6f",
+        "pixel_sha256": "a0b32405ef711d54f710e5b481f1e5146a13a20b750460078ac74e91422740ce",
+        "dimensions": [
+          1014,
+          3332
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_search",
+        "result_index": 0,
+        "source_kind": "search_result_image",
+        "source_title": "Why Now Is the Best Time to Travel to Europe or the US | Tatler Asia",
+        "source_page": "https://www.tatlerasia.com/power-purpose/wealth/euro-us-dollar-parity-exchange-rate-travel",
+        "message_index": 4,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/hermes-tool-bridge-v2/offline/source.png",
+        "source_ref_sha256": "06c0db288c913f10b76f3c75a0d295aa64b11c21db467f32e82b71f9d1bb83e2",
+        "file_sha256": "0b09c5bb1cb32eb2e488c9e527c532ba895efc00312131619802c458af5e1d6f",
+        "pixel_sha256": "a0b32405ef711d54f710e5b481f1e5146a13a20b750460078ac74e91422740ce",
+        "dimensions": [
+          1014,
+          3332
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_search",
+        "result_index": 1,
+        "source_kind": "search_result_image",
+        "source_title": "Best time to visit Paris: climate, seasons and events guide | WeRoad",
+        "source_page": "https://www.weroad.com/blog/best-time-to-visit-paris-climate-seasons-and-events-guide",
+        "message_index": 4,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/hermes-tool-bridge-v2/offline/source.png",
+        "source_ref_sha256": "06c0db288c913f10b76f3c75a0d295aa64b11c21db467f32e82b71f9d1bb83e2",
+        "file_sha256": "0b09c5bb1cb32eb2e488c9e527c532ba895efc00312131619802c458af5e1d6f",
+        "pixel_sha256": "a0b32405ef711d54f710e5b481f1e5146a13a20b750460078ac74e91422740ce",
+        "dimensions": [
+          1014,
+          3332
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 1,
+        "status": "duplicate_pixels",
+        "duplicate_of": 0
+      },
+      {
+        "label": "image_search",
+        "result_index": 2,
+        "source_kind": "search_result_image",
+        "source_title": "Best Hotels Paris \u2014 Travel Guide | Lorraine Travel",
+        "source_page": "https://www.lorrainetravel.com/destinations/best-hotels-paris",
+        "message_index": 4,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/hermes-tool-bridge-v2/offline/source.png",
+        "source_ref_sha256": "06c0db288c913f10b76f3c75a0d295aa64b11c21db467f32e82b71f9d1bb83e2",
+        "file_sha256": "0b09c5bb1cb32eb2e488c9e527c532ba895efc00312131619802c458af5e1d6f",
+        "pixel_sha256": "a0b32405ef711d54f710e5b481f1e5146a13a20b750460078ac74e91422740ce",
+        "dimensions": [
+          1014,
+          3332
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 2,
+        "status": "duplicate_pixels",
+        "duplicate_of": 0
+      },
+      {
+        "label": "image_crop",
+        "content_index": 1,
+        "source_attachment_id": "sha256:36ff784656e6868c62a5ba526df64d34cba72f8d9803206b5bdb29946a4a4051",
+        "source_occurrence": "1f938020-9ba3-4df1-804c-587516168fda:block-1",
+        "source_kind": "returned_or_native_image",
+        "message_index": 7,
+        "resolved_path": "/tmp/acl-render-8hyf20k1/source_images/36ff784656e6868c62a5ba526df64d34cba72f8d9803206b5bdb29946a4a4051.image",
+        "source_ref_sha256": "25f3093f9522add183c36712b52e37066744c3311f815673079dd62d10aa4951",
+        "file_sha256": "36ff784656e6868c62a5ba526df64d34cba72f8d9803206b5bdb29946a4a4051",
+        "pixel_sha256": "2feda9f15fa0811cf5d320125a84e5c02f12fb4db494f0c8c2c7f820495a9703",
+        "dimensions": [
+          1000,
+          999
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_zoom_in",
+        "content_index": 1,
+        "source_attachment_id": "sha256:1b25535d86d972388218a7379cbac3ac52907c27b316ab685cdefa86d269fec3",
+        "source_occurrence": "810dfc45-caa7-45d8-a985-daececa67bf4:block-1",
+        "source_kind": "returned_or_native_image",
+        "message_index": 9,
+        "resolved_path": "/tmp/acl-render-8hyf20k1/source_images/1b25535d86d972388218a7379cbac3ac52907c27b316ab685cdefa86d269fec3.image",
+        "source_ref_sha256": "3b821a569f2583a4ddf33ba169e00202a408496e51bdddd054c9933f50be51db",
+        "file_sha256": "1b25535d86d972388218a7379cbac3ac52907c27b316ab685cdefa86d269fec3",
+        "pixel_sha256": "57bfb3bc15b091b97b3c4330327f2b130b693aba4c23205bc7da51e8e2d592a1",
+        "dimensions": [
+          500,
+          500
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      }
+    ],
+    "text_chars": 3059305,
+    "text_tokens_estimate": 764827,
+    "messages_rendered": 48,
+    "source_image_input_occurrences": 6,
+    "source_image_occurrences": 6,
+    "rendered_source_images": 4,
+    "deduplicated_source_occurrences": 2,
+    "source_image_coverage_verified": true,
+    "image_tokens_estimate": 24908,
+    "image_count": 5
+  },
+  "wire_raw_sha_verified": true
+}

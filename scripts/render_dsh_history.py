@@ -30,21 +30,27 @@ class RenderFailures(logging.Handler):
 
 def render(payload):
     messages = []
+    tool_names = {}
     for message in payload['messages']:
         content, calls = [], []
         for block in message['content']:
             if block['type'] in ('text', 'reasoning'):
                 content.append({'type': 'text', 'text': block['text']})
             elif block['type'] == 'tool-call':
+                tool_names[block['id']] = block['name']
                 calls.append({'id': block['id'], 'type': 'function', 'function': {
                     'name': block['name'], 'arguments': block['arguments']}})
             elif block['type'] == 'image_url':
                 content.append(block)
+            elif block['type'] == 'image':
+                raise ValueError('Native DSH image must be resolved to inline bytes before rendering')
         item = {'role': message['role'], 'content': content}
         if calls:
             item['tool_calls'] = calls
         if message.get('toolCallId'):
             item['tool_call_id'] = message['toolCallId']
+            if message['toolCallId'] in tool_names:
+                item['name'] = tool_names[message['toolCallId']]
         messages.append(item)
     stats = {}
     start = time.monotonic()
@@ -67,8 +73,22 @@ def render(payload):
               if isinstance(part, dict) and part.get('type') == 'image_url']
     if result is messages or not images:
         raise ValueError('History was not rendered; refusing a silent text fallback')
+    expected = [block for message in messages for block in message['content']
+                if block.get('type') == 'image_url']
+    if expected:
+        ledger = stats.get('source_images', [])
+        if (stats.get('renderer_version') != 'multimodal-wrap-v2'
+                or stats.get('source_image_occurrences') != len(ledger)
+                or not stats.get('source_image_coverage_verified')):
+            raise ValueError('Shared renderer did not verify complete inline visual evidence coverage')
+        expected_sources = [(b.get('source_attachment_id'), b.get('source_occurrence')) for b in expected]
+        actual_sources = [(b.get('source_attachment_id'), b.get('source_occurrence')) for b in ledger
+                          if b.get('source_occurrence') is not None or b.get('source_attachment_id') is not None]
+        if expected_sources != actual_sources:
+            raise ValueError('Rendered evidence provenance changed order or omitted an occurrence')
     return {'images': images, 'render_seconds': time.monotonic() - start, 'stats': stats,
-            'renderer': 'Hermes PDF/Poppler; fallback forbidden'}
+            'renderer': 'Hermes PDF/Poppler; inline evidence v2; fallback forbidden',
+            'presentation_version': 'hermes-inline-evidence-v2'}
 
 
 if __name__ == '__main__':

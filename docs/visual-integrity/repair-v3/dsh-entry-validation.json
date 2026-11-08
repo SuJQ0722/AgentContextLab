@@ -1,0 +1,247 @@
+{
+  "paid_model_calls": 0,
+  "external_http_calls": 0,
+  "entrypoint": "scripts/run_dsh_eval_v3.py",
+  "scope": "Synthetic localhost responses and provider usage; actual production tool/policy/attachment routing, not accuracy.",
+  "lens_coverage": "Schema is checked here; real public-URL Lens handler success is separately recorded in outputs/preflight/hermes-tool-bridge-v2/live-lens.json. No Lens network request in this fixture.",
+  "passed": true,
+  "source_result_sha256": "af535fa5766ad544b56ae85cd95f4d0565272ac2e6e8a69b835330be2ed77a7d",
+  "strategies": [
+    {
+      "strategy": "none",
+      "exit_code": 0,
+      "wire_guard_errors": [],
+      "actual_wire_canvas": false,
+      "implementation_before": {
+        "scripts/run_dsh_eval_v3.py": "051a6240abe8b7674e5a85b6b7412d5075d4b199bb33e558ed3cfc5adc4960c7",
+        "scripts/shared_context_policy.py": "2de989a182dd178ce1a5d8f2e487d397a91cccf225b9697c7d5a84cf4f3923d0",
+        "plugins/dsh-context/hermes-policy-v3.mjs": "940f38fef15383d505517dc8043814079efb13c7b11e4873aff7c57b853c7fd4",
+        "plugins/dsh-context/shared-surface.mjs": "2f1c184dd21f981737f64d4de966e1ac19b3e37bab44690487e97018b43468f8",
+        "plugins/dsh-local-web/hermes-tools-v2.mjs": "04fb55136a475f97866c5156aca41a8e959913e8222cc73fae90d68f7c44dbec",
+        "scripts/hermes_tool_bridge.py": "a780387a23b2651d27e0175781bd5cdee1662b2a746421aa48713e05443466aa",
+        "scripts/dsh_wire_image_guard.mjs": "aed5d86ea9567b73e866ed7214253858ca5c057620c6b9f135b7cd8d4b035b59",
+        "scripts/dsh_wire_expectations.mjs": "12223b4ca062a96ebf5d0cf0cff91c4f42850e35d105213521672591c3b890bb",
+        "scripts/dsh_raw_usage_observer.mjs": "f09a4c64472e2c2d23538ea1059797d93aafdfeda3f54bd89c16ca7d241c5891"
+      },
+      "implementation_after": {
+        "scripts/run_dsh_eval_v3.py": "051a6240abe8b7674e5a85b6b7412d5075d4b199bb33e558ed3cfc5adc4960c7",
+        "scripts/shared_context_policy.py": "2de989a182dd178ce1a5d8f2e487d397a91cccf225b9697c7d5a84cf4f3923d0",
+        "plugins/dsh-context/hermes-policy-v3.mjs": "940f38fef15383d505517dc8043814079efb13c7b11e4873aff7c57b853c7fd4",
+        "plugins/dsh-context/shared-surface.mjs": "2f1c184dd21f981737f64d4de966e1ac19b3e37bab44690487e97018b43468f8",
+        "plugins/dsh-local-web/hermes-tools-v2.mjs": "04fb55136a475f97866c5156aca41a8e959913e8222cc73fae90d68f7c44dbec",
+        "scripts/hermes_tool_bridge.py": "a780387a23b2651d27e0175781bd5cdee1662b2a746421aa48713e05443466aa",
+        "scripts/dsh_wire_image_guard.mjs": "aed5d86ea9567b73e866ed7214253858ca5c057620c6b9f135b7cd8d4b035b59",
+        "scripts/dsh_wire_expectations.mjs": "12223b4ca062a96ebf5d0cf0cff91c4f42850e35d105213521672591c3b890bb",
+        "scripts/dsh_raw_usage_observer.mjs": "f09a4c64472e2c2d23538ea1059797d93aafdfeda3f54bd89c16ca7d241c5891"
+      },
+      "new_canvas_source_hashes": [],
+      "all_new_canvases_present_on_actual_wire": false,
+      "server_requests": [
+        {
+          "step": 1,
+          "image_hashes": [],
+          "canvas_present": false,
+          "image_details": [],
+          "native_expected_details": [],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 2,
+          "image_hashes": [],
+          "canvas_present": false,
+          "image_details": [],
+          "native_expected_details": [],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 3,
+          "image_hashes": [],
+          "canvas_present": false,
+          "image_details": [],
+          "native_expected_details": [],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 4,
+          "image_hashes": [
+            "af186519d97081e21ad3f1cdbce2327a0d9ee1b623719fb856ec050ec8cea709"
+          ],
+          "canvas_present": false,
+          "image_details": [
+            "auto"
+          ],
+          "native_expected_details": [
+            "auto"
+          ],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 5,
+          "image_hashes": [
+            "af186519d97081e21ad3f1cdbce2327a0d9ee1b623719fb856ec050ec8cea709",
+            "a5247322c1ee6ec243ca5fd41c5c8e31356eaff3a1c50c2132f8a595a5416396"
+          ],
+          "canvas_present": false,
+          "image_details": [
+            "auto",
+            "auto"
+          ],
+          "native_expected_details": [
+            "auto",
+            "auto"
+          ],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        }
+      ]
+    },
+    {
+      "strategy": "visual_native",
+      "exit_code": 0,
+      "wire_guard_errors": [],
+      "actual_wire_canvas": true,
+      "implementation_before": {
+        "scripts/run_dsh_eval_v3.py": "051a6240abe8b7674e5a85b6b7412d5075d4b199bb33e558ed3cfc5adc4960c7",
+        "scripts/shared_context_policy.py": "2de989a182dd178ce1a5d8f2e487d397a91cccf225b9697c7d5a84cf4f3923d0",
+        "plugins/dsh-context/hermes-policy-v3.mjs": "940f38fef15383d505517dc8043814079efb13c7b11e4873aff7c57b853c7fd4",
+        "plugins/dsh-context/shared-surface.mjs": "2f1c184dd21f981737f64d4de966e1ac19b3e37bab44690487e97018b43468f8",
+        "plugins/dsh-local-web/hermes-tools-v2.mjs": "04fb55136a475f97866c5156aca41a8e959913e8222cc73fae90d68f7c44dbec",
+        "scripts/hermes_tool_bridge.py": "a780387a23b2651d27e0175781bd5cdee1662b2a746421aa48713e05443466aa",
+        "scripts/dsh_wire_image_guard.mjs": "aed5d86ea9567b73e866ed7214253858ca5c057620c6b9f135b7cd8d4b035b59",
+        "scripts/dsh_wire_expectations.mjs": "12223b4ca062a96ebf5d0cf0cff91c4f42850e35d105213521672591c3b890bb",
+        "scripts/dsh_raw_usage_observer.mjs": "f09a4c64472e2c2d23538ea1059797d93aafdfeda3f54bd89c16ca7d241c5891"
+      },
+      "implementation_after": {
+        "scripts/run_dsh_eval_v3.py": "051a6240abe8b7674e5a85b6b7412d5075d4b199bb33e558ed3cfc5adc4960c7",
+        "scripts/shared_context_policy.py": "2de989a182dd178ce1a5d8f2e487d397a91cccf225b9697c7d5a84cf4f3923d0",
+        "plugins/dsh-context/hermes-policy-v3.mjs": "940f38fef15383d505517dc8043814079efb13c7b11e4873aff7c57b853c7fd4",
+        "plugins/dsh-context/shared-surface.mjs": "2f1c184dd21f981737f64d4de966e1ac19b3e37bab44690487e97018b43468f8",
+        "plugins/dsh-local-web/hermes-tools-v2.mjs": "04fb55136a475f97866c5156aca41a8e959913e8222cc73fae90d68f7c44dbec",
+        "scripts/hermes_tool_bridge.py": "a780387a23b2651d27e0175781bd5cdee1662b2a746421aa48713e05443466aa",
+        "scripts/dsh_wire_image_guard.mjs": "aed5d86ea9567b73e866ed7214253858ca5c057620c6b9f135b7cd8d4b035b59",
+        "scripts/dsh_wire_expectations.mjs": "12223b4ca062a96ebf5d0cf0cff91c4f42850e35d105213521672591c3b890bb",
+        "scripts/dsh_raw_usage_observer.mjs": "f09a4c64472e2c2d23538ea1059797d93aafdfeda3f54bd89c16ca7d241c5891"
+      },
+      "new_canvas_source_hashes": [
+        "3f4bcdfae148ef81bc57cd924b2024ff057c20327b68bb6ef03b9510324ca2cc"
+      ],
+      "all_new_canvases_present_on_actual_wire": true,
+      "server_requests": [
+        {
+          "step": 1,
+          "image_hashes": [],
+          "canvas_present": false,
+          "image_details": [],
+          "native_expected_details": [],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 2,
+          "image_hashes": [],
+          "canvas_present": false,
+          "image_details": [],
+          "native_expected_details": [],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 3,
+          "image_hashes": [],
+          "canvas_present": false,
+          "image_details": [],
+          "native_expected_details": [],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 4,
+          "image_hashes": [
+            "af186519d97081e21ad3f1cdbce2327a0d9ee1b623719fb856ec050ec8cea709"
+          ],
+          "canvas_present": false,
+          "image_details": [
+            "auto"
+          ],
+          "native_expected_details": [
+            "auto"
+          ],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        },
+        {
+          "step": 5,
+          "image_hashes": [
+            "3f4bcdfae148ef81bc57cd924b2024ff057c20327b68bb6ef03b9510324ca2cc",
+            "a5247322c1ee6ec243ca5fd41c5c8e31356eaff3a1c50c2132f8a595a5416396"
+          ],
+          "canvas_present": true,
+          "image_details": [
+            "high",
+            "auto"
+          ],
+          "native_expected_details": [
+            "high",
+            "auto"
+          ],
+          "tool_names": [
+            "image_crop",
+            "image_search",
+            "image_zoom_in",
+            "web_extract",
+            "web_search"
+          ]
+        }
+      ]
+    }
+  ]
+}

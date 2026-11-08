@@ -1,0 +1,182 @@
+{
+  "passed": true,
+  "paid_calls": 0,
+  "network_calls": 0,
+  "conditions": [
+    {
+      "strategy": "none",
+      "phase": 1,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "1b17460f1aff00e70280207a8704c1e5baf75d849826ac68e0143cc5959a7eb8",
+      "compression_count": 0,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 0.0,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.0021148230880498886
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "none",
+      "phase": 2,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "18a5ebd60e4d6a409e54ea467715e6b8acfe7a1b9119dc7e7cc4b577a8cca97c",
+      "compression_count": 0,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 0.0,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.0016968846321105957
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "discard",
+      "phase": 1,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "8895cdc655a7d1e78b77545c0dd6bb918faf5ee63d7710cec8c35f7b9205c840",
+      "compression_count": 1,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 0.00012313947081565857,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.7935520242899656
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "discard",
+      "phase": 2,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "8895cdc655a7d1e78b77545c0dd6bb918faf5ee63d7710cec8c35f7b9205c840",
+      "compression_count": 2,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 0.00011014752089977264,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.7905282564461231
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "sliding_window",
+      "phase": 1,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "419711be98512f9f1c571d144088d6507c44c9ef648ef6459911335bb8be7236",
+      "compression_count": 1,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 0.00012744590640068054,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.6073364373296499
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "sliding_window",
+      "phase": 2,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "cd4c72c655a78a4fa45970b10053b65bdfb08fd153b40670608edbd26f1d5e1a",
+      "compression_count": 2,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 0.0001954995095729828,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.7411047369241714
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "summarize",
+      "phase": 1,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "e64663fb01b869683a7028cbf5fab31d91aa5617660631e604636423eaf8c16e",
+      "compression_count": 1,
+      "summary_prompt_identical": true,
+      "local_timings": {
+        "engine_seconds": 0.00044310465455055237,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.6958445850759745
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "summarize",
+      "phase": 2,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "61b180820d9eb236c8088213a05f083bf4bab1761a9079277ff5515884510053",
+      "compression_count": 2,
+      "summary_prompt_identical": true,
+      "local_timings": {
+        "engine_seconds": 0.0003663022071123123,
+        "renderer_seconds": 0.0,
+        "renderer_calls": 0,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 0.6637424863874912
+      },
+      "visual_full_history_messages": null
+    },
+    {
+      "strategy": "visual",
+      "phase": 1,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "2273c4b56cb7d78a54c6092a1a1cfc345354d33ef9a6756ec3194517bf11ac76",
+      "compression_count": 1,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 2.320187631994486,
+        "renderer_seconds": 2.3171431217342615,
+        "renderer_calls": 1,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 2.999345473945141
+      },
+      "visual_full_history_messages": 20
+    },
+    {
+      "strategy": "visual",
+      "phase": 2,
+      "subprocess_restart": true,
+      "direct_hermes_messages_identical": true,
+      "output_messages_sha256": "d44ad1632646f4ae045c3bac4e760c6621739f79409d56047320107a77ceb5da",
+      "compression_count": 2,
+      "summary_prompt_identical": null,
+      "local_timings": {
+        "engine_seconds": 2.875856449827552,
+        "renderer_seconds": 2.8726860396564007,
+        "renderer_calls": 1,
+        "definition": "Local wall time only; renderer is nested inside engine; excludes host model API and subprocess IPC.",
+        "policy_total_seconds": 3.602652493864298
+      },
+      "visual_full_history_messages": 40
+    }
+  ],
+  "scope": "Direct Hermes engine versus new Python process on each step; not a DSH native surface persistence test.",
+  "implementation_sha256": {
+    "scripts/shared_context_policy.py": "2de989a182dd178ce1a5d8f2e487d397a91cccf225b9697c7d5a84cf4f3923d0",
+    "scripts/rq3_pdf_renderer.py": "cfff6060b714f55bbcd0bdde49f9b922d3084fcbe130cb51d2103dc786a26dab"
+  }
+}

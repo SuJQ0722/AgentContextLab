@@ -1,18 +1,18 @@
 # Rebuttal work and supervision
 
-**2026-11-08: user explicitly requested all experiments remain paused.** Core/RQ3 STOP markers and `outputs/PAUSED_BY_USER.json` are present; the waiting judge process was stopped. Only requested web checks and offline audits are authorized during this pause. Do not interpret successful diagnostics as permission to resume evaluations.
+**2026-11-08: user explicitly requested all experiments remain paused.** Core/RQ3 STOP markers and `outputs/PAUSED_BY_USER.json` are present; the waiting judge process was stopped. Web/tool/render repairs, offline validation, dev push and SCO deployment preparation are authorized; cloud instances and paid evaluations await user review of the repaired evidence and exact deployment plan. See [repair review](repair-review-v3.md) and [SCO review plan](sco-review-plan.md). Do not interpret successful diagnostics as permission to resume evaluations.
 
-Updated 2026-11-07. New inference uses the exact configured DeepSeek route;
+Updated 2026-11-08 (paused; historical counts remain in the cited reports). New inference uses the exact configured DeepSeek route;
 no new Gemini calls, no fourth repeats, and no pinned-harness changes.
 
 | Work | Scope | Execution and evidence |
 |---|---|---|
 | Core transfer experiment | BC-100 × 3 × 5 strategies × 2 harnesses = 3,000 | Held for native-image routing validation. Original core coordinator pause interrupted 16 in-flight attempts; originals and usage are preserved, no automatic retries. Previous worker cap was 16. [Protocol](bc100-campaign.md). |
-| Experiment 3 | Summary + native images, window + native images, visual control | Historical-prefix budget calibration finished but failed formal gates. The original capture protocol timed out. A versioned fixed-prefix continuation pilot is now running: two visual arms first, followed automatically by budget-fitted text arms once measured targets are available. A frozen 180-arm small-cohort queue remains gated on six paired pilot outcomes; requested cap 16, shared process admission. [New protocol](experiment3/controlled-v3.md). This is not the original full-trajectory three-benchmark evaluation. [Status and blockers](experiment3/README.md). |
+| Experiment 3 | Summary + native images, window + native images, visual control | Historical-prefix budget calibration finished but failed formal gates. The original capture protocol timed out. The versioned fixed-prefix continuation pilot ended with failed readiness gates; no continuation workers are running. A frozen 180-arm small-cohort queue remains gated on six paired pilot outcomes; requested cap 16, shared process admission. [New protocol](experiment3/controlled-v3.md). This is not the original full-trajectory three-benchmark evaluation. [Status and blockers](experiment3/README.md). |
 | Existing text-table statistics | Reuse historical avg@3 records | Offline reconstruction and paired statistics completed. No extra inference. [Candidate Table 1 audit](paper-table1/audit.md); exact full submitted-table mapping remains unverified. |
 | Broad Experiment 4 expansion | Extra repeats across Table 1/2/5 | Skipped at the user's request. Earlier generic statistical drafts remain in `experiment4/` but are not the submitted Table 1. No avg@4 queue exists. |
 | Experiment 5 | Failure causes, length buckets, 20 VERA failure cases | Completed from 14,920 historical trajectories, no model calls. [Report](experiment5/experiment5.md). |
-| Experiment 6 | Real-trajectory reconstruction and fact probes | Single-trajectory pilot completed. A serial full-canvas study over seven frozen, exactly matched real trajectories is running. [Phase 2](experiment6/phase2.md); [pilot failures and missing observations](experiment6/report.md). |
+| Experiment 6 | Real-trajectory reconstruction and fact probes | Single-trajectory pilot completed. The serial study over seven frozen, exactly matched real trajectories ended with missing/error observations and no complete cross-scale visual QA cohort; it is not running. [Phase 2](experiment6/phase2.md); [pilot failures and missing observations](experiment6/report.md). |
 | New RQ3 experiment | DeepSeek/Hermes BC-100 × 3, seven history scales | New dispatch held after confirmed missing-image evidence. Plan remains 1,800 new trials and 300 reused 1x core observations. Requested new-task concurrency 16; effective runtime concurrency is reported in status.json and remains subject to shared process admission. [Protocol](rq3/deepseek-bc100-r3.md). Latest progress is in `outputs/campaigns/rq3-deepseek-bc100-r3/status.json`. |
 
 ## Process limits and ownership
@@ -22,13 +22,13 @@ image controls, and information-loss/RQ3 work. Durable local observers continue
 when a conversational subagent is idle; this does not promise unsolicited future
 chat messages.
 
-The user requires fewer than 128 concurrent visible OS processes. Process counts
+The earlier single-machine allocation required fewer than 128 concurrent visible OS processes. The new requested multi-instance allocation (32 workers per method instance) is prepared separately in [the review plan](sco-review-plan.md); its aggregate exceeds 128 and is awaiting explicit review before launch. Process counts
 are not model-request counts or thread counts. `scripts/monitor_rebuttal.py`
 records a 30-second census in `outputs/rebuttal-monitor/status.json` and
 `history.jsonl`, with totals for this `/proc` namespace and experiment process
 trees. Admission reserves capacity below the ceiling: RQ3 <100 live processes,
 native-prefix captures <104. The later user-requested targets are RQ3 16 and controlled baseline 16; shared admission must account for worker descendants and reserve core capacity. These targets do not authorize exceeding 128 processes.
-The core retains its separate 16-worker pool. Unrelated external processes can
+The old core used a separate 16-worker pool; it is now paused. Unrelated external processes can
 change the observed total, so counts are explicitly timestamped measurements.
 
 Observers:

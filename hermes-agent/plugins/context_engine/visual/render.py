@@ -116,43 +116,81 @@ def _build_tool_name_map(messages: List[Dict[str, Any]]) -> Dict[str, tuple]:
     return mapping
 
 
-def _extract_images_from_msg(
-    msg: Dict[str, Any],
-    tool_name_map: Optional[Dict[str, str]] = None,
-) -> List[tuple]:
-    """Extract image paths/URLs from message content or tool call arguments.
+VISUAL_RENDER_VERSION = "multimodal-wrap-v2"
 
-    Returns list of (path, tool_name) tuples, max 2.
-    """
-    images: List[tuple] = []
+
+class VisualEvidenceError(ValueError):
+    """Refuse compression when an explicit image cannot be preserved in the PDF."""
+
+
+def _message_payload(msg):
     content = msg.get("content", "")
-    if isinstance(content, list):
-        for item in content:
-            if isinstance(item, dict) and item.get("type") == "image_url":
-                url_obj = item.get("image_url", {})
-                url = url_obj.get("url", "") if isinstance(url_obj, dict) else str(url_obj)
-                if url and not url.startswith("data:"):
-                    images.append((url, "user_image"))
+    if (isinstance(content, list) and len(content) == 1
+            and isinstance(content[0], dict) and content[0].get("type") == "text"):
+        candidate = content[0].get("text", "")
+    else:
+        candidate = content
+    if isinstance(candidate, str):
+        try:
+            decoded = json.loads(candidate)
+            if isinstance(decoded, (dict, list)):
+                return decoded
+        except (ValueError, TypeError):
+            pass
+    return content
 
-    tool_calls = msg.get("tool_calls")
-    if tool_calls:
-        for tc in tool_calls:
-            if not isinstance(tc, dict):
+
+def _image_candidates(msg, tool_name_map=None):
+    """Actual returned/native evidence, never image inputs from assistant tool calls.
+
+    Crop and zoom arguments identify the parent image, not the returned crop.
+    Sources stay ordered and no arbitrary image-count cap is applied.
+    """
+    entry = (tool_name_map or {}).get(msg.get("tool_call_id"), ("", ""))
+    tool = entry[0] if isinstance(entry, tuple) else entry
+    payload = _message_payload(msg)
+    if isinstance(payload, dict):
+        tool = tool or payload.get("meta", {}).get("tool") or payload.get("tool", "")
+    label = tool or ("user_image" if msg.get("role") == "user" else "native_image")
+    blocks = payload.get("content", []) if isinstance(payload, dict) else payload
+    candidates = []
+    if isinstance(blocks, list):
+        for index, block in enumerate(blocks):
+            if not isinstance(block, dict):
                 continue
-            fn = tc.get("function", {})
-            name = (fn.get("name", "") if isinstance(fn, dict) else "").lower()
-            if name not in ("vision_analyze", "image_search", "image_crop", "image_zoom_in"):
+            ref = None
+            if block.get("type") in ("image_url", "input_image"):
+                ref = block.get("image_url", {})
+                ref = ref.get("url") if isinstance(ref, dict) else ref
+            elif block.get("type") == "image":
+                source = block.get("source", {})
+                if source.get("type") == "base64":
+                    ref = "data:" + source.get("media_type", "image/png") + ";base64," + source.get("data", "")
+                elif source.get("type") == "url":
+                    ref = source.get("url")
+                else:
+                    raise VisualEvidenceError("Native attachment must be resolved to an inline image before rendering")
+            if ref:
+                candidates.append({"ref": ref, "label": label, "content_index": index,
+                    "source_attachment_id": block.get("source_attachment_id"),
+                    "source_occurrence": block.get("source_occurrence"), "source_kind": "returned_or_native_image"})
+    # image_search is textual JSON: thumbnail_url is a returned image;
+    # top-level image_url is the query image and results.link is a web page.
+    if isinstance(payload, dict) and (tool == "image_search" or payload.get("tool") == "image_search"):
+        for index, result in enumerate(payload.get("results") or []):
+            if not isinstance(result, dict):
                 continue
-            args_str = fn.get("arguments", "") if isinstance(fn, dict) else ""
-            for key in ("image_url", "image_path", "image"):
-                pat = re.compile(rf'"{key}"\s*:\s*"([^"]+)"')
-                m = pat.search(args_str)
-                if m:
-                    val = m.group(1)
-                    if val and not val.startswith("data:"):
-                        if not any(v[0] == val for v in images):
-                            images.append((val, name))
-    return images[:2]
+            ref = result.get("thumbnail_url") or result.get("thumbnailUrl") or result.get("image_url")
+            if ref:
+                candidates.append({"ref": ref, "label": "image_search", "result_index": index,
+                    "source_kind": "search_result_image", "source_title": result.get("title", ""),
+                    "source_page": result.get("link", "")})
+    return candidates
+
+
+def _extract_images_from_msg(msg, tool_name_map=None):
+    """Compatibility view of ordered native/returned image references."""
+    return [(item["ref"], item["label"]) for item in _image_candidates(msg, tool_name_map)]
 
 
 # ---------------------------------------------------------------------------
@@ -220,6 +258,25 @@ def _resolve_image_path(
     Local paths are returned as-is if they exist.
     Remote URLs are downloaded to cache_dir/source_images/.
     """
+    if img_ref.startswith("data:"):
+        from pathlib import Path
+        import tempfile
+        from PIL import Image
+        try:
+            header, encoded = img_ref.split(",", 1)
+            if not header.startswith("data:image/") or not header.endswith(";base64"):
+                raise ValueError("Expected a base64 image data URL")
+            data = base64.b64decode(encoded, validate=True)
+            with Image.open(io.BytesIO(data)) as image:
+                image.verify()
+            directory = Path(cache_dir or tempfile.gettempdir()) / "source_images"
+            directory.mkdir(parents=True, exist_ok=True)
+            path = directory / (hashlib.sha256(data).hexdigest() + ".image")
+            if not path.exists() or path.read_bytes() != data:
+                path.write_bytes(data)
+            return str(path)
+        except Exception as exc:
+            raise VisualEvidenceError("Inline image could not be decoded") from exc
     expanded = os.path.expanduser(img_ref)
     if os.path.isfile(expanded):
         return expanded
@@ -248,7 +305,7 @@ def _detect_table(text: str) -> Optional[List[List[str]]]:
                 continue
             rows.append(cells)
         if len(rows) >= 2:
-            return rows[:30]
+            return rows
 
     if _TABLE_TRAILER_RE.search(text) or re.search(r"^.+\s{3,}\S+", text, re.MULTILINE):
         lines = text.split("\n")
@@ -265,7 +322,7 @@ def _detect_table(text: str) -> Optional[List[List[str]]]:
         if len(data_lines) < 2:
             return None
         rows = []
-        for line in data_lines[:15]:
+        for line in data_lines:
             cells = re.split(r"\s{2,}", line.strip())
             if cells:
                 rows.append(cells)
@@ -276,12 +333,22 @@ def _detect_table(text: str) -> Optional[List[List[str]]]:
                     while len(r) < max_cols:
                         r.append("")
                     rows[i] = r[:max_cols]
-                return rows[:15]
+                return rows
     return None
 
 
 def _strip_table_text(body: str, inner_table_text: str) -> str:
     """Remove the tabular portion from body text to avoid duplication with rendered table."""
+    if _PIPE_TABLE_RE.search(inner_table_text) and _PIPE_TABLE_RE.search(body):
+        retained, inserted = [], False
+        for line in body.splitlines():
+            if line.strip().startswith("|"):
+                if not inserted:
+                    retained.append("[table]")
+                    inserted = True
+            else:
+                retained.append(line)
+        return "\n".join(retained)
     output_match = re.search(r'["\']output["\']\s*:\s*["\'](.+?)["\'](?:\s*,|\s*\})', body, re.DOTALL)
     if output_match:
         return body[:output_match.start(1)] + "[table]" + body[output_match.end(1):]
@@ -339,11 +406,15 @@ def _format_message_block(
                     args = args[:300] + "..."
                 body_parts.append(f"→ call {name}({args})")
 
-    content = msg.get("content", "")
+    content = _message_payload(msg)
+    if isinstance(content, dict) and isinstance(content.get("content"), list):
+        content = content["content"]
     if isinstance(content, dict):
         output_val = content.get("output", "")
         if isinstance(output_val, str) and output_val.strip():
             body_parts.append(output_val)
+        else:
+            body_parts.append(json.dumps(content, ensure_ascii=False))
     elif isinstance(content, str) and content.strip():
         body_parts.append(content)
     elif isinstance(content, list):
@@ -363,7 +434,10 @@ def _format_message_block(
     if layout == "plain_no_header":
         header = ""
 
-    images = _extract_images_from_msg(msg, tool_name_map)
+    image_sources = _image_candidates(msg, tool_name_map)
+    for source in image_sources:
+        source["message_index"] = msg_index
+    images = [(source["ref"], source["label"]) for source in image_sources]
 
     _DATA_FILE_RE = re.compile(r"\.(csv|parquet|tsv|xlsx?|feather|h5|hdf5|jsonl?)\b", re.IGNORECASE)
 
@@ -388,7 +462,15 @@ def _format_message_block(
             if table_data:
                 body = _strip_table_text(body, inner)
 
-    return {"role": role, "header": header, "body": body, "images": images, "table_data": table_data, "table_source": table_source}
+    if table_data is None and _PIPE_TABLE_RE.search(body):
+        table_data = _detect_table(body)
+        table_source = table_source or "table"
+        if table_data:
+            body = "\n".join(line for line in body.splitlines() if not line.strip().startswith("|"))
+            body = (body + "\n[table]").strip()
+
+    return {"role": role, "header": header, "body": body, "images": images,
+            "image_sources": image_sources, "table_data": table_data, "table_source": table_source}
 
 
 # ---------------------------------------------------------------------------
@@ -513,8 +595,11 @@ def _render_image_flowable(image_path: str, max_height_pt: float = 60.0, max_wid
 
 def _render_table_flowable(table_data: List[List[str]], font_name: str, font_size: int, page_pt_width: float):
     """Create a compact ReportLab Table flowable from detected table data."""
-    from reportlab.platypus import Table, TableStyle
+    from reportlab.platypus import Paragraph, Table, TableStyle
+    from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib import colors
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+    from xml.sax.saxutils import escape
 
     if not table_data:
         return None
@@ -522,22 +607,23 @@ def _render_table_flowable(table_data: List[List[str]], font_name: str, font_siz
     cell_font_size = max(9, font_size + 2)
     # Wide tables (many cols) can use more page width; narrow tables stay compact
     max_table_frac = min(0.98, 0.55 + max_cols * 0.12)
-    max_cell_chars = max(16, int(page_pt_width * max_table_frac / (max_cols * cell_font_size * 0.30)))
-    truncated = []
-    for row in table_data[:15]:
-        truncated.append([c[:max_cell_chars] for c in row])
+    rows = [[str(cell) for cell in row] + [""] * (max_cols - len(row)) for row in table_data]
 
     try:
         col_widths = []
         for col_idx in range(max_cols):
-            max_len = max((len(truncated[r][col_idx]) if col_idx < len(truncated[r]) else 0) for r in range(len(truncated)))
-            col_widths.append(max(cell_font_size * 3, min(max_len * cell_font_size * 0.65 + 6, page_pt_width * max_table_frac / max_cols)))
+            natural_width = max(stringWidth(line, font_name, cell_font_size)
+                                for row in rows for line in (row[col_idx].splitlines() or [""])) + 10
+            col_widths.append(max(cell_font_size * 3, min(natural_width, page_pt_width * max_table_frac / max_cols)))
         total_w = sum(col_widths)
         if total_w > page_pt_width * max_table_frac:
             scale = page_pt_width * max_table_frac / total_w
             col_widths = [w * scale for w in col_widths]
 
-        t = Table(truncated, colWidths=col_widths)
+        cell_style = ParagraphStyle("EvidenceTableCell", fontName=font_name,
+                                    fontSize=cell_font_size, leading=cell_font_size + 3)
+        cells = [[Paragraph(escape(cell).replace("\n", "<br/>"), cell_style) for cell in row] for row in rows]
+        t = Table(cells, colWidths=col_widths, splitByRow=1, splitInRow=1)
         style_cmds = [
             ("FONTNAME", (0, 0), (-1, -1), font_name),
             ("FONTSIZE", (0, 0), (-1, -1), cell_font_size),
@@ -553,8 +639,8 @@ def _render_table_flowable(table_data: List[List[str]], font_name: str, font_siz
         t.setStyle(TableStyle(style_cmds))
         t.hAlign = "LEFT"
         return t
-    except Exception:
-        return None
+    except Exception as exc:
+        raise VisualEvidenceError("Structured table could not be laid out without truncation") from exc
 
 
 def _blocks_to_pdf_bytes(
@@ -568,6 +654,7 @@ def _blocks_to_pdf_bytes(
     fit_to_content_height: bool = False,
     text_only: bool = False,
     image_cache_dir: Optional[str] = None,
+    image_audit: Optional[List[Dict[str, Any]]] = None,
 ) -> bytes:
     """Render blocks to PDF with per-message paragraphs, text-wrapped images and tables."""
     from reportlab.lib import colors
@@ -673,10 +760,46 @@ def _blocks_to_pdf_bytes(
     block_paras = []  # (Paragraph, images_tuples, table_data, table_source)
     for block in blocks:
         para = _make_para(block)
-        images = block.get("images") or []
+        images = []
+        seen_pixels = {}
+        for source_index, (ref, label) in enumerate(block.get("images") or []):
+            if text_only:
+                continue
+            resolved = _resolve_image_path(ref, image_cache_dir)
+            if not resolved:
+                raise VisualEvidenceError("Referenced image could not be resolved; refusing to discard evidence")
+            try:
+                from PIL import Image
+                with Image.open(resolved) as original:
+                    rgba = original.convert("RGBA")
+                    dimensions = list(rgba.size)
+                    digest = hashlib.sha256(json.dumps(dimensions).encode() + rgba.tobytes()).hexdigest()
+                with open(resolved, "rb") as image_file:
+                    file_digest = hashlib.sha256(image_file.read()).hexdigest()
+            except Exception as exc:
+                raise VisualEvidenceError("Referenced image could not be decoded") from exc
+            sources = block.get("image_sources") or []
+            provenance = dict(sources[source_index]) if source_index < len(sources) else {}
+            # Never duplicate base64 payloads in the audit ledger.
+            provenance.pop("ref", None)
+            provenance.update(resolved_path=resolved, source_ref_sha256=hashlib.sha256(ref.encode()).hexdigest(),
+                              file_sha256=file_digest, pixel_sha256=digest, dimensions=dimensions,
+                              pixel_encoding="RGBA8",
+                              message_image_index=source_index,
+                              status="duplicate_pixels" if digest in seen_pixels else "rendered",
+                              duplicate_of=seen_pixels.get(digest))
+            if image_audit is not None:
+                image_audit.append(provenance)
+            if digest not in seen_pixels:
+                seen_pixels[digest] = source_index
+                images.append((resolved, label))
         table_data = block.get("table_data")
         table_source = block.get("table_source", "")
-        block_paras.append((para, images, table_data, table_source))
+        # An image-bearing message may also contain a table. Render both;
+        # the image-wrap branch must not silently consume the table.
+        block_paras.append((para, images, None if images else table_data, table_source))
+        if images and table_data:
+            block_paras.append((Paragraph("[table]", body_style), [], table_data, table_source))
 
     if text_only:
         block_paras = [(p, [], None, "") for p, _, td, ts in block_paras]
@@ -693,6 +816,8 @@ def _blocks_to_pdf_bytes(
                 img_f = _make_img_flowable(resolved)
                 if img_f:
                     img_results.append((tool_name, img_f))
+                else:
+                    raise VisualEvidenceError("Resolved evidence image cannot be embedded in PDF")
 
         if img_results:
             # Collect paragraphs to wrap around images: current block + following blocks
@@ -1088,6 +1213,10 @@ def render_visual_compression(
         and sent as a separate old-history image. Keeping old pages separate
         avoids creating one very tall request image.
     """
+    source_image_audit = []
+    if stats is not None:
+        stats["renderer_version"] = VISUAL_RENDER_VERSION
+        stats["source_images"] = source_image_audit
     history_image_height = int(history_max_image_height or max_image_height)
 
     # Find round boundaries (assistant messages with tool_calls)
@@ -1165,8 +1294,13 @@ def render_visual_compression(
                 fit_to_content_height=fit_to_content_height,
                 text_only=text_only,
                 image_cache_dir=effective_save_dir,
+                image_audit=source_image_audit,
             )
+        except VisualEvidenceError:
+            raise
         except Exception as e:
+            if not text_only and any(b.get("images") or b.get("table_data") for b in blocks):
+                raise VisualEvidenceError("PDF layout failed with native visual evidence; text fallback forbidden") from e
             logger.warning("Visual: PDF render failed for %s (%s); using PIL fallback.", prefix, e)
 
         if pdf_bytes:
@@ -1175,6 +1309,8 @@ def render_visual_compression(
                     pdf_bytes, dpi=dpi, save_dir=save_dir, save_prefix=prefix
                 )
             except Exception as e:
+                if not text_only and any(b.get("images") or b.get("table_data") for b in blocks):
+                    raise VisualEvidenceError("PDF rasterization failed with visual evidence; text fallback forbidden") from e
                 logger.warning("Visual: PDF->image failed for %s (%s); using PIL fallback.", prefix, e)
                 images = _text_to_images_fallback(
                     blocks, font_size, segment_image_width, segment_max_image_height, save_dir, prefix
@@ -1203,6 +1339,8 @@ def render_visual_compression(
             fit_to_content_height=True,
             msg_offset=head_end + split_point,
         )
+    except VisualEvidenceError:
+        raise
     except Exception as e:
         logger.error("Visual: recent rendering failed: %s", e)
         return messages
@@ -1257,6 +1395,8 @@ def render_visual_compression(
                     history_render_width,
                     history_render_height,
                 )
+        except VisualEvidenceError:
+            raise
         except Exception as e:
             logger.error("Visual: far history rendering failed: %s", e)
 
@@ -1312,6 +1452,14 @@ def render_visual_compression(
 
     # Populate image token stats for compression ratio tracking
     if stats is not None:
+        source_image_audit.sort(key=lambda item: (item.get("message_index", -1), item["message_image_index"]))
+        expected_source_images = sum(len(_image_candidates(message, tool_name_map)) for message in to_render_msgs)
+        stats["source_image_input_occurrences"] = expected_source_images
+        stats["source_image_occurrences"] = len(source_image_audit)
+        stats["rendered_source_images"] = sum(item["status"] == "rendered" for item in source_image_audit)
+        stats["deduplicated_source_occurrences"] = sum(item["status"] == "duplicate_pixels" for item in source_image_audit)
+        stats["source_image_coverage_verified"] = (len(source_image_audit) == expected_source_images
+            and all(item["status"] in ("rendered", "duplicate_pixels") for item in source_image_audit))
         image_tokens = 0
         for part in content_parts:
             if not isinstance(part, dict) or part.get("type") != "image_url":

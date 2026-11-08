@@ -288,6 +288,11 @@ class VisualEngine(ContextEngine):
             "token_savings": savings,
             "image_count": render_stats.get("image_count", 0),
             "messages_rendered": render_stats.get("messages_rendered", 0),
+            "renderer_version": render_stats.get("renderer_version"),
+            "source_images": render_stats.get("source_images", []),
+            "source_image_occurrences": render_stats.get("source_image_occurrences", 0),
+            "rendered_source_images": render_stats.get("rendered_source_images", 0),
+            "source_image_coverage_verified": render_stats.get("source_image_coverage_verified", False),
         })
         self._write_stats_sidecar()
 

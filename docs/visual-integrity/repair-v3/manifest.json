@@ -1,0 +1,28 @@
+{
+  "renderer_version": "multimodal-wrap-v2",
+  "paid_calls": 0,
+  "network_calls": 0,
+  "source": "synthetic fixture; actual crop/zoom and actual search handler with stubbed transport",
+  "source_occurrences": 8,
+  "unique_images_in_pdf": 7,
+  "deduplicated_same_pixels": 1,
+  "table_last_row_present": true,
+  "crop_zoom_dimensions": [
+    [
+      135,
+      170
+    ],
+    [
+      115,
+      170
+    ]
+  ],
+  "implementation_sha256": {
+    "hermes-agent/plugins/context_engine/visual/render.py": "85de6f12b03fb05af66ec71626cddb3d9a7f54fc3d1f8900d85464b1a1a0e455",
+    "hermes-agent/plugins/context_engine/visual/__init__.py": "8080a951e93351737f31d1d40a40995d476b93ae01d5cc809c27333b7974ab63"
+  },
+  "files": {
+    "hermes-all-evidence.png": "5adb1c5e3be00e303de9f51bd0ee7a5a622b69bf62b507ab0416650a84b871c0",
+    "native-parent.png": "73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0"
+  }
+}

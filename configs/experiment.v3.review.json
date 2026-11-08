@@ -1,0 +1,115 @@
+{
+  "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+  "input_modalities": [
+    "text",
+    "image"
+  ],
+  "context_window": 131072,
+  "max_output_tokens": 8192,
+  "notes": "Exact route discovered through TokenHub /models on 2026-11-07. Text, red/blue image probes and tool round trip passed; configured context/output limits remain experimental limits, not verified provider capacity.",
+  "comparison": [
+    {
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "source": "historical"
+    },
+    {
+      "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+      "harness": "dsh",
+      "source": "new"
+    }
+  ],
+  "pilot": {
+    "seed": 20261107,
+    "questions_per_dataset": 10,
+    "repeats": 1,
+    "concurrency": 1,
+    "max_rounds": 60,
+    "compression_trigger_tokens": 32768,
+    "post_compression_budget_tokens": 16384
+  },
+  "bc100": {
+    "source": "../hermes-agent/Browsecomp_eval/data/browsecomp_subset_200/questions_100.jsonl",
+    "strategies": [
+      "summarize",
+      "visual_native"
+    ],
+    "max_rounds": 60,
+    "timeout_seconds": 1800,
+    "concurrency": 1,
+    "search_max_results": 5,
+    "fetch_max_output_chars": 15000
+  },
+  "visual_renderer": {
+    "font_size": 16,
+    "history_scale": 1.0,
+    "notes": "New repaired shared Hermes multimodal renderer; inline images/crop/zoom/table wrap. DSH original-byte transport profile, no implicit downsampling."
+  },
+  "web": {
+    "search_host": "10.120.4.249",
+    "search_port": 80,
+    "fetch_base_url": "http://127.0.0.1:18080",
+    "preferred_fetch_base_url": "http://10.120.7.221:8080",
+    "notes": "Review candidate: SHA-pinned text Reader replica on each instance. Remote 10.13.64.17 unavailable in Nov8 checks. Must pass real fetch checks before user-approved dispatch.",
+    "tools": [
+      "web_search",
+      "web_extract",
+      "image_search",
+      "image_crop",
+      "image_zoom_in"
+    ]
+  },
+  "bc100_campaign": {
+    "name": "bc100-r3-hermes-parity-v3",
+    "questions": 100,
+    "repeats": 3,
+    "concurrency": 32,
+    "max_rounds": 60,
+    "timeout_seconds": 1800,
+    "strategies": [
+      "none",
+      "summarize",
+      "sliding_window",
+      "discard",
+      "visual"
+    ],
+    "models": {
+      "dsh": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+      "hermes": "deepseek-v4.1-flash-1017/huoshan/huoshan"
+    },
+    "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "shuffle_seed": 20261107,
+    "resume_policy": "Skip terminal jobs; preserve all interrupted attempts, retry only interrupted jobs on explicit --resume. No native-session continuation claim.",
+    "note": "New reviewed implementation; 32 workers per harness/strategy instance, not a global cap. Old results remain separate."
+  },
+  "execution_version": "hermes-parity-v3",
+  "review_approved": false,
+  "source_experiment_sha256": "f08b1762e5c7df6c85de7c91000c977fa311828174e8ee722d1df4bcbd4d9a5e",
+  "shared_policy": {
+    "version": "hermes-shared-context-v1",
+    "trigger_source": "latest provider prompt usage, including cached input",
+    "strategy_configs": {
+      "discard": {
+        "keep_rounds": 0
+      },
+      "visual": {
+        "keep_rounds": 1,
+        "recent_rounds": 5
+      },
+      "sliding_window": {
+        "window_size": 5
+      },
+      "summarize": {
+        "protect_first_n": 3,
+        "protect_last_n": 20,
+        "summary_target_ratio": 0.2
+      }
+    },
+    "post_compression_budget_enforcement": "Hermes native behavior; no DSH-only local-meter hard cap. Matched-budget native-image baselines use a separate protocol."
+  },
+  "image_transport": {
+    "version": "original-image-bytes-v2",
+    "max_request_image_bytes": 20971520,
+    "overflow": "fail_without_resizing"
+  }
+}

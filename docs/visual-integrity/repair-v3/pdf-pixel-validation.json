@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "paid_calls": 0,
+  "page_count": 2,
+  "pixels_equal": true,
+  "base64_png_bytes_equal": true,
+  "normal_path_unchanged": true,
+  "implementation": {
+    "name": "rq3-pdf-bounded-memory-v1",
+    "max_page_pixels": 500000000,
+    "large_page_threshold": 100000000,
+    "stripe_rows": 1024,
+    "normal_path": "Unmodified original Hermes converter",
+    "large_path": "Poppler same DPI, one page per call, disk PPM, exact stripe grayscale crop; PNG optimize=True",
+    "crop_predicate": "abs(gray-bg_median)>5; exact integer equivalent abs(2*gray-2*bg_median)>10",
+    "scale_layout_dpi_unchanged": true,
+    "pillow_limit_restored": true,
+    "trusted_generated_pdfs_only": true
+  }
+}

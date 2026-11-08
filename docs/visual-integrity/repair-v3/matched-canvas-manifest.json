@@ -1,0 +1,253 @@
+{
+  "passed": true,
+  "paid_calls": 0,
+  "network": "two localhost mock model calls (pre-compression raw usage, post-compression wire)",
+  "scope": "Same canonical multimodal fixture -> direct actual Hermes VisualEngine vs DSH native shared-policy durable span replacement -> actual pi-ai OpenAI HTTP adapter. The input includes actual crop/zoom handler results, stubbed local image_search transport, and18-row table. This is transport/render parity, not semantic benchmark accuracy.",
+  "source_fixture": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/multimodal-wrap-v2-2026-11-08-final",
+  "provider_prompt_tokens_fixture": 40000,
+  "canvas_sha256": [
+    "5adb1c5e3be00e303de9f51bd0ee7a5a622b69bf62b507ab0416650a84b871c0"
+  ],
+  "canvas_count": 1,
+  "byte_identical_direct_hermes_native_and_wire": true,
+  "hermes_details": [
+    "high"
+  ],
+  "detail_policy_matches": true,
+  "native_roles": [
+    "user",
+    "assistant",
+    "tool",
+    "user",
+    "assistant",
+    "tool"
+  ],
+  "wire": [
+    {
+      "roles": [
+        "user",
+        "assistant",
+        "tool",
+        "assistant",
+        "tool",
+        "user",
+        "assistant",
+        "tool",
+        "user",
+        "assistant",
+        "tool",
+        "user",
+        "assistant",
+        "tool",
+        "assistant",
+        "tool",
+        "assistant",
+        "assistant",
+        "tool"
+      ],
+      "image_details": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "image_sha256": [
+        "73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0",
+        "73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0",
+        "5fa758566da8a594e98aef626a8626f94b004f6d9244247955bed72cc614519f",
+        "8494ec139b804bfcb58920e4c180963c4fbf494c5b7dc023afbd3d5f6f489e43"
+      ]
+    },
+    {
+      "roles": [
+        "user",
+        "assistant",
+        "tool",
+        "user",
+        "assistant",
+        "tool"
+      ],
+      "image_details": [
+        "high"
+      ],
+      "image_sha256": [
+        "5adb1c5e3be00e303de9f51bd0ee7a5a622b69bf62b507ab0416650a84b871c0"
+      ]
+    }
+  ],
+  "source_image_stats": {
+    "index": 1,
+    "text_tokens": 2672,
+    "image_tokens": 8880,
+    "token_savings": 0,
+    "image_count": 1,
+    "messages_rendered": 11,
+    "renderer_version": "multimodal-wrap-v2",
+    "source_images": [
+      {
+        "label": "fixture_native",
+        "content_index": 1,
+        "source_attachment_id": "sha256:73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0",
+        "source_occurrence": "6825c7b6-2e52-46a5-9c13-55f8d69226d3:block-1",
+        "source_kind": "returned_or_native_image",
+        "message_index": 1,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/dsh-shared-matched-1794118081326564188/hermes-canvas/source_images/73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0.image",
+        "source_ref_sha256": "2bfd4b9379c94537551004b1be7e0977fa2ddbe0dcdba781371b395df70edd4c",
+        "file_sha256": "73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0",
+        "pixel_sha256": "37951909d84313a990d02416a4547f83b81ec8508370194bf312b1def486facc",
+        "dimensions": [
+          400,
+          240
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "fixture_native",
+        "content_index": 2,
+        "source_attachment_id": "sha256:73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0",
+        "source_occurrence": "6825c7b6-2e52-46a5-9c13-55f8d69226d3:block-2",
+        "source_kind": "returned_or_native_image",
+        "message_index": 1,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/dsh-shared-matched-1794118081326564188/hermes-canvas/source_images/73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0.image",
+        "source_ref_sha256": "2bfd4b9379c94537551004b1be7e0977fa2ddbe0dcdba781371b395df70edd4c",
+        "file_sha256": "73e80a8479a8a6700e12e00ad8eb57d1f98b90674f250fbf0dbb58d0c196ffe0",
+        "pixel_sha256": "37951909d84313a990d02416a4547f83b81ec8508370194bf312b1def486facc",
+        "dimensions": [
+          400,
+          240
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 1,
+        "status": "duplicate_pixels",
+        "duplicate_of": 0
+      },
+      {
+        "label": "image_crop",
+        "content_index": 1,
+        "source_attachment_id": "sha256:5fa758566da8a594e98aef626a8626f94b004f6d9244247955bed72cc614519f",
+        "source_occurrence": "0f73a64e-3379-4ab1-bd79-001d68ae7820:block-1",
+        "source_kind": "returned_or_native_image",
+        "message_index": 3,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/dsh-shared-matched-1794118081326564188/hermes-canvas/source_images/5fa758566da8a594e98aef626a8626f94b004f6d9244247955bed72cc614519f.image",
+        "source_ref_sha256": "c156193a00de3298b80ed3e08ed64099c77f3e65a9d7b68f7a6ecf5ae6f2f2c7",
+        "file_sha256": "5fa758566da8a594e98aef626a8626f94b004f6d9244247955bed72cc614519f",
+        "pixel_sha256": "41e618d613a90972776f0a54b544e4edc6bd6b3188853756a172320e1191fd25",
+        "dimensions": [
+          135,
+          170
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_zoom_in",
+        "content_index": 1,
+        "source_attachment_id": "sha256:8494ec139b804bfcb58920e4c180963c4fbf494c5b7dc023afbd3d5f6f489e43",
+        "source_occurrence": "1e0baf2b-a343-4e22-af95-15c028c396eb:block-1",
+        "source_kind": "returned_or_native_image",
+        "message_index": 5,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/dsh-shared-matched-1794118081326564188/hermes-canvas/source_images/8494ec139b804bfcb58920e4c180963c4fbf494c5b7dc023afbd3d5f6f489e43.image",
+        "source_ref_sha256": "09dbc7727630059953760954435b5d77d50e62bf33dd15459480eed2348eb8bc",
+        "file_sha256": "8494ec139b804bfcb58920e4c180963c4fbf494c5b7dc023afbd3d5f6f489e43",
+        "pixel_sha256": "1f786f0dd730805a72d97c81413791eef32d612a474e868794c4238a4f1e59ab",
+        "dimensions": [
+          115,
+          170
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_search",
+        "result_index": 0,
+        "source_kind": "search_result_image",
+        "source_title": "Fixture result 0",
+        "source_page": "https://example.org/source/0",
+        "message_index": 7,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/multimodal-wrap-v2-2026-11-08-final/search-result-0.png",
+        "source_ref_sha256": "9ee8d931af9d5e685da50450af2469e0f841ca55b9356880956887967d1e35fd",
+        "file_sha256": "cad1d9df21d651527f3e81e243c4a63d1151bb43f9bdfb2c581e256588df356f",
+        "pixel_sha256": "ecdc82f399a20e9ca29428b871e3661bbc68e224b4910e6dc95c25a756e511b3",
+        "dimensions": [
+          100,
+          70
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 0,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_search",
+        "result_index": 1,
+        "source_kind": "search_result_image",
+        "source_title": "Fixture result 1",
+        "source_page": "https://example.org/source/1",
+        "message_index": 7,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/multimodal-wrap-v2-2026-11-08-final/search-result-1.png",
+        "source_ref_sha256": "3a39a796e5eda1275113765a973fb9ba23173fc083ffe2652f9cae2b277f334a",
+        "file_sha256": "6d1f4867b61dc0730cad7a7f5e7a9f9a8514969e17db4b7edd6af6a3ae9d2acf",
+        "pixel_sha256": "c7b8d7561b203b2aa82f3da648a761a344f723dfe7dfbc81ec81d7e6b0611367",
+        "dimensions": [
+          100,
+          70
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 1,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_search",
+        "result_index": 2,
+        "source_kind": "search_result_image",
+        "source_title": "Fixture result 2",
+        "source_page": "https://example.org/source/2",
+        "message_index": 7,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/multimodal-wrap-v2-2026-11-08-final/search-result-2.png",
+        "source_ref_sha256": "de47c5145d131fdc848eb441e0bf09d669116defd919ec890d031703353b6c52",
+        "file_sha256": "80eacbf9d19ef7a39051619db22f45933b32e8b536dee583d45524eaabff30c4",
+        "pixel_sha256": "7a17e2e59f7bc34d39376e7b235e0c14d1bbbb8d2bbfb7379f112a285fd6ccd3",
+        "dimensions": [
+          100,
+          70
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 2,
+        "status": "rendered",
+        "duplicate_of": null
+      },
+      {
+        "label": "image_search",
+        "result_index": 3,
+        "source_kind": "search_result_image",
+        "source_title": "Fixture result 3",
+        "source_page": "https://example.org/source/3",
+        "message_index": 7,
+        "resolved_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/multimodal-wrap-v2-2026-11-08-final/search-result-3.png",
+        "source_ref_sha256": "47ae149cc708aa51bbc941c981b1a874c688889e2d4f7b1cdc482316e698cdee",
+        "file_sha256": "a8837cb2ed4e15fff984ae76bb9c380b0fa3b938c29d310097c61cc69b6f43c5",
+        "pixel_sha256": "3ff067258770aecdb95a6e7cd5aef3e5321790a6f7018f972d395f7543213207",
+        "dimensions": [
+          100,
+          70
+        ],
+        "pixel_encoding": "RGBA8",
+        "message_image_index": 3,
+        "status": "rendered",
+        "duplicate_of": null
+      }
+    ],
+    "source_image_occurrences": 8,
+    "rendered_source_images": 7,
+    "source_image_coverage_verified": true
+  },
+  "native_replay_verified": true
+}

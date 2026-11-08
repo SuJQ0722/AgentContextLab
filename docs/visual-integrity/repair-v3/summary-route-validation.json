@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "paid_calls": 0,
+  "model_calls": 6,
+  "summary_calls": 1,
+  "summary_route": "actual Hermes auxiliary_client.call_llm -> SDK -> loopback",
+  "summary_usage_per_call": {
+    "inputTokens": 150,
+    "cacheReadTokens": 50,
+    "outputTokens": 20,
+    "totalTokens": 220
+  },
+  "same_model": true,
+  "final": "SUMMARY-NATIVE-LOOP-PASSED",
+  "denial_cases": {
+    "passed": true,
+    "rejected_cases": [
+      "sdk-wrong-model",
+      "sdk-wrong-route",
+      "uninstrumented-httpx",
+      "uninstrumented-requests",
+      "wrong-aux-task",
+      "wrong-aux-model",
+      "final-wire-model",
+      "final-wire-endpoint",
+      "async-inference"
+    ],
+    "web_request_passed": true,
+    "guard_records": 9
+  },
+  "denied_requests_reached_server": 0,
+  "implementation_sha256": {
+    "scripts/hermes_bc_worker_v3.py": "90956f8a896265e8d29345669b3599276bbd24c3a93636053cdf09e5a3f1acf7",
+    "scripts/shared_context_policy.py": "d8cf8f8e188576d3c31c0a91eeb496a7ffff1bee9be447d0f52d42c9c633ff1f"
+  }
+}

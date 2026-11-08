@@ -51,7 +51,10 @@ def stage_images(row, workspace):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--dataset', required=True)
+    # The repaired five-tool protocol is validated only for BC-100. Do not
+    # expose the legacy data-task branch's filesystem/shell tools by selecting
+    # another dataset; controlled data protocols need separate review first.
+    parser.add_argument('--dataset', required=True, choices=['bc100'])
     parser.add_argument('--strategies', nargs='+', choices=STRATEGIES, required=True)
     parser.add_argument('--limit', type=int, default=10)
     parser.add_argument('--timeout', type=int, default=1200)
@@ -182,7 +185,10 @@ def main():
                            'maxSteps': cfg.get(args.dataset, cfg['pilot'])['max_rounds'], 'allowedTools': TOOLS if args.dataset=='bc100' else None}}]
             plugins.append({'id': 'acl-wire-expectations', 'name': str(ROOT/'scripts/dsh_wire_expectations.mjs'),
                             'config': {'expectedFile': env['ACL_IMAGE_WIRE_EXPECTED']}})
-            patches = preservation_patches(env) + [{'id': 'session-title-llm', 'disabled': True}]
+            patches = preservation_patches(env) + [
+                {'id': 'session-title-llm', 'disabled': True},
+                {'id': 'agent-instructions', 'disabled': True},
+            ]
             if web_metadata:
                 plugins.append({'id': 'acl-hermes-tools-v2', 'name': str(ROOT/'plugins/dsh-local-web/hermes-tools-v2.mjs'),
                                 'config': {'python': python_for(ROOT), 'bridge': str(ROOT/'scripts/hermes_tool_bridge.py'),

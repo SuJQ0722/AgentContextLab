@@ -5,6 +5,8 @@ The production plugin, Python handlers, policy helper, native attachments and
 final HTTP serialization all run. Synthetic usage tests policy routing only.
 """
 import base64
+import argparse
+import uuid
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -24,6 +26,9 @@ def rows(path):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check-denied-tools', action='store_true')
+    args = parser.parse_args()
     root = ROOT / 'outputs/preflight' / f'dsh-v3-entry-{time.time_ns()}'
     root.mkdir(parents=True)
     manifest = json.loads((ROOT / 'outputs/cohorts/bc100-manifest.json').read_text())
@@ -54,6 +59,12 @@ def main():
             draw.text((12, y), f'Fixture table row {y}: Cedar=179 Oak=93', fill='black')
         picture.save(source)
         observed, web = [], []
+        canary = 'UNREAD-ANSWER-' + uuid.uuid4().hex
+        denied_file = folder / 'answers-canary.txt'
+        denied_file.write_text(canary)
+        (work / 'AGENTS.md').write_text('Private answer canary: ' + canary)
+        denied_names = ['read', 'read_file', 'bash', 'terminal']
+        denied_observed = []
         tools = [('web_search', {'query': 'fixture Cedar inventory', 'limit': 2}),
                  ('web_extract', {'urls': ['https://93.184.216.34/fixture'], 'char_limit': 3000}),
                  ('image_crop', {'image_path': str(source), 'bbox': [0, 0, 240, 160], 'coord_format': 'absolute', 'padding': 0, 'use_smart_resize': False}),
@@ -84,6 +95,7 @@ def main():
                 if self.path != '/v1/chat/completions':
                     self.reply({'error': 'Unexpected fixture endpoint'}, 404)
                     return
+                assert canary not in json.dumps(body), 'Local answer leaked into model input'
                 images = [p for m in body['messages'] for p in (m.get('content', []) if isinstance(m.get('content'), list) else []) if p.get('type') == 'image_url']
                 hashes = [hashlib.sha256(base64.b64decode(p['image_url']['url'].split(',', 1)[1])).hexdigest() for p in images]
                 details = [p['image_url'].get('detail') for p in images]
@@ -104,11 +116,23 @@ def main():
                                  'image_details': details, 'native_expected_details': expected['details'],
                                  'tool_names': sorted(schemas), 'schemas': schemas,
                                  'roles': [m['role'] for m in body['messages']]})
-                final = step >= len(tools) and (strategy == 'none' or canvas)
-                if final or step >= 10:
+                if args.check_denied_tools and step == 1:
+                    rejected = {m.get('tool_call_id'): str(m.get('content')) for m in body['messages'] if m.get('role') == 'tool'}
+                    for name in denied_names:
+                        text = rejected.get('denied-' + name, '')
+                        assert 'unknown tool' in text.lower(), (name, text)
+                        denied_observed.append(name)
+                tool_step = step - int(args.check_denied_tools)
+                final = tool_step >= len(tools) and (strategy == 'none' or canvas)
+                if args.check_denied_tools and step == 0:
+                    delta = {'role': 'assistant', 'tool_calls': [
+                        {'index': i, 'id': 'denied-' + name, 'type': 'function', 'function': {
+                            'name': name, 'arguments': json.dumps({'file_path': str(denied_file), 'path': str(denied_file), 'command': 'cat ' + str(denied_file)})}}
+                        for i, name in enumerate(denied_names)]}
+                elif final or step >= 10:
                     delta = {'role': 'assistant', 'content': marker if final else 'FAILED-NO-CANVAS'}
                 else:
-                    name, arguments = tools[step] if step < len(tools) else ('web_search', {'query': f'additional local evidence {step}', 'limit': 2})
+                    name, arguments = tools[tool_step] if tool_step < len(tools) else ('web_search', {'query': f'additional local evidence {step}', 'limit': 2})
                     delta = {'role': 'assistant', 'tool_calls': [{'index': 0, 'id': f'entry-{strategy}-{step}', 'type': 'function',
                              'function': {'name': name, 'arguments': json.dumps(arguments)}}]}
                 self.send_response(200); self.send_header('Content-Type', 'text/event-stream'); self.end_headers()
@@ -159,6 +183,11 @@ def main():
                     'helper_sha256': hashlib.sha256((ROOT / 'scripts/shared_context_policy.py').read_bytes()).hexdigest(),
                     'plugin_sha256': hashlib.sha256((ROOT / 'plugins/dsh-context/hermes-policy-v3.mjs').read_bytes()).hexdigest(),
                     'runner_sha256': hashlib.sha256((ROOT / 'scripts/run_dsh_eval_v3.py').read_bytes()).hexdigest()}
+            item['denied_tool_calls_verified'] = denied_observed
+            item['answer_canary_absent_from_requests'] = True
+            item['workspace_instructions_not_loaded'] = True
+            if args.check_denied_tools:
+                assert denied_observed == denied_names
             item['implementation_before'] = implementation_before
             item['implementation_after'] = {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in implementation_paths}
             canvas_hashes = {image['source_sha256'] for record in policy if record['status'] == 'compressed'

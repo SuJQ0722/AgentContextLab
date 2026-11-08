@@ -1,0 +1,17 @@
+{
+  "paid_model_calls": 0,
+  "synthetic_image_only": true,
+  "both_harnesses_resolve_same_upload_key": true,
+  "source_kind": "actual_image_crop_return",
+  "source_sha256": "0c6f2b35db298e9d776ef3c278c219561807602c75ff4791625ea7d94b2cee46",
+  "parent_sha256": "046d73092b36f2054e431d5faa103d14d84879d0603d016794d46c01bdfdbc00",
+  "upload_attempts": 1,
+  "upload_succeeded": true,
+  "uploaded_sha256": "0c6f2b35db298e9d776ef3c278c219561807602c75ff4791625ea7d94b2cee46",
+  "handler_success": true,
+  "result_count": 0,
+  "client_seconds": 9.293661849573255,
+  "uploaded_actual_crop": true,
+  "artifact": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/preflight/imgbb-local-crop-1794120385761870276",
+  "passed": true
+}

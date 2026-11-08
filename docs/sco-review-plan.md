@@ -20,7 +20,7 @@
 
 官方 [SSP 参数化任务文档](https://www.sensecore.cn/help/docs/CLI/SCO_Refrence/SSP/jobs/create-params) 支持单 pod、0 GPU、8 CPU、32 GiB 以及 AFS 挂载；最终产品/region 必须以账号实际可用队列为准。AICL 的 [start](https://www.sensecore.cn/help/docs/CLI/SCO_Refrence/AICL/instances/start) 用于启动已有开发机，不能从该命令推断可以批量新建任意规格开发机。
 
-本机尚无 active profile。一次含假占位 workspace/queue/image、命令 `exit 0` 的 `--dry-run` 被 CLI 拒绝：`no active profile found; run 'sco init' first`。**没有成功做云端配置校验，也没有创建资源。**尚缺真实 region、workspace、queue、镜像、AFS volume 与账号配置；不能从控制台 URL 推断 region code。不要把密钥放进提交、任务命令行或报告。API key 经私有挂载/环境注入，容器只得到必要凭据。
+本机尚无 active profile。一次含假占位 workspace/queue/image、命令 `exit 0` 的 `--dry-run` 被 CLI 拒绝：`no active profile found; run 'sco init' first`。**没有成功做云端配置校验，也没有创建资源。**用户已指定 AFS `afs_agents`（挂载到 `/mnt/afs_agents`），私有镜像选择 `ccr-zuhu2026 / sjq-dev-cpu`，工作目录为 `/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab`，结果仍写其 `outputs/` 下的新版目录。名称已记录，镜像 tag/digest、完整 URI 和 AFS resource ID 尚待账号查询；不会猜测 `latest`。当前环境的 `WORKSPACE_NAME=rl` 仅是待核验线索，云端 workspace/queue/region 仍须查询确认，不能把磁盘工作目录当作云 workspace ID。仍缺 SCO 登录配置；不能从控制台 URL 推断 region code。不要把密钥放进提交、任务命令行或报告。API key 经私有挂载/环境注入，容器只得到必要凭据。
 
 以下仅是供核对的官方参数形式，所有占位必须替换，启动命令必须换成验收后的版本化 runner：
 
@@ -48,3 +48,7 @@ sco ssp jobs create job-acl-review \
 ```bash
 python scripts/prepare_sco_review.py --out outputs/sco-review/instance-matrix.json
 ```
+
+## 工具访问范围
+
+核心两个 harness 从首次请求起仅开放 `web_search`、`web_extract`、`image_search`、`image_crop`、`image_zoom_in`。文件读取、目录检索、终端、代码执行、委派等不在白名单；同时关闭自动工作目录 instructions。新版 DSH 非 BC-100 入口当前拒绝运行，避免绕回旧数据任务工具集。AFS 为运行程序、日志及数据加载器挂载，不等同于向模型开放文件工具。imgBB key 通过当前 Hermes 私有 `.env.local` 单项注入，不进入镜像、提交或任务命令行。

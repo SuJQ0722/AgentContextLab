@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Actual repaired Hermes loop, real crop/zoom/compression, localhost model only."""
 import base64
+import argparse
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import io
 import json
@@ -17,6 +19,11 @@ class Fixture(BaseHTTPRequestHandler):
     calls = []
     native_tools = []
     source = None
+    canary = None
+    denied_file = None
+    check_denied_tools = False
+    denied_names = ["read_file", "terminal", "read", "bash"]
+    denied_observed = []
 
     def log_message(self, *args):
         pass
@@ -31,15 +38,28 @@ class Fixture(BaseHTTPRequestHandler):
         elif self.path == '/fetch':
             data = {'status': 'success', 'content': 'Original archival source with a blue circle and green triangle.'}
         else:
+            assert Fixture.canary not in json.dumps(body), 'Local answer leaked into model input'
             Fixture.calls.append(body)
+            if Fixture.check_denied_tools and len(Fixture.calls) == 2:
+                rejected = {m.get('tool_call_id'): str(m.get('content')) for m in body['messages'] if m.get('role') == 'tool'}
+                for name in Fixture.denied_names:
+                    error = rejected.get('denied-' + name, '')
+                    assert 'does not exist' in error.lower(), (name, error)
+                    Fixture.denied_observed.append(name)
             assert {t['function']['name'] for t in body.get('tools', [])} == set(TOOLS)
             images = [p for m in body['messages'] for p in m.get('content', [])
                       if isinstance(p, dict) and p.get('type') == 'image_url']
             widths = [Image.open(io.BytesIO(base64.b64decode(p['image_url']['url'].split(',')[1]))).width for p in images]
-            if any(width >= 1000 for width in widths):
+            if Fixture.check_denied_tools and len(Fixture.calls) == 1:
+                message = {'role': 'assistant', 'content': None, 'tool_calls': [
+                    {'index': i, 'id': 'denied-' + name, 'type': 'function', 'function': {
+                        'name': name, 'arguments': json.dumps({'path': str(Fixture.denied_file), 'file_path': str(Fixture.denied_file), 'command': 'cat ' + str(Fixture.denied_file)})}}
+                    for i, name in enumerate(Fixture.denied_names)]}
+                reason = 'tool_calls'
+            elif any(width >= 1000 for width in widths):
                 message = {'role': 'assistant', 'content': 'V3-CANVAS-TOOLS-OK'}; reason = 'stop'
             else:
-                n = len(Fixture.calls)
+                n = len(Fixture.calls) - int(Fixture.check_denied_tools)
                 assert n <= 12, 'Native compression did not produce a canvas'
                 tool, args = (
                     ('image_crop', {'image_path': str(Fixture.source), 'bbox': [100, 10, 195, 100]}) if n == 1 else
@@ -64,8 +84,16 @@ class Fixture(BaseHTTPRequestHandler):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check-denied-tools', action='store_true')
+    args = parser.parse_args()
+    Fixture.check_denied_tools = args.check_denied_tools
     out = ROOT/'outputs/preflight'/f'hermes-v3-{time.time_ns()}'
     workspace = out/'native/workspace'; workspace.mkdir(parents=True)
+    Fixture.canary = 'UNREAD-ANSWER-' + uuid.uuid4().hex
+    Fixture.denied_file = out / 'answers-canary.txt'
+    Fixture.denied_file.write_text(Fixture.canary)
+    (workspace / 'AGENTS.md').write_text('Private answer canary: ' + Fixture.canary)
     im = Image.new('RGB', (300, 120), 'white'); draw = ImageDraw.Draw(im)
     draw.rectangle((5, 10, 95, 100), fill='red'); draw.ellipse((100, 10, 195, 100), fill='blue')
     draw.polygon([(200, 100), (250, 10), (295, 100)], fill='green')
@@ -95,7 +123,10 @@ def main():
         assert {'image_crop', 'image_zoom_in'} <= set(Fixture.native_tools)
         wire = [json.loads(line) for line in (out/'native/metrics/vision-wire.jsonl').read_text().splitlines()]
         assert any(r['compression_count'] and r['matching_rendered_pixels'] for r in wire)
-        report = {'passed': True, 'paid_model_calls': 0, 'native_tools_executed': Fixture.native_tools,
+        if args.check_denied_tools:
+            assert Fixture.denied_observed == Fixture.denied_names
+        report = {'denied_tool_calls_verified': Fixture.denied_observed, 'answer_canary_absent_from_requests': True,
+                  'workspace_instructions_not_loaded': True, 'passed': True, 'paid_model_calls': 0, 'native_tools_executed': Fixture.native_tools,
                   'model_visible_tools': TOOLS, 'actual_http_calls': len(Fixture.calls),
                   'rendered_pixels_preserved_at_wire': True, 'artifact': str(out)}
         (out/'result.json').write_text(json.dumps(report, indent=2)); print(json.dumps(report))

@@ -24,6 +24,9 @@ def expand(plan):
     if len({c['id'] for c in cells}) != len(cells):
         raise ValueError('Duplicate instance assignment')
     return dict(state='review_only_not_submittable', cloud=plan['cloud'], cells=cells,
+                working_directory=plan.get('working_directory'),
+                output_root=plan.get('output_root'), output_policy=plan.get('output_policy'),
+                tool_policy=plan.get('tool_policy'),
                 totals=dict(instances=len(cells), vcpus=len(cells)*resource['cpu_count'],
                             memory_gib=len(cells)*resource['memory_gib'],
                             worker_slots=len(cells)*resource['worker_concurrency']),

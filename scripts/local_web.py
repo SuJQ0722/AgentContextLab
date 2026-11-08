@@ -3,9 +3,25 @@ import json
 import subprocess
 from pathlib import Path
 import yaml
+from lab import read_env
+
+
+def configure_image_upload(root, env):
+    """Share only the selected Hermes upload credential with either harness.
+
+    Do not merge the rest of Hermes' private dotenv into DSH: it may contain
+    legacy model routes/keys. Explicit caller environment takes precedence.
+    """
+    private = {**read_env(root / 'hermes-agent/.env'),
+               **read_env(root / 'hermes-agent/.env.local')}
+    key = env.get('IMAGE_UPLOAD_API_KEY') or private.get('IMAGE_UPLOAD_API_KEY')
+    if key:
+        env['IMAGE_UPLOAD_API_KEY'] = key
+    return {'provider': 'imgbb', 'configured': bool(key)}
 
 
 def configure_web(root, env, config_path=None):
+    upload = configure_image_upload(root, env)
     source = Path(env.get('ACL_HERMES_WEB_CONFIG', root / 'hermes-agent/config.yaml'))
     cfg = yaml.safe_load(source.read_text())['web']['local_web']
     search = dict(cfg['search'])
@@ -27,7 +43,8 @@ def configure_web(root, env, config_path=None):
             'fetch': 'Hermes Reader server (Jina fallback)',
             'search_endpoint': f"http://{search['url']}:{search['port']}/search",
             'fetch_endpoint': fetch['base_url'].rstrip('/') + '/fetch',
-            'extract_mode': fetch.get('extract_mode', 'markdown')}
+            'extract_mode': fetch.get('extract_mode', 'markdown'),
+            'image_upload': upload}
 
 
 def validate_web(root, env):

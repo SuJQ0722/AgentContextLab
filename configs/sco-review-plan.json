@@ -3,13 +3,99 @@
   "state": "awaiting_user_review",
   "source_experiment": "configs/experiment.json",
   "launch_authorized": false,
-  "instance": {"cpu_count": 8, "memory_gib": 32, "gpu_count": 0, "worker_concurrency": 32},
-  "cloud": {"profile": null, "region": null, "workspace": null, "queue_id": null, "image": null, "afs_volume_id": null},
+  "instance": {
+    "cpu_count": 8,
+    "memory_gib": 32,
+    "gpu_count": 0,
+    "worker_concurrency": 32
+  },
+  "cloud": {
+    "profile": null,
+    "region": null,
+    "workspace": null,
+    "queue_id": null,
+    "image": null,
+    "afs_volume_id": null,
+    "image_registry_selection": "ccr-zuhu2026",
+    "image_repository": "sjq-dev-cpu",
+    "image_visibility": "private",
+    "image_tag": null,
+    "afs_volume_name": "afs_agents",
+    "afs_mount_path": "/mnt/afs_agents"
+  },
   "groups": [
-    {"experiment": "bc100", "harnesses": ["dsh", "hermes"], "methods": ["none", "summarize", "sliding_window", "discard", "visual"], "questions": 100, "repeats": 3, "priority": 1, "status": "new_version_required"},
-    {"experiment": "rq3", "harnesses": ["hermes"], "methods": ["scale_0000", "scale_0125", "scale_0250", "scale_0500", "scale_0700", "scale_0800"], "questions": 100, "repeats": 3, "priority": 2, "status": "new_version_required", "reuse": "1x from the NEW matching core Hermes visual cell only"},
-    {"experiment": "controlled", "harnesses": ["hermes"], "methods": ["visual", "summarize_native", "sliding_window_native"], "questions": null, "repeats": 3, "priority": 2, "status": "full_trajectory_protocol_and_budget_gate_required", "benchmarks": ["browsecomp_v3", "mmbrowsecomp", "agenticdatabench"]},
-    {"experiment": "information_loss", "harnesses": ["analysis"], "methods": ["visual", "summarize", "text_only"], "questions": null, "repeats": null, "priority": 3, "status": "conditional_new_valid_sources_and_probe_protocol_required"}
+    {
+      "experiment": "bc100",
+      "harnesses": [
+        "dsh",
+        "hermes"
+      ],
+      "methods": [
+        "none",
+        "summarize",
+        "sliding_window",
+        "discard",
+        "visual"
+      ],
+      "questions": 100,
+      "repeats": 3,
+      "priority": 1,
+      "status": "new_version_required"
+    },
+    {
+      "experiment": "rq3",
+      "harnesses": [
+        "hermes"
+      ],
+      "methods": [
+        "scale_0000",
+        "scale_0125",
+        "scale_0250",
+        "scale_0500",
+        "scale_0700",
+        "scale_0800"
+      ],
+      "questions": 100,
+      "repeats": 3,
+      "priority": 2,
+      "status": "new_version_required",
+      "reuse": "1x from the NEW matching core Hermes visual cell only"
+    },
+    {
+      "experiment": "controlled",
+      "harnesses": [
+        "hermes"
+      ],
+      "methods": [
+        "visual",
+        "summarize_native",
+        "sliding_window_native"
+      ],
+      "questions": null,
+      "repeats": 3,
+      "priority": 2,
+      "status": "full_trajectory_protocol_and_budget_gate_required",
+      "benchmarks": [
+        "browsecomp_v3",
+        "mmbrowsecomp",
+        "agenticdatabench"
+      ]
+    },
+    {
+      "experiment": "information_loss",
+      "harnesses": [
+        "analysis"
+      ],
+      "methods": [
+        "visual",
+        "summarize",
+        "text_only"
+      ],
+      "questions": null,
+      "repeats": null,
+      "priority": 3,
+      "status": "conditional_new_valid_sources_and_probe_protocol_required"
+    }
   ],
   "required_gates": [
     "user_review_of_committed_Hermes_and_DSH_image_table_crop_zoom_canvases",
@@ -20,5 +106,20 @@
     "frozen_new_implementation_cohorts_and_versioned_output_paths",
     "cross_host_resume_ownership_and_usage_accounting_verified",
     "cloud_profile_queue_image_and_AFS_mount_verified"
-  ]
+  ],
+  "working_directory": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab",
+  "output_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs",
+  "output_policy": "New versioned campaign directories under the existing outputs root; never overwrite prior attempts.",
+  "tool_policy": {
+    "allowed_tools": [
+      "web_search",
+      "web_extract",
+      "image_search",
+      "image_crop",
+      "image_zoom_in"
+    ],
+    "filesystem_shell_code_execution": false,
+    "automatic_workspace_context": false,
+    "scope": "Repaired BC-100 entrypoints; other dataset protocols remain blocked pending isolated input/answer policy."
+  }
 }

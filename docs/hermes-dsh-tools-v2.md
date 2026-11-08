@@ -52,13 +52,17 @@ Evidence is under `outputs/preflight/hermes-tool-bridge-v2/`:
 | Actual Hermes `web_extract` wrapper via bridge against new local Reader | `live-bridge-reader.json`: same two URLs returned 156 / 12,190 chars with null error |
 | Model-mode rejection | New Reader rejects markdown/LLM fields with HTTP 400; the bridge independently rejects markdown before dispatch |
 
-No upload backend credentials are currently configured (`IMAGE_UPLOAD_API_KEY`, COS, OSS checks were all false). Local-image reverse search therefore requires either an available hosting backend or a verified public origin URL. The bridge supports an optional `ACL_IMAGE_ORIGIN_MAP` pointing to a caller-owned JSON ledger:
+The upload key was found in the original project's `hermes-agent/.env.local`, then copied **only as IMAGE_UPLOAD_API_KEY** into the current ignored, mode-0600 `hermes-agent/.env.local`. `configure_web` shares only that key with both harnesses; unrelated Hermes provider credentials are not imported into DSH. Explicit environment values take precedence. The key and upload URL are not included in committed evidence.
+
+[Real synthetic-crop upload validation](visual-integrity/repair-v3/imgbb-crop-validation.json) passed: actual crop handler → imgBB upload → Serper Lens. Uploaded bytes matched the crop SHA and differed from the parent SHA. Lens returned success with zero matches for this synthetic image; this proves the local-image service route, not image-search accuracy. No model calls.
+
+The bridge also supports an optional `ACL_IMAGE_ORIGIN_MAP` pointing to a caller-owned JSON ledger:
 
 ```json
 {"images":[{"path":"/run/input/original.png","sha256":"downloaded-byte-hash","origin_url":"https://public.example/original.png","kind":"native_original","transformed":false}]}
 ```
 
-Only an allowed local path with matching bytes and `native_original` is resolved to that URL. Changed files fail; unknown files retain the original missing-upload error. A crop/zoom output is never automatically mapped to its parent image URL. The same optional resolver must be applied in both new runners if enabled. Current public-URL Lens success does not imply arbitrary local crops can be reverse searched. A public URL can also change after download; its archive hash documents local evidence but cannot force the external Lens service to retrieve historic bytes.
+Only an allowed local path with matching bytes and `native_original` is resolved to that URL. Changed files fail; unknown files use the real configured upload backend. A crop/zoom output is never automatically mapped to its parent image URL. The same optional resolver must be applied in both new runners if enabled. The synthetic-crop validation independently exercises local upload; public-URL Lens results alone are not used as its evidence. A public URL can also change after download; its archive hash documents local evidence but cannot force the external Lens service to retrieve historic bytes.
 
 ## Local Reader bootstrap and limits
 

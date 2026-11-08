@@ -43,8 +43,8 @@ DSH 原 adapter 会省略 Hermes 指定的 image `detail`。v3 显式保留每�
 | `10.13.64.17:8080` | 仍超时，**没有声称修复远端服务器** |
 | 新本地同源 Reader | `127.0.0.1:18080`，真实 example.com 与历史失败 WordPress 页均 HTTP 200、非空；实际 Hermes wrapper 也通过 |
 | Fetch 缓存 | 同 URL 实测 `X-Cached: false → true`，正文 SHA 一致；来自实际 cache lookup，Jina/无字段/失败保持 unknown |
-| 本地图/crop 的反向图搜 | 缺少已有图片上传 backend 凭据；待提供本地配置路径 |
-| SCO | CLI v2.0.4 已安装；缺 active profile / 实际队列与镜像、AFS 参数；没有创建实例 |
+| 本地图/crop 的反向图搜 | 已找到旧 Hermes `.env.local` 的 imgBB key，单项迁入当前私有配置并由两 harness 共用；真实合成 crop 上传与 Lens 调用成功，上传 SHA 与 crop 一致，合成图匹配数为 0 |
+| SCO | 已记录 `afs_agents`、私有镜像选择 `ccr-zuhu2026 / sjq-dev-cpu`、当前项目工作目录；仍缺 active profile，镜像 tag/完整 URI 与云资源 ID 待查询；没有创建实例 |
 
 Reader 仅启用 text 模式并拒绝 LLM 字段。它读取固定 SHA 的共享 ReaderEngine，不读取源码所有者的配置/凭据；未来每台实例需自己的 loopback 服务。新配置显式选择该 endpoint，旧历史配置不变。对从公开 URL 下载且 SHA 匹配的原图，两入口使用相同 origin ledger，可直接将其公共原始 URL 交给 Lens；**不能把 crop/zoom 图替换成父图来绕过上传缺失**。
 
@@ -68,3 +68,9 @@ Reader 仅启用 text 模式并拒绝 LLM 字段。它读取固定 SHA 的共享
 - [DSH 正式新入口验收](visual-integrity/repair-v3/dsh-entry-validation.json)：`none`、`visual_native` 各 5 次 localhost 模型请求，第一轮起均只有指定五工具；实际执行 search/fetch/crop/zoom，40k synthetic provider usage 触发真实共享压缩。新画布全部进入最终 HTTP，SHA 与 image detail 一致；测试前后实现文件 hash 相同。
 
 这些检查不产生付费模型调用，不提供 benchmark accuracy 或真实模型视觉理解结论。所有实验仍暂停；正式 SCO 分布式运行仍待部署参数、分片恢复验收及用户检查。
+
+## 文件读取隔离（用户追加要求）
+
+模型仅能调用五个 web/图像工具。Hermes 关闭自动 context 文件与 memory；DSH 在 agent 创建时限制工具，并显式禁用自动工作目录 instructions。新版 DSH runner 仅接收已验收的 BC-100，避免旧 data-task 分支重新开放文件/终端；其他 benchmark 需单独完成输入与答案隔离后接入。crop/zoom 仅在每题允许的图片目录内工作，不能用父图代替 crop 做反向搜索。
+
+追加验收通过 localhost 假模型主动请求 `read_file`、`read`、`terminal`、`bash`，要求实际拒绝，并在答案文件与工作目录 `AGENTS.md` 放置唯一标记，检查所有模型请求中均不存在标记；不会读取真实 benchmark 答案进行测试。详情见 [工具隔离验收 JSON](visual-integrity/repair-v3/tool-isolation-validation.json)。本轮 root unittest 104 项通过。

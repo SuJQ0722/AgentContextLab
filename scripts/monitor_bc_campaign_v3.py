@@ -5,6 +5,8 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 import json
 import math
+import os
+import socket
 from pathlib import Path
 import time
 import uuid
@@ -230,12 +232,105 @@ def inspect_attempt(attempt, harness):
     return row, all_rows
 
 
+def node_process_totals(root, local_counts, *, now_unix=None, local_identity=None,
+                        submissions_root=None, local_observed_unix=None):
+    """Observed PID-namespace counts; incomplete cloud coverage never becomes zero."""
+    now_unix = time.time() if now_unix is None else now_unix
+    local_identity = local_identity or {'hostname': socket.gethostname(),
+        'boot_id': Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+        'pid_namespace': os.readlink('/proc/self/ns/pid')}
+    local_key = (local_identity.get('hostname'), local_identity.get('boot_id'))
+    directory = root / 'runtime/nodes'
+    submissions_root = submissions_root or ROOT / 'outputs/cloud-runtime/submissions'
+    issues, active, terminal = [], [], {'completed', 'succeeded', 'failed', 'submission_failed', 'cancelled', 'canceled', 'stopped', 'deleted', 'terminated'}
+    active_states = {'submitting', 'submitted', 'queued', 'pending', 'scheduled', 'starting', 'running', 'active'}
+    registry_complete = submissions_root.is_dir()
+    for path in sorted(submissions_root.glob('*.json')):
+        item = read_json(path)
+        if not isinstance(item, dict):
+            registry_complete = False; issues.append({'kind': 'unreadable_submission', 'path': str(path)}); continue
+        if item.get('mode') == 'dry_run' or item.get('state') in terminal: continue
+        if item.get('state') not in active_states:
+            registry_complete = False; issues.append({'kind': 'unknown_submission_state', 'name': item.get('name', path.stem)}); continue
+        # `workers: 32` is harness concurrency, never 32 cloud nodes.
+        nodes = item.get('worker_nodes', 1)
+        argv = item.get('argv', [])
+        if isinstance(argv, list) and '--worker-nodes' in argv:
+            try: nodes = int(argv[argv.index('--worker-nodes') + 1])
+            except (ValueError, IndexError, TypeError): nodes = None
+        if not count(nodes) or nodes < 1:
+            registry_complete = False; nodes = None
+        active.append({'name': item.get('name', path.stem), 'state': item.get('state'), 'expected_nodes': nodes})
+    expected = sum(item['expected_nodes'] or 0 for item in active) if registry_complete else None
+    if not registry_complete: issues.append({'kind': 'submission_registry_incomplete'})
+    nodes, chosen = [], {}
+    for path in sorted(directory.glob('*/telemetry.json')):
+        item = read_json(path)
+        row = {'path': str(path), 'status': 'invalid', 'counted': False}
+        if not isinstance(item, dict) or item.get('schema') != 'bc-v3-node-telemetry-v1':
+            issues.append({'kind': 'invalid_node_telemetry', 'path': str(path)}); nodes.append(row); continue
+        row.update({key: item.get(key) for key in ('timestamp', 'hostname', 'boot_id', 'pid_namespace')})
+        row.update(processes=item.get('processes') if isinstance(item.get('processes'), dict) else None,
+                   cgroup=item.get('cgroup') if isinstance(item.get('cgroup'), dict) else None)
+        key = (item.get('hostname'), item.get('boot_id'))
+        if not all(isinstance(v, str) and v for v in key):
+            issues.append({'kind': 'missing_node_identity', 'path': str(path)}); nodes.append(row); continue
+        try:
+            timestamp = datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00'))
+            if timestamp.tzinfo is None: raise ValueError('timezone required')
+            age = now_unix - timestamp.timestamp()
+        except (ValueError, TypeError, KeyError, AttributeError):
+            issues.append({'kind': 'invalid_node_timestamp', 'path': str(path)}); nodes.append(row); continue
+        row.update(age_seconds=round(age, 3), status='fresh' if -5 <= age <= 90 else 'stale' if age > 90 else 'future_timestamp')
+        if key == local_key:
+            row['status'] = 'local_duplicate'
+            if item.get('pid_namespace') != local_identity.get('pid_namespace'):
+                issues.append({'kind': 'local_pid_namespace_conflict', 'path': str(path)})
+        elif key in chosen:
+            previous = chosen[key]
+            if previous.get('pid_namespace') != row.get('pid_namespace'):
+                issues.append({'kind': 'remote_pid_namespace_conflict', 'hostname': key[0]})
+            if row['age_seconds'] < previous['age_seconds']:
+                previous['status'] = 'duplicate_superseded'; chosen[key] = row
+            else: row['status'] = 'duplicate_superseded'
+        else: chosen[key] = row
+        nodes.append(row)
+    fresh = [row for row in chosen.values() if row['status'] == 'fresh']
+    for row in fresh: row['counted'] = True
+    unknown_nodes = sum(row['status'] not in ('fresh', 'local_duplicate', 'duplicate_superseded') for row in nodes)
+    missing = max(0, expected - len(fresh)) if expected is not None else None
+    local_age = max(0, now_unix - (now_unix if local_observed_unix is None else local_observed_unix))
+    coverage = registry_complete and missing == 0 and unknown_nodes == 0 and not issues and local_age <= 90
+    fields = {}
+    for key in ('visible_total', 'visible_live', 'core_v3_subtree_live'):
+        values = [local_counts.get(key)] + [(row.get('processes') or {}).get(key) for row in fresh]
+        known = [value for value in values if count(value)]
+        complete = coverage and len(known) == len(values)
+        fields[key] = {'known_subtotal': sum(known), 'known_nodes': len(known),
+                       'missing_count_nodes': len(values) - len(known),
+                       'complete_total': sum(known) if complete else None}
+    complete = coverage and all(value['complete_total'] is not None for value in fields.values())
+    cloud = {'telemetry_root': str(directory), 'freshness_seconds': 90, 'nodes': nodes,
+             'fresh_unique_remote_nodes': len(fresh), 'expected_active_cloud_nodes': expected,
+             'missing_fresh_nodes': missing, 'unusable_telemetry_nodes': unknown_nodes,
+             'active_submissions': active, 'submission_registry_complete': registry_complete,
+             'coverage_complete': coverage, 'issues': issues,
+             'matching_scope': 'Count coverage only: submission receipts do not identify host/boot. Queued/submitting nodes remain expected until a terminal receipt is recorded.'}
+    total = {'complete': complete, 'fields': fields, 'local_identity': local_identity,
+             'local_snapshot_age_seconds': round(local_age, 3), 'counted_remote_nodes': len(fresh),
+             'expected_unreported_remote_nodes': missing, 'unusable_telemetry_nodes': unknown_nodes,
+             'scope': 'Sum of observed local PID namespaces, not physical-host process totals or threads. Hostname+boot duplicates are excluded; stale/missing nodes are unknown, never zero.'}
+    return cloud, total
+
+
 def snapshot(root):
     monitor_rebuttal.SCRIPT_GROUPS.update({
         'run_bc_campaign_v3.py': 'core_bc_v3', 'run_bc_trial_v3.py': 'core_bc_v3',
+        'run_bc_campaign_v3_io.py': 'core_bc_v3', 'run_bc_trial_v3_io.py': 'core_bc_v3',
         'hermes_bc_worker_v3.py': 'core_bc_v3', 'run_dsh_eval_v3.py': 'core_bc_v3',
         'monitor_bc_campaign_v3.py': 'resource_monitor'})
     processes = monitor_rebuttal.process_snapshot()
+    process_observed_unix = time.time()
     live = {k: v for k, v in processes.items() if v['state'] != 'Z'}
     attempts, rows, cells, purposes = [], [], defaultdict(list), defaultdict(list)
     for path in sorted((root / 'jobs').glob('*/*/*/attempts/attempt_*')):
@@ -249,6 +344,9 @@ def snapshot(root):
     requests, web = Counter(), Counter()
     for attempt in attempts:
         requests.update(attempt['requests']); web.update(attempt['web_cache'])
+    local_processes = {'visible_total': len(processes), 'visible_live': len(live),
+                       'core_v3_subtree_live': sum(v['group'] == 'core_bc_v3' for v in live.values())}
+    cloud_nodes, global_counts = node_process_totals(root, local_processes, local_observed_unix=process_observed_unix)
     return {'schema': 'bc-v3-monitor-v1', 'as_of': datetime.now(timezone.utc).isoformat(), 'root': str(root),
             'attempt_states': dict(states), 'attempt_count': len(attempts),
             'requests': dict(requests), 'web_cache': dict(web),
@@ -265,6 +363,7 @@ def snapshot(root):
             'processes': {'visible_total': len(processes), 'visible_live': len(live),
                           'core_v3_subtree_live': sum(v['group'] == 'core_bc_v3' for v in live.values()),
                           'scope': 'This local /proc namespace only; not cross-host concurrency or threads.'},
+            'cloud_nodes': cloud_nodes, 'global_process_counts': global_counts,
             'usd': None, 'provider_internal_latency_seconds': None,
             'definitions': {'usage': 'All attempts, raw counters only; incomplete observations remain unknown. No price inference.',
                             'latency': 'SDK client duration includes retries; not provider internal latency. Rendering is separately timed and nested inside compression; never sum render+IPC+API as end-to-end.',

@@ -1,5 +1,6 @@
 import importlib.util
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 import tempfile
@@ -96,6 +97,68 @@ class RawAccountingTests(unittest.TestCase):
             (metrics / 'wire/raw-usage.jsonl').unlink()
             rows, _, _, _ = monitor.accounting(metrics, 'dsh', [])
             self.assertEqual(len(rows), 2)
+
+
+class CloudTelemetryTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
+        self.registry=self.root/'submissions';self.registry.mkdir()
+        self.local={'hostname':'local','boot_id':'boot-local','pid_namespace':'pid:[1]'}
+        self.counts={'visible_total':11,'visible_live':10,'core_v3_subtree_live':5}
+        self.now=1800000000
+    def tearDown(self):self.temp.cleanup()
+    def submission(self,name='one',state='submitted',**kw):
+        (self.registry/(name+'.json')).write_text(json.dumps({'name':name,'state':state,'mode':'live','workers':32,**kw}))
+    def node(self,name,hostname='remote',boot='boot-remote',age=0,**kw):
+        path=self.root/'runtime/nodes'/name/'telemetry.json';path.parent.mkdir(parents=True)
+        value={'schema':'bc-v3-node-telemetry-v1','timestamp':datetime.fromtimestamp(self.now-age,timezone.utc).isoformat(),
+               'hostname':hostname,'boot_id':boot,'pid_namespace':'pid:[2]',
+               'processes':{'visible_total':21,'visible_live':20,'core_v3_subtree_live':15},**kw}
+        path.write_text(json.dumps(value));return path
+    def inspect(self,**kw):
+        return monitor.node_process_totals(self.root,self.counts,now_unix=self.now,local_identity=self.local,
+                                            submissions_root=self.registry,**kw)
+    def test_fresh_cloud_coverage_and_worker_concurrency_is_not_node_count(self):
+        self.submission(argv=['sco','--worker-nodes','1']);self.node('one')
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'],1)
+        self.assertTrue(total['complete']);self.assertEqual(total['fields']['visible_live']['complete_total'],30)
+        self.assertEqual(self.counts['visible_live'],10)  # Existing local record is untouched.
+    def test_missing_cloud_reports_are_unknown_not_zero(self):
+        self.submission('one');self.submission('two');self.node('one')
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['missing_fresh_nodes'],1);self.assertFalse(total['complete'])
+        self.assertEqual(total['fields']['visible_live']['known_subtotal'],30)
+        self.assertIsNone(total['fields']['visible_live']['complete_total'])
+    def test_stale_and_absent_counters_are_not_summed_as_zero(self):
+        self.submission();self.node('old',age=91)
+        cloud,total=self.inspect();self.assertEqual(cloud['nodes'][0]['status'],'stale')
+        self.assertEqual(total['fields']['visible_live']['known_subtotal'],10);self.assertFalse(total['complete'])
+        (self.root/'runtime/nodes/old/telemetry.json').unlink()
+        self.node('missing',processes={'visible_total':21,'core_v3_subtree_live':15})
+        cloud,total=self.inspect();self.assertFalse(total['complete'])
+        self.assertEqual(total['fields']['visible_live']['missing_count_nodes'],1)
+        self.assertIsNone(total['fields']['visible_live']['complete_total'])
+    def test_local_and_duplicate_host_boot_are_not_double_counted(self):
+        self.submission();self.node('self','local','boot-local',pid_namespace='pid:[1]')
+        self.node('old-copy',age=10,processes={'visible_total':99,'visible_live':99,'core_v3_subtree_live':99})
+        self.node('new-copy',age=1)
+        cloud,total=self.inspect();self.assertTrue(total['complete'])
+        self.assertEqual(total['fields']['visible_live']['complete_total'],30)
+        self.assertEqual({n['status'] for n in cloud['nodes']},{'local_duplicate','duplicate_superseded','fresh'})
+    def test_bad_registry_future_clock_and_namespace_conflict_are_explicit(self):
+        (self.registry/'bad.json').write_text('{')
+        self.node('future',age=-30)
+        cloud,total=self.inspect();self.assertFalse(total['complete']);self.assertIsNone(cloud['expected_active_cloud_nodes'])
+        self.assertEqual(cloud['nodes'][0]['status'],'future_timestamp')
+        (self.registry/'bad.json').unlink();(self.root/'runtime/nodes/future/telemetry.json').unlink()
+        self.node('self','local','boot-local',pid_namespace='pid:[999]')
+        cloud,total=self.inspect();self.assertFalse(total['complete'])
+        self.assertEqual(cloud['issues'][0]['kind'],'local_pid_namespace_conflict')
+    def test_ended_submissions_are_not_expected_and_stale_local_is_incomplete(self):
+        self.submission(state='submission_failed');self.submission('done',state='completed')
+        cloud,total=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],0);self.assertTrue(total['complete'])
+        cloud,total=self.inspect(local_observed_unix=self.now-91);self.assertFalse(total['complete'])
 
 
 if __name__ == '__main__': unittest.main()

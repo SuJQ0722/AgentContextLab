@@ -1,6 +1,6 @@
-# SCO 实例与并发方案（已授权，待云登录配置）
+# SCO 实例与并发方案（已授权，天津认证通过，云实例尚未创建）
 
-2026-11-08。用户要求先修复、push `dev`、检查 DSH/Hermes 图表环绕与 web 服务，确认后才开始实验。用户随后明确回复“没问题，resume目前运行结果，开始吧”，已授权启动；授权记录位于 `outputs/authorization/resume-v3.json`。本文件和 [配置](../configs/sco-review-plan.json) 记录部署范围，云实例尚未创建。
+2026-11-08。用户要求先修复、push `dev`、检查 DSH/Hermes 图表环绕与 web 服务，确认后才开始实验。用户随后明确回复“没问题，resume目前运行结果，开始吧”，已授权启动；授权记录位于 `outputs/authorization/resume-v3.json`。本文件和 [配置](../configs/sco-review-plan.json) 记录部署范围，天津首台核心实例 `acl-bc-v3-hermes-visual` 已于 2026-11-08 08:00:58 UTC 创建；运行时和真实 web 预检通过，正在核对实际模型调用。其余实例在首台运行确认后展开。
 
 | 组别 | 实例划分 | 实例数 | 每台配置 | worker 并发上限合计 |
 |---|---|---:|---|---:|
@@ -16,32 +16,51 @@
 
 ## CLI 与账号状态
 
-已根据用户提供的 [SCO 介绍](https://console.cn-tj-01.sensecore.cn/help/docs/CLI/Introduction) 查阅其 [官方可访问页面](https://www.sensecore.cn/help/docs/CLI/Introduction)，并安装隔离的 SCO v2.0.4 到 `.tools/sco`；没有修改全局 PATH 或登录配置。`sco version` 与 `sco ssp jobs create --help` 成功。安装器在当前 AFS 上需要 `TAR_OPTIONS=--no-same-owner`，未更改文件系统属主。
+天津专用 SCO CLI **v1.3.0** 已安装在 `.tools/sco-tj/cli/sco`，profile `agentcontextlab-tj` 已认证成功。采用 [天津官方 CLI 文档](https://console.cn-tj-01.sensecore.cn/micro/help/docs/CLI/Introduction/) 的区域包与元数据；此前 `.tools/sco` 的通用 v2.0.4 及 SSP 示例不适用于本次天津部署。创建入口为 [ACP `jobs create`](https://console.cn-tj-01.sensecore.cn/micro/help/docs/CLI/SCO_Refrence/ACP/instances/create/)，而非通用 `ssp jobs create`。
 
-官方 [SSP 参数化任务文档](https://www.sensecore.cn/help/docs/CLI/SCO_Refrence/SSP/jobs/create-params) 支持单 pod、0 GPU、8 CPU、32 GiB 以及 AFS 挂载；最终产品/region 必须以账号实际可用队列为准。AICL 的 [start](https://www.sensecore.cn/help/docs/CLI/SCO_Refrence/AICL/instances/start) 用于启动已有开发机，不能从该命令推断可以批量新建任意规格开发机。
+以下为认证后的非秘密资源查询结果，**云实例尚未创建**：
 
-本机尚无 active profile。一次含假占位 workspace/queue/image、命令 `exit 0` 的 `--dry-run` 被 CLI 拒绝：`no active profile found; run 'sco init' first`。**没有成功做云端配置校验，也没有创建资源。**用户已指定 AFS `afs_agents`（挂载到 `/mnt/afs_agents`），私有镜像选择 `ccr-zuhu2026 / sjq-dev-cpu`，工作目录为 `/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab`，结果仍写其 `outputs/` 下的新版目录。名称已记录，镜像 tag/digest、完整 URI 和 AFS resource ID 尚待账号查询；不会猜测 `latest`。当前环境的 `WORKSPACE_NAME=rl` 仅是待核验线索，云端 workspace/queue/region 仍须查询确认，不能把磁盘工作目录当作云 workspace ID。仍缺 SCO 登录配置；不能从控制台 URL 推断 region code。不要把密钥放进提交、任务命令行或报告。API key 经私有挂载/环境注入，容器只得到必要凭据。
+| 项目 | 已核验值 |
+|---|---|
+| Region / zone | `cn-tj-01` / `cn-tj-01a` |
+| Workspace | `rl` |
+| Subscription | `019e1f63-b10b-78d7-a6da-2b39e0790662` |
+| Resource group | `default` |
+| 算力池 | `agents` |
+| Worker spec | `N4lS.Iu.I80.8c32g`；查询返回 CPU 8、内存 32 GiB、`chip_count=0` |
+| AFS | `afs_agents`，ID `019ed8e0-f4f8-71f7-830c-f8a1e667a9ec` |
+| 挂载路径 | `/mnt/afs_agents` |
+| 私有镜像 | `registry.cn-tj-01.sensecore.cn/ccr-zuhu2026/sjq-dev-cpu:sjq-dev-20261108063401` |
+| 镜像 digest | 尚未查询，保持未知；tag 不等同于不可变 digest |
 
-以下仅是供核对的官方参数形式，所有占位必须替换，启动命令必须换成验收后的版本化 runner：
+工作目录为 `/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab`，结果写入其 `outputs/` 下的新版本目录。密钥只保存在私有配置，不进入提交、任务命令行或报告。容器通过私有挂载/环境获得必要 API 凭据。
+
+ACP 按实际池与 worker spec 选择资源。供部署脚本核对的命令形式如下；`<versioned-bootstrap-command>` 必须替换为验收后的启动脚本，以下示例未执行，不代表云任务已经创建：
 
 ```bash
-sco ssp jobs create job-acl-review \
-  --workspace-name <workspace> --queue-id <queue-resource-id> \
-  --image <validated-image> --args 'exit 0' \
-  --framework FRAMEWORK_CUSTOM --pod-count 1 \
-  --cpu-count 8 --memory-gib 32 --gpu-count 0 \
-  --volume-mount PV_AFS:<volume-id>:<mount-path> --dry-run
+.tools/sco-tj/cli/sco acp jobs create \
+  --workspace-name rl --aec2-name agents \
+  --job-name <unique-job-display-name> \
+  --container-image-url registry.cn-tj-01.sensecore.cn/ccr-zuhu2026/sjq-dev-cpu:sjq-dev-20261108063401 \
+  --training-framework pytorch --worker-nodes 1 \
+  --worker-spec N4lS.Iu.I80.8c32g \
+  --storage-mount 019ed8e0-f4f8-71f7-830c-f8a1e667a9ec:/mnt/afs_agents \
+  --command '<versioned-bootstrap-command>'
 ```
+
+区域 CLI 的实际组件帮助及服务端校验优先于通用 CLI 参数。此处不添加未验证的 `--dry-run`，也不启用自动容错重试来重复执行可能已经发生付费调用的任务。
 
 ## 冻结、恢复与统计
 
 新版代码必须生成新 campaign 与实现哈希。旧冻结运行目录、STOP、结果、已发生费用全部保留；旧视觉缺图结果不能当作新版已完成题目直接跳过。即使非视觉策略名称相同，只要 web 返回行为等改变，也不能自动混合两版本结果。
 
-每台只负责其 experiment/harness/method 分片，每题/重复/attempt 唯一目录。跨机器恢复要使用机器 ID、owner epoch、heartbeat 与原子分片 lease；不能只拿另一台的 PID 去查本地 `/proc`，也不能原样复制目前单机 coordinator。终态结果跳过；中断重试必须保留原 attempt 与未知 usage，不得覆盖或填零。AFS 锁和原子更新须先在实例间验证。
+核心 v3 已在本机运行，目录为 `outputs/campaigns/bc100-r3-hermes-parity-v3`。本机继续参与同一调度：本机与后续云控制器共享 AFS 上的原子 job claim 和每个 harness/strategy cell 的 slots，**每个 cell 的跨主机总 worker 上限为 32**，不是本机 32 再叠加每台云机 32。终态结果跳过，已有 claim 不自动重试；中断或未知状态保留原 attempt、usage 与 owner 证据，避免重复付费。
+
+每台只负责指定 experiment/harness/method 分片，每题/重复/attempt 唯一目录。跨机器身份包含 hostname、boot ID、PID namespace 和 start identity，不能只拿另一台 PID 查本地 `/proc`。多机 AFS 锁、原子更新和恢复行为仍须在实际实例间验证；本机运行通过不能替代跨主机验证。其他实验组保持表述中的未就绪状态，不因账号认证通过而自动启动。
 
 每条请求保存 cached input、non-cache input、output、total 与缺失字段，单列 compaction、budget calibration、judge 消耗；逐调用检查 token 守恒。保存 search/fetch cache hit、压缩次数、原生图与渲染图哈希、最终 HTTP image ledger。客户端 API elapsed、端到端时间、渲染/排队时间分别记录；provider 内部延迟与未提供的图片 token 拆分保持缺失。实际美元成本需 TokenHub 对应 route 费率，不能假装 Gemini 价格是 DeepSeek 实付。
 
-部署前先在各实例网络执行真实 search/fetch/Lens 检查，再检查 shared policy、图像最终 payload、native baseline 的匹配预算。用户已验收并授权启动。云部署仍必须取得登录 profile 并完成资源与实例网络校验；不能把缺凭据的计划写成已运行。
+部署前先在各实例网络执行真实 search/fetch/Lens 检查，再检查 shared policy、图像最终 payload、native baseline 的匹配预算。用户已验收并授权启动。天津认证与上述资源查询已完成；云部署仍须完成实例启动后的网络与共享存储校验。当前本机核心 v3 运行与云实例尚未创建须分开报告。
 
 本地展开可审查矩阵（只写 JSON，不调用 SCO 或模型）：
 

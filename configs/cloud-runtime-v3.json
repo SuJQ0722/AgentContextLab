@@ -1,0 +1,35 @@
+{
+  "hermes": {
+    "python_version": "3.11.15",
+    "python_executable": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/hermes-agent/.venv/bin/python",
+    "python_resolved": "/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/bin/python3.11",
+    "packages": {
+      "openai": "2.24.0",
+      "Pillow": "12.2.0",
+      "reportlab": "5.0.0"
+    },
+    "font_name": "HermesVisualFont",
+    "font_path": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "font_sha256": "690243adfefe0ce154b547db6205794bd30ac4277275179517a90994f4980648"
+  },
+  "node_version": "v24.11.0",
+  "node_sha256": "d918479037f14dc30c8d21df3767a010fe710685373baec7edf680ca8c3edbee",
+  "poppler_sha256": {
+    "pdfinfo": "069e3ee65a63c45f657430576c709d6c94d5da8531c3e9f8572c8ed87d52192d",
+    "pdftoppm": "1b675125a26352ab135f262293b815496fd3e8bd7ecd9a008f448f496cd050f6",
+    "pdftocairo": "72e5e2e4bd4148248f3f6bf040cc7955c76c2ec09fc47a5defb0a4b9a77e541c"
+  },
+  "reader": {
+    "python_version": "3.10.19",
+    "dependencies_imported": true,
+    "packages": {
+      "httpx": "0.28.1",
+      "tiktoken": "0.12.0",
+      "trafilatura": "2.1.0",
+      "uvicorn": "0.40.0",
+      "fastapi": "0.128.0",
+      "pydantic": "2.12.3"
+    }
+  },
+  "reader_source_sha256": "fd90a4ef57ef775e5bb48b25d2cb81c517f9ef2601b8be03efe5ef67d17dd743"
+}

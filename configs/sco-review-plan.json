@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "state": "authorized_waiting_cloud_configuration",
+  "state": "core_cloud_fleet_submitted_observing",
   "source_experiment": "configs/experiment.json",
   "launch_authorized": true,
   "instance": {
@@ -10,18 +10,48 @@
     "worker_concurrency": 32
   },
   "cloud": {
-    "profile": null,
-    "region": null,
-    "workspace": null,
+    "profile": "agentcontextlab-tj",
+    "region": "cn-tj-01",
+    "workspace": "rl",
     "queue_id": null,
-    "image": null,
-    "afs_volume_id": null,
+    "image": "registry.cn-tj-01.sensecore.cn/ccr-zuhu2026/sjq-dev-cpu:sjq-dev-20261108063401",
+    "afs_volume_id": "019ed8e0-f4f8-71f7-830c-f8a1e667a9ec",
     "image_registry_selection": "ccr-zuhu2026",
     "image_repository": "sjq-dev-cpu",
     "image_visibility": "private",
-    "image_tag": null,
+    "image_tag": "sjq-dev-20261108063401",
     "afs_volume_name": "afs_agents",
-    "afs_mount_path": "/mnt/afs_agents"
+    "afs_mount_path": "/mnt/afs_agents",
+    "zone": "cn-tj-01a",
+    "subscription": "019e1f63-b10b-78d7-a6da-2b39e0790662",
+    "resource_group": "default",
+    "resource_pool": "agents",
+    "worker_spec": "N4lS.Iu.I80.8c32g",
+    "image_digest": null,
+    "cli_path": ".tools/sco-tj/cli/sco",
+    "cli_version": "1.3.0",
+    "product": "acp",
+    "create_command": "sco acp jobs create",
+    "authentication_verified": true,
+    "resources_created": true,
+    "verified_worker_resources": {
+      "chip_count": 0,
+      "cpu_count": 8,
+      "memory_gib": 32
+    },
+    "queue_id_note": "Regional ACP uses aec2/resource pool agents; generic SSP queue_id does not apply.",
+    "created_core_job_names": [
+      "acl-bc-v3-dsh-discard",
+      "acl-bc-v3-dsh-none",
+      "acl-bc-v3-dsh-sliding-window",
+      "acl-bc-v3-dsh-summarize",
+      "acl-bc-v3-dsh-visual",
+      "acl-bc-v3-hermes-discard",
+      "acl-bc-v3-hermes-none",
+      "acl-bc-v3-hermes-sliding-window",
+      "acl-bc-v3-hermes-summarize",
+      "acl-bc-v3-hermes-visual"
+    ]
   },
   "groups": [
     {
@@ -40,7 +70,10 @@
       "questions": 100,
       "repeats": 3,
       "priority": 1,
-      "status": "new_version_required"
+      "status": "core_v3_local_active_10_cloud_jobs_submitted",
+      "campaign_root": "outputs/campaigns/bc100-r3-hermes-parity-v3",
+      "cross_host_cell_worker_limit": 32,
+      "resume_policy": "Local and cloud controllers share atomic job claims and per-cell slots; 32 is the combined per-harness/strategy limit across hosts."
     },
     {
       "experiment": "rq3",

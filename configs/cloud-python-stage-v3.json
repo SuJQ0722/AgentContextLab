@@ -1,0 +1,11 @@
+{
+  "version": "standalone-python-stage-v1",
+  "archive_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/cpython-3.11.15-linux-x86_64-gnu-v3.tar.gz",
+  "archive_sha256": "5f23916b71b66a409c43d2f40512309e7c834cfa655413bd24d90c4501a23fe9",
+  "archive_bytes": 34976734,
+  "archive_root": "cpython-3.11.15-linux-x86_64-gnu",
+  "target_path": "/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu",
+  "interpreter_relative": "bin/python3.11",
+  "interpreter_sha256": "9e7f0dd93c77a32d07aa66631b48116101db6266701b292ebdc56a30d6cc7924",
+  "shared_venv_changed": false
+}

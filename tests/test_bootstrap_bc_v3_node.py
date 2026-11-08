@@ -38,6 +38,15 @@ class CloudBootstrapTests(unittest.TestCase):
         self.assertEqual(command[command.index('--concurrency')+1],'32')
         self.assertIn('--resume',command);self.assertIn('--live',command)
 
+    def test_all_dsh_strategies_preserve_accumulated_native_images(self):
+        for strategy in ['none', 'summarize', 'sliding_window', 'discard', 'visual']:
+            args=SimpleNamespace(reader_python='/reader/python',root=Path('/afs/new-root'),harness='dsh',strategy=strategy,controller_concurrency=4)
+            command=commands(args)['controller']
+            self.assertEqual(Path(command[1]).name,'run_bc_campaign_v3_capacity1.py')
+            self.assertEqual(command[command.index('--concurrency')+1],'4')
+        args.harness='hermes';args.strategy='none'
+        self.assertEqual(Path(commands(args)['controller'][1]).name,'run_bc_campaign_v3_io2.py')
+
     def test_python_archive_rejects_path_and_symlink_escape(self):
         file=tarfile.TarInfo('runtime/bin/python');validate_members([file],'runtime')
         with self.assertRaises(ValueError):validate_members([tarfile.TarInfo('../outside')],'runtime')

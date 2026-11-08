@@ -1,0 +1,9 @@
+{
+  "version": "cloud-dispatch-ops-v2",
+  "worker_ceiling_per_instance": 32,
+  "active_workers_per_cloud_instance": 4,
+  "local_target_workers": 4,
+  "effective_at": "2026-11-08T09:36:14.109633+00:00",
+  "reason": "Observed sustained ModelAccountRpmRateLimitExceeded and ModelAccountTpmRateLimitExceeded at 8 workers per node; clean-drain ops2 and pending-only ops3 at 4 workers. No model, endpoint or scientific strategy change.",
+  "ramp_policy": "Observe completed requests and trajectories before a separately recorded increase; no automatic ramp to 32"
+}

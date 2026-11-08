@@ -166,12 +166,12 @@ def health(expected):
 
 
 def commands(args):
-    return {'reader': [args.reader_python, str(ROOT/'scripts/local_reader_text_service.py'), '--config', str(ROOT/'configs/reader-text-v1.json')],
+    return {'reader': [args.reader_python, str(ROOT/'scripts/local_reader_text_service.py'), '--config', str(ROOT/'configs/reader-text-v1-workers32.json')],
             'telemetry': [sys.executable,str(ROOT/'scripts/monitor_bc_v3_node.py'),'--watch','--root',str(args.root)],
             'web_preflight': [sys.executable, str(ROOT/'scripts/preflight_bc_v3_web.py'), '--root', str(args.root)],
-            'controller': [sys.executable, str(ROOT/'scripts/run_bc_campaign_v3_io.py'), '--root', str(args.root),
+            'controller': [sys.executable, str(ROOT/('scripts/run_bc_campaign_v3_capacity1.py' if args.harness=='dsh' or args.strategy=='visual' else 'scripts/run_bc_campaign_v3_io2.py')), '--root', str(args.root),
                            '--config', str(args.root/'experiment.json'), '--harness', args.harness, '--strategy', args.strategy,
-                           '--concurrency', '32', '--resume', '--live']}
+                           '--concurrency', str(getattr(args,'controller_concurrency',32)), '--resume', '--live']}
 
 
 def main():
@@ -187,17 +187,29 @@ def main():
     mode.add_argument('--check', action='store_true', help='Hash/import checks only, no network or service/model start')
     mode.add_argument('--capture-runtime-reference', type=Path, help='Offline reference capture; never launches services/models')
     args = parser.parse_args();args.root=args.root.resolve()
+    dispatch=json.loads((ROOT/'configs/cloud-dispatch-ops-v2.json').read_text())
+    args.controller_concurrency=dispatch['active_workers_per_cloud_instance']
+    if not 1 <= args.controller_concurrency <= 32:raise ValueError('Operational dispatch must stay within approved worker ceiling')
     plan = {'mode':'live' if args.live else 'offline_check' if args.check else 'capture_reference' if args.capture_runtime_reference else 'dry_run',
-            'cell':args.harness+'/'+args.strategy,'required_cloud_allocation':{'cpu':8,'memory_gib':32,'workers':32},
+            'cell':args.harness+'/'+args.strategy,'operational_dispatch':dispatch,'required_cloud_allocation':{'cpu':8,'memory_gib':32,'workers':32},
             'mount':'/mnt/afs_agents','repository':str(ROOT),'commands':commands(args),
             'credential_policy':'Provisioning credentials never inherited; research launchers load existing research dotenv only.',
-            'git_policy':'Only per-node /tmp git diff lock; no cross-host git lock.'}
+            'git_policy':'Only per-node /tmp git diff lock; no cross-host git lock.',
+            'reader_deployment_config':'configs/reader-text-v1-workers32.json',
+            'reader_deployment_sha256':digest(ROOT/'configs/reader-text-v1-workers32.json'),
+            'network_deployment':'Use explicitly configured research dotenv proxy variables only; provisioning credentials remain excluded.'}
     if not (args.live or args.check or args.capture_runtime_reference):
         print(json.dumps(plan,indent=2));return
     if not ROOT.resolve().is_relative_to(Path('/mnt/afs_agents')):
         raise RuntimeError('Repository must be on the reviewed AFS mount')
     reject_cloud_dotenv()
-    env=clean_environment(os.environ);boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    env=clean_environment(os.environ)
+    network_keys={'http_proxy','https_proxy','no_proxy','HTTP_PROXY','HTTPS_PROXY','NO_PROXY'}
+    env.update({key:value for key,value in read_env(ROOT/'.env').items() if key in network_keys})
+    boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    from replace_bc_v3_reader import proxy_summary
+    plan.update(reader_egress_proxy=proxy_summary(env),hostname=socket.gethostname(),
+                boot_id=boot,pid_namespace=os.readlink('/proc/self/ns/pid'))
     local=local_git_wrapper(env,boot)
     # Also protect descendants spawned by validate_sources and Python imports.
     os.environ.clear();os.environ.update(env)
@@ -221,6 +233,15 @@ def main():
     state=args.root/'runtime/nodes'/host/(args.harness+'-'+args.strategy);state.mkdir(parents=True,exist_ok=True)
     # One core cell per instance; a second local cell must not double the
     # reviewed 32-worker resource allocation.
+    # Keep prior container epochs when ACP restarts the same job/hostname.
+    if (state/'bootstrap.json').exists():
+        previous=json.loads((state/'bootstrap.json').read_text())
+        epoch=state/'epochs'/str(previous.get('started_at_unix',time.time()))
+        epoch.mkdir(parents=True,exist_ok=True)
+        for name in ('bootstrap.json','exit.json','reader-failure.json'):
+            if (state/name).exists():
+                (epoch/name).write_bytes((state/name).read_bytes())
+                if name != 'bootstrap.json':(state/name).unlink()
     lock=(local/'core-cell-bootstrap.lock').open('a')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     stopping=False;controller=None;reader=None;telemetry=None

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "source_path": "/mnt/afs_agents/pangcong/workspace/projects/fetch_server/server.py",
+  "source_sha256": "fd90a4ef57ef775e5bb48b25d2cb81c517f9ef2601b8be03efe5ef67d17dd743",
+  "host": "127.0.0.1",
+  "port": 18080,
+  "max_concurrent_requests": 32,
+  "extract_workers": 1,
+  "max_length": 8192,
+  "fetch_timeout": 45,
+  "cache_size": 1000
+}

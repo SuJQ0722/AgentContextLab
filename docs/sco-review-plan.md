@@ -71,3 +71,7 @@ python scripts/prepare_sco_review.py --out outputs/sco-review/instance-matrix.js
 ## 工具访问范围
 
 核心两个 harness 从首次请求起仅开放 `web_search`、`web_extract`、`image_search`、`image_crop`、`image_zoom_in`。文件读取、目录检索、终端、代码执行、委派等不在白名单；同时关闭自动工作目录 instructions。新版 DSH 非 BC-100 入口当前拒绝运行，避免绕回旧数据任务工具集。AFS 为运行程序、日志及数据加载器挂载，不等同于向模型开放文件工具。imgBB key 通过当前 Hermes 私有 `.env.local` 单项注入，不进入镜像、提交或任务命令行。
+
+## 2026-11-08 live deployment
+
+All ten core ACP jobs were submitted under `rl / agents`. Per-node bootstrap verifies 8 CPU / 32 GiB, native runtime/font parity, real search/fetch, frozen sources and shared pending-only claims. Initial cloud and local traffic exposed missing cloud egress proxy plus Reader queue saturation; explicit Reader deployment records under `runtime/nodes/*/reader-ops/` retain each 4→32 concurrency transition, proxy repair, cache reset and affected trajectories. Scientific source/config/cohort files remain frozen. Existing errors, unknown usage and paid attempts remain in accounting; an execution completion is still ungraded until a judge result exists.

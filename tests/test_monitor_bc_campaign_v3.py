@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -159,6 +160,227 @@ class CloudTelemetryTests(unittest.TestCase):
         self.submission(state='submission_failed');self.submission('done',state='completed')
         cloud,total=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],0);self.assertTrue(total['complete'])
         cloud,total=self.inspect(local_observed_unix=self.now-91);self.assertFalse(total['complete'])
+
+    def test_retired_namespace_does_not_block_complete_but_missing_stays_unknown(self):
+        self.submission()
+        old = self.node('old', age=1000)
+        (old.parent / 'retired.json').write_text(json.dumps({'hostname':'remote', 'boot_id':'boot-remote',
+            'pid_namespace':'pid:[2]', 'job_name':'old-job', 'retired_at':'2026-11-08T09:00:00+00:00'}))
+        current = self.node('current', pid_namespace='pid:[3]')
+        cloud, total = self.inspect()
+        self.assertTrue(total['complete'])
+        self.assertEqual(cloud['unusable_telemetry_nodes'], 0)
+        self.assertEqual(cloud['fresh_unique_remote_nodes'], 1)
+        self.assertEqual({row['status'] for row in cloud['nodes']}, {'retired_namespace','fresh'})
+        self.assertEqual(total['fields']['visible_live']['complete_total'], 30)
+        current.unlink()
+        cloud, total = self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'], 1)
+        self.assertEqual(cloud['missing_fresh_nodes'], 1)
+        self.assertIsNone(total['fields']['visible_live']['complete_total'])
+
+    def test_retirement_cannot_exclude_new_namespace_on_same_host_boot(self):
+        self.submission()
+        path = self.node('reused-directory', pid_namespace='pid:[3]')
+        (path.parent / 'retired.json').write_text(json.dumps({'hostname':'remote', 'boot_id':'boot-remote',
+            'pid_namespace':'pid:[2]', 'job_name':'old-job', 'retired_at':'2026-11-08T09:00:00+00:00'}))
+        cloud, total = self.inspect()
+        self.assertEqual(cloud['nodes'][0]['status'], 'fresh')
+        self.assertTrue(total['complete'])
+        self.assertEqual(cloud['fresh_unique_remote_nodes'], 1)
+
+    def retired_original(self, name='one', strategy='none'):
+        self.submission(name)
+        old=self.node('old-'+name,hostname='old-'+name,age=1000)
+        marker={'hostname':'old-'+name,'boot_id':'boot-remote','pid_namespace':'pid:[2]','job_name':name}
+        (old.parent/'retired.json').write_text(json.dumps(marker))
+        exited=old.parent/'exit.json';exited.write_text(json.dumps({'controller_exit_code':0,'stopped':True}))
+        directory=self.registry.parent/'reader-resume'/name;directory.mkdir(parents=True)
+        request={'job':{'name':name,'strategy':strategy},'evidence':{'acp_state':'SUCCEEDED',
+            'node_directory':str(old.parent),'bootstrap_exit':str(exited),'hostname':marker['hostname'],
+            'retired_boot_id':marker['boot_id'],'retired_pid_namespace':marker['pid_namespace']}}
+        (directory/'request.json').write_text(json.dumps(request))
+        (directory/'response.json').write_text(json.dumps({'state':'rejected','returncode':1,
+             'stderr':'{"reason":"tjUpdateNotSupportStart"}'}))
+        return directory
+
+    def replacement(self,name='one',state='submitted'):
+        directory=self.registry.parent/'replacement-submissions'/(name+'-ops2');directory.mkdir(parents=True)
+        (directory/'request.json').write_text(json.dumps({'name':name+'-ops2','replaces':name,
+            'argv':['sco','--worker-nodes','1'],'operational_dispatch':{'active_workers_per_cloud_instance':8},'worker_ceiling':32}))
+        (directory/'response.json').write_text(json.dumps({'state':state}))
+        return directory
+
+    def test_replacement_retires_old_count_and_keeps_actual_worker_count_separate(self):
+        self.retired_original();self.replacement();self.node('new',hostname='new',pid_namespace='pid:[3]')
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'],1)
+        self.assertEqual(len(cloud['retired_generations']),1)
+        self.assertEqual(cloud['active_submissions'][0]['active_workers_per_instance'],8)
+        self.assertEqual(cloud['active_submissions'][0]['worker_ceiling'],32)
+        self.assertTrue(total['complete'])
+        self.assertEqual(json.loads((self.registry/'one.json').read_text())['state'],'submitted')
+
+    def test_unknown_replacement_counts_one_but_never_complete_and_rejection_zero(self):
+        self.retired_original();directory=self.replacement(state='unknown')
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'],1)
+        self.assertEqual(cloud['missing_fresh_nodes'],1);self.assertFalse(total['complete'])
+        self.assertIn('replacement_submission_outcome_unknown',[x['kind'] for x in cloud['issues']])
+        (directory/'response.json').write_text(json.dumps({'state':'rejected'}))
+        cloud,total=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],0)
+        self.assertEqual(cloud['planned_not_running'][0]['reason'],'replacement_rejected')
+
+    def test_visual_hold_not_missing_active_node_but_retirement_must_be_proven(self):
+        directory=self.retired_original(strategy='visual')
+        cloud,total=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],0)
+        self.assertEqual(cloud['missing_fresh_nodes'],0);self.assertTrue(total['complete'])
+        self.assertEqual(cloud['holds'][0]['reason'],'visual_intentionally_held')
+        (directory/'response.json').write_text(json.dumps({'state':'unknown'}))
+        cloud,total=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],1)
+        self.assertFalse(total['complete'])
+
+    def rate_replacement(self,state='submitted'):
+        self.retired_original();self.replacement()
+        node=self.node('old-ops2',hostname='old-ops2',age=1000)
+        marker={'hostname':'old-ops2','boot_id':'boot-remote','pid_namespace':'pid:[2]','job_name':'one-ops2'}
+        (node.parent/'retired.json').write_text(json.dumps(marker))
+        exited=node.parent/'exit.json';exited.write_text(json.dumps({'controller_exit_code':0,'stopped':True}))
+        directory=self.registry.parent/'rate-replacements/one-ops3';directory.mkdir(parents=True)
+        request={'name':'one-ops3','replaces':'one-ops2','original_name':'one','generation':'ops3',
+            'argv':['sco','--worker-nodes','1'],'operational_dispatch':{'active_workers_per_cloud_instance':4},'worker_ceiling':32,
+            'evidence':{'acp_state':'SUCCEEDED','node_directory':str(node.parent),'bootstrap_exit':str(exited),
+                'hostname':'old-ops2','retired_boot_id':'boot-remote','retired_pid_namespace':'pid:[2]'}}
+        (directory/'request.json').write_text(json.dumps(request))
+        (directory/'response.json').write_text(json.dumps({'state':state}))
+        return directory,node
+
+    def test_three_generations_count_only_latest_and_actual_four(self):
+        self.rate_replacement();self.node('new-ops3',hostname='new-ops3',pid_namespace='pid:[4]')
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'],1)
+        self.assertEqual(len(cloud['retired_generations']),2)
+        self.assertEqual(cloud['active_submissions'][0]['name'],'one-ops3')
+        self.assertEqual(cloud['active_submissions'][0]['active_workers_per_instance'],4)
+        self.assertEqual(cloud['active_submissions'][0]['worker_ceiling'],32)
+        self.assertTrue(total['complete'])
+
+    def test_rate_unknown_never_zero_and_unproven_parent_not_hidden(self):
+        directory,node=self.rate_replacement(state='unknown')
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'],1);self.assertFalse(total['complete'])
+        self.assertIn('rate_replacement_submission_outcome_unknown',[r['kind'] for r in cloud['issues']])
+        marker=json.loads((node.parent/'retired.json').read_text());marker['pid_namespace']='pid:[wrong]'
+        (node.parent/'retired.json').write_text(json.dumps(marker))
+        cloud,total=self.inspect()
+        self.assertEqual(cloud['expected_active_cloud_nodes'],2)
+        self.assertIn('rate_parent_retirement_unproven',[r['kind'] for r in cloud['issues']])
+        self.assertFalse(total['complete'])
+
+    def test_rate_controller_only_drain_requires_exact_identity_and_saved_hash(self):
+        directory,node=self.rate_replacement()
+        request=json.loads((directory/'request.json').read_text())
+        (node.parent/'exit.json').write_text(json.dumps({'controller_exit_code':0,'stopped':False}))
+        boot=node.parent/'bootstrap.json'
+        identity={'hostname':'old-ops2','boot_id':'boot-remote','pid_namespace':'pid:[2]'}
+        boot.write_text(json.dumps({**identity,'controller_pid':42}))
+        status=self.root/'controllers/old/status.json';status.parent.mkdir(parents=True)
+        status.write_text(json.dumps({**identity,'pid':42,'start_identity':'99','stop_dispatch':True,'active_local':0}))
+        import hashlib
+        request['evidence'].update(bootstrap_path=str(boot),clean_drain={'kind':'controller_stop_and_drain',
+            'status_path':str(status),'status_sha256':hashlib.sha256(status.read_bytes()).hexdigest()})
+        (directory/'request.json').write_text(json.dumps(request))
+        cloud,_=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],1)
+        value=json.loads(status.read_text());value['active_local']=1;status.write_text(json.dumps(value))
+        cloud,_=self.inspect();self.assertEqual(cloud['expected_active_cloud_nodes'],2)
+
+
+class TerminalCacheTests(unittest.TestCase):
+    def setUp(self):
+        monitor._TERMINAL_CACHE.clear()
+        self.addCleanup(monitor._TERMINAL_CACHE.clear)
+        self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        self.attempt = Path(self.temp.name)
+        self.metrics = self.attempt / 'native/metrics'; self.metrics.mkdir(parents=True)
+        self.calls = self.metrics / 'calls.jsonl'
+        self.calls.write_text(json.dumps({'call_id':'one','raw_provider_usage':{
+            'prompt_tokens':10,'completion_tokens':2,'total_tokens':12}})+'\n')
+        self.result = self.attempt / 'result.json'
+        self.write_result()
+
+    def write_result(self, **changes):
+        self.result.write_text(json.dumps({'status':'completed','slot_released':True,
+            'unconfirmed_child_termination':[], **changes}))
+
+    def test_terminal_hit_preserves_missing_and_is_deep_copy(self):
+        with patch.object(monitor, '_inspect_attempt_uncached', wraps=monitor._inspect_attempt_uncached) as inspect:
+            row, usage = monitor.inspect_attempt(self.attempt, 'hermes')
+            row['strategy'] = 'mutated'; row['usage']['fields']['prompt']['known_subtotal'] = 999
+            usage[0]['raw_provider_usage']['prompt_tokens'] = 999
+            again, raw = monitor.inspect_attempt(self.attempt, 'hermes')
+            self.assertEqual(inspect.call_count, 1)
+            self.assertNotIn('strategy', again)
+            self.assertEqual(again['usage']['fields']['prompt']['known_subtotal'], 10)
+            self.assertEqual(raw[0]['raw_provider_usage']['prompt_tokens'], 10)
+            self.assertIsNone(again['usage']['fields']['cached_input']['complete_total'])
+
+    def test_result_marker_change_invalidates(self):
+        with patch.object(monitor, '_inspect_attempt_uncached', wraps=monitor._inspect_attempt_uncached) as inspect:
+            monitor.inspect_attempt(self.attempt, 'hermes')
+            self.write_result(status='failed', end_to_end_seconds=123)
+            row, _ = monitor.inspect_attempt(self.attempt, 'hermes')
+            self.assertEqual(inspect.call_count, 2)
+            self.assertEqual(row['state'], 'failed')
+
+    def test_active_unknown_and_unconfirmed_cleanup_never_cached(self):
+        for state, released, remaining in [('unfinished',False,[]),('unknown',True,[]),
+                                            ('interrupted',False,[123]),('completed',True,None)]:
+            monitor._TERMINAL_CACHE.clear()
+            self.write_result(status=state,slot_released=released,unconfirmed_child_termination=remaining)
+            with patch.object(monitor, '_inspect_attempt_uncached', wraps=monitor._inspect_attempt_uncached) as inspect:
+                monitor.inspect_attempt(self.attempt,'hermes'); monitor.inspect_attempt(self.attempt,'hermes')
+                self.assertEqual(inspect.call_count,2)
+            self.assertFalse(monitor._TERMINAL_CACHE)
+        self.result.unlink()
+        monitor.inspect_attempt(self.attempt,'hermes'); self.assertFalse(monitor._TERMINAL_CACHE)
+
+    def test_terminal_metric_append_and_new_directory_invalidate(self):
+        with patch.object(monitor, '_inspect_attempt_uncached', wraps=monitor._inspect_attempt_uncached) as inspect:
+            monitor.inspect_attempt(self.attempt,'hermes')
+            with self.calls.open('a') as stream: stream.write(json.dumps({'call_id':'two'})+'\n')
+            row, _ = monitor.inspect_attempt(self.attempt,'hermes')
+            self.assertEqual(inspect.call_count,2)
+            self.assertEqual(row['usage']['fields']['prompt']['missing_count'],1)
+            newer = self.attempt/'native/second'; newer.mkdir()
+            (newer/'calls.jsonl').write_text(json.dumps({'call_id':'three'})+'\n')
+            row, _ = monitor.inspect_attempt(self.attempt,'hermes')
+            self.assertEqual(inspect.call_count,3)
+            self.assertEqual(row['metrics_directories'],2)
+
+
+class KnownLayoutDiscoveryTests(unittest.TestCase):
+    def test_formal_layout_never_recurses_and_late_raw_usage_invalidates(self):
+        monitor._TERMINAL_CACHE.clear(); self.addCleanup(monitor._TERMINAL_CACHE.clear)
+        with tempfile.TemporaryDirectory() as temporary:
+            attempt=Path(temporary)/'jobs/dsh/visual/q_001_r01/attempts/attempt_001'
+            attempt.mkdir(parents=True)
+            (attempt/'result.json').write_text(json.dumps({'status':'completed','slot_released':True,'unconfirmed_child_termination':[]}))
+            with patch.object(Path,'rglob',side_effect=AssertionError('No recursive traversal for formal v3 layout')):
+                row,_=monitor.inspect_attempt(attempt,'dsh');self.assertEqual(row['metrics_directories'],0)
+                metrics=attempt/'native/visual_native/q_001/workspace/metrics'
+                (metrics/'wire').mkdir(parents=True)
+                (metrics/'wire/raw-usage.jsonl').write_text(json.dumps({'request_id':'late','response_complete':True,
+                    'raw_provider_usage':{'prompt_tokens':10,'completion_tokens':2,'total_tokens':12}})+'\n')
+                row,_=monitor.inspect_attempt(attempt,'dsh')
+                self.assertEqual(row['metrics_directories'],1)
+                self.assertEqual(row['usage']['fields']['prompt']['complete_total'],10)
+                self.assertIsNone(row['usage']['fields']['cached_input']['complete_total'])
+
+    def test_hermes_direct_location_and_sliding_window_alias(self):
+        attempt=Path('/tmp/jobs/hermes/none/q_001_r01/attempts/attempt_001')
+        self.assertEqual(monitor._known_metric_path(attempt,'hermes'),attempt/'native/metrics')
+        attempt=Path('/tmp/jobs/dsh/sliding_window/q_001_r01/attempts/attempt_001')
+        self.assertEqual(monitor._known_metric_path(attempt,'dsh'),attempt/'native/sliding_window_native/q_001/workspace/metrics')
 
 
 if __name__ == '__main__': unittest.main()

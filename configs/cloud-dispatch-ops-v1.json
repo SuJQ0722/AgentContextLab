@@ -1,0 +1,9 @@
+{
+  "version": "cloud-dispatch-ops-v1",
+  "worker_ceiling_per_instance": 32,
+  "active_workers_per_cloud_instance": 8,
+  "local_target_workers": 8,
+  "effective_at": "2026-11-08T09:02:53.563237+00:00",
+  "reason": "Sustained provider system_memory_limit HTTP429 and transport errors after Reader recovery; reduce dispatch pressure without changing scientific jobs or retrying old attempts",
+  "ramp_policy": "Observe completed requests and trajectories before a separately recorded increase; no automatic ramp to 32"
+}

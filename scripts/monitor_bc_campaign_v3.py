@@ -2,9 +2,12 @@
 """Read-only v3 accounting observer. No retry, inference, process kill, or judging."""
 import argparse
 from collections import Counter, defaultdict
+from copy import deepcopy
 from datetime import datetime, timezone
 import json
+import hashlib
 import math
+import re
 import os
 import socket
 from pathlib import Path
@@ -171,12 +174,105 @@ def accounting(metrics, harness, issues):
         'definition': 'SDK client wall time, including retries; DSH normalized calls used only for latency, never token accounting. Not provider-internal latency; not additive with nested render/IPC.'}
 
 
+# Process-local only. A released slot is written after descendant termination;
+# no active producer may be cached. File/dir metadata also invalidates a cached
+# result if archived metrics are later repaired or appended. Missing remains
+# missing: this is an I/O optimization, never an accounting substitution.
+_TERMINAL_CACHE = {}
+_TERMINAL_STATES = {'completed', 'failed', 'timeout', 'interrupted', 'not_started'}
+_METRIC_NAMES = ('calls.jsonl', 'call-starts.jsonl', 'web.jsonl',
+                 'shared-policy.jsonl', 'compression.jsonl', 'render.jsonl',
+                 'wire/raw-usage.jsonl', 'wire/requests.jsonl')
+
+
+def _known_metric_path(attempt, harness):
+    # Formal v3 trial layout, including io/capacity maintenance entrypoints.
+    if (attempt.parent.name != 'attempts' or len(attempt.parents) < 4
+            or attempt.parents[3].name != harness): return None
+    if harness == 'hermes': return attempt/'native/metrics'
+    if harness == 'dsh':
+        strategy=attempt.parents[2].name
+        mapped={'visual':'visual_native','sliding_window':'sliding_window_native'}.get(strategy,strategy)
+        trial=attempt.parents[1].name
+        question=re.sub(r'_r[0-9]+$', '', trial)
+        if question == trial: return None
+        return attempt/'native'/mapped/question/'workspace/metrics'
+    return None
+
+
+def _metric_directories(attempt, harness=None):
+    known=_known_metric_path(attempt,harness)
+    if known is not None:
+        return [known] if known.is_dir() else []
+    # Standalone/legacy fixtures: one traversal, never three recursive walks.
+    found=set()
+    for path in attempt.rglob('*.jsonl'):
+        if path.name in ('calls.jsonl','call-starts.jsonl'): found.add(path.parent)
+        elif path.name=='raw-usage.jsonl' and path.parent.name=='wire': found.add(path.parent.parent)
+    return sorted(found)
+
+
+def _cache_metadata_paths(attempt,harness,metric_dirs):
+    paths={attempt/'result.json',attempt/'heartbeat.json',attempt}
+    known=_known_metric_path(attempt,harness)
+    directories=set(metric_dirs)
+    if known is not None: directories.add(known)
+    else: paths.update(p for p in attempt.rglob('*') if p.is_dir())
+    for directory in directories:
+        paths.update(directory/name for name in _METRIC_NAMES)
+        paths.add(directory/'wire')
+        parent=directory
+        while parent != attempt and parent.is_relative_to(attempt):
+            paths.add(parent);parent=parent.parent
+    return tuple(sorted(paths))
+
+
+def _metadata_signature(paths):
+    values = []
+    for path in paths:
+        try:
+            stat = path.stat()
+            values.append((str(path), stat.st_mtime_ns, stat.st_size, stat.st_ino))
+        except FileNotFoundError:
+            values.append((str(path), None))
+        except OSError:
+            return None  # AFS errors cannot authorize using stale accounting.
+    return tuple(values)
+
+
+def _cacheable_terminal(attempt):
+    result = read_json(attempt / 'result.json')
+    return (isinstance(result, dict) and result.get('status') in _TERMINAL_STATES
+            and result.get('slot_released') is True
+            and result.get('unconfirmed_child_termination') == [])
+
+
 def inspect_attempt(attempt, harness):
+    attempt = Path(attempt)
+    key = (str(attempt.absolute()), harness)
+    cached = _TERMINAL_CACHE.get(key)
+    if cached is not None:
+        paths, signature, value = cached
+        if _metadata_signature(paths) == signature:
+            return deepcopy(value)
+        del _TERMINAL_CACHE[key]
+    metric_dirs = _metric_directories(attempt, harness)
+    eligible = _cacheable_terminal(attempt)
+    paths = _cache_metadata_paths(attempt,harness,metric_dirs) if eligible else ()
+    before = _metadata_signature(paths) if eligible else None
+    value = _inspect_attempt_uncached(attempt, harness, metric_dirs)
+    after = _metadata_signature(paths) if eligible else None
+    if eligible and before is not None and before == after and _cacheable_terminal(attempt):
+        _TERMINAL_CACHE[key] = (paths, after, deepcopy(value))
+    return value
+
+
+def _inspect_attempt_uncached(attempt, harness, metric_dirs=None):
     issues, all_rows, counts = [], [], Counter()
     by_purpose = defaultdict(list)
     sdk_known, sdk_missing = 0, 0
     web, compression, rendering = Counter(), 0, []
-    metric_dirs = sorted({p.parent for p in attempt.rglob('calls.jsonl')} | {p.parent for p in attempt.rglob('call-starts.jsonl')} | {p.parent.parent for p in attempt.rglob('raw-usage.jsonl') if p.parent.name == 'wire'})
+    if metric_dirs is None: metric_dirs = _metric_directories(attempt, harness)
     for metrics in metric_dirs:
         rows, states, _, latency = accounting(metrics, harness, issues)
         all_rows += rows
@@ -232,6 +328,144 @@ def inspect_attempt(attempt, harness):
     return row, all_rows
 
 
+def _retired_generation_proven(root, name, evidence):
+    node = Path(evidence.get('node_directory') or '/missing')
+    try: node.relative_to(root / 'runtime/nodes')
+    except ValueError: return False
+    marker = read_json(node / 'retired.json') or {}
+    exited = read_json(Path(evidence.get('bootstrap_exit') or '/missing')) or {}
+    drained = exited.get('controller_exit_code') == 0 and exited.get('stopped') is True
+    clean = evidence.get('clean_drain', {})
+    if exited.get('controller_exit_code') == 0 and clean.get('kind') == 'controller_stop_and_drain':
+        status_path = Path(clean.get('status_path') or '/missing')
+        try:
+            status_path.relative_to(root/'controllers')
+            status = read_json(status_path) or {}
+            boot = read_json(Path(evidence.get('bootstrap_path') or '/missing')) or {}
+            drained = (hashlib.sha256(status_path.read_bytes()).hexdigest() == clean.get('status_sha256')
+                       and all(status.get(k) and status.get(k) == boot.get(k) == marker.get(k)
+                               for k in ('hostname','boot_id','pid_namespace'))
+                       and status.get('pid') == boot.get('controller_pid') and bool(status.get('start_identity'))
+                       and status.get('stop_dispatch') is True and status.get('active_local') == 0)
+        except (OSError,ValueError): drained = False
+    return bool(evidence.get('acp_state') == 'SUCCEEDED' and marker.get('job_name') == name
+                and marker.get('hostname') == evidence.get('hostname')
+                and marker.get('boot_id') == evidence.get('retired_boot_id')
+                and isinstance(marker.get('pid_namespace'), str) and marker['pid_namespace']
+                and marker['pid_namespace'] == evidence.get('retired_pid_namespace')
+                and drained)
+
+
+def _rate_generations(root, rate_root, active, retired, planned, issues):
+    by_name = {row['name']:row for row in active}
+    candidates = []
+    for directory in sorted(rate_root.iterdir()) if rate_root.is_dir() else []:
+        if not directory.is_dir(): continue
+        request = read_json(directory/'request.json')
+        response = read_json(directory/'response.json') or {'state':'unknown'}
+        if not isinstance(request, dict):
+            issues.append({'kind':'unknown_rate_replacement_request','path':str(directory)}); continue
+        candidates.append((request.get('requested_at_unix',0),directory,request,response))
+    replaced = set()
+    for _,directory,request,response in sorted(candidates,key=lambda item:item[0]):
+        name, previous, original = request.get('name'), request.get('replaces'), request.get('original_name')
+        if not (isinstance(original,str) and name == original+'-ops3' and previous == original+'-ops2'
+                and directory.name == name and previous not in replaced):
+            issues.append({'kind':'invalid_rate_generation_binding','path':str(directory)}); continue
+        replaced.add(previous)
+        evidence = request.get('evidence',{})
+        if previous not in by_name or not _retired_generation_proven(root,previous,evidence):
+            issues.append({'kind':'rate_parent_retirement_unproven','name':name})
+        else:
+            del by_name[previous]
+            retired.append({'name':previous,'state':'succeeded_rate_rollover',
+                            'retirement_path':str(Path(evidence['node_directory'])/'retired.json')})
+        state = response.get('state')
+        if state in ('rejected','not_sent_stopping','not_sent_source_changed'):
+            planned.append({'name':original,'replacement':name,'reason':'rate_replacement_'+state}); continue
+        argv = request.get('argv',[])
+        try: nodes = int(argv[argv.index('--worker-nodes')+1])
+        except (ValueError,IndexError,TypeError): nodes = None
+        if nodes != 1:
+            issues.append({'kind':'invalid_rate_replacement_node_count','name':name}); nodes = None
+        if state not in ('submitted','unknown'):
+            issues.append({'kind':'unknown_rate_replacement_state','name':name}); state = 'unknown'
+        if state == 'unknown': issues.append({'kind':'rate_replacement_submission_outcome_unknown','name':name})
+        by_name[name] = {'name':name,'replaces':previous,'original_name':original,'generation':'ops3','state':state,
+                        'expected_nodes':nodes,'active_workers_per_instance':request.get('operational_dispatch',{}).get('active_workers_per_cloud_instance'),
+                        'worker_ceiling':request.get('worker_ceiling'),'receipt':str(directory)}
+    return list(by_name.values())
+
+
+def _replacement_generations(root, submissions_root, active, issues):
+    """Read-only lifecycle overlay; never rewrite original submission receipts."""
+    resume_root = submissions_root.parent / 'reader-resume'
+    replacements_root = submissions_root.parent / 'replacement-submissions'
+    retired, planned, holds = [], [], []
+    by_name = {row['name']: row for row in active}
+    proven = {}
+    for name in list(by_name):
+        request = read_json(resume_root / name / 'request.json') or {}
+        response = read_json(resume_root / name / 'response.json') or {}
+        evidence = request.get('evidence', {})
+        text = str(response.get('stderr', '')) + str(response.get('stdout', ''))
+        for _ in range(4): text = text.replace('\\"', '"')
+        if not (response.get('state') == 'rejected' and response.get('returncode') not in (None, 0)
+                and re.search(r'"reason"\s*:\s*"tjUpdateNotSupportStart"', text)
+                and request.get('job', {}).get('name') == name and evidence.get('acp_state') == 'SUCCEEDED'):
+            continue
+        node = Path(evidence.get('node_directory') or '/missing')
+        try: node.relative_to(root / 'runtime/nodes')
+        except ValueError:
+            issues.append({'kind':'invalid_retirement_path','name':name}); continue
+        marker = read_json(node / 'retired.json') or {}
+        exited = read_json(Path(evidence.get('bootstrap_exit') or '/missing')) or {}
+        if not (marker.get('job_name') == name and marker.get('hostname') == evidence.get('hostname')
+                and marker.get('boot_id') == evidence.get('retired_boot_id')
+                and isinstance(marker.get('pid_namespace'), str) and marker['pid_namespace']
+                and marker['pid_namespace'] == evidence.get('retired_pid_namespace')
+                and exited.get('controller_exit_code') == 0 and exited.get('stopped') is True):
+            issues.append({'kind':'unproven_original_generation_retirement','name':name}); continue
+        proven[name] = request
+        retired.append({'name':name,'state':'succeeded_start_unsupported', 'retirement_path':str(node/'retired.json')})
+        del by_name[name]
+    seen = set()
+    for directory in sorted(replacements_root.iterdir()) if replacements_root.is_dir() else []:
+        if not directory.is_dir(): continue
+        request = read_json(directory / 'request.json')
+        response = read_json(directory / 'response.json') or {'state':'unknown'}
+        if not isinstance(request, dict):
+            issues.append({'kind':'unknown_replacement_request','path':str(directory)}); continue
+        name, original = request.get('name'), request.get('replaces')
+        if not isinstance(original, str) or name != original + '-ops2' or directory.name != name or original in seen:
+            issues.append({'kind':'invalid_or_duplicate_replacement_binding','path':str(directory)}); continue
+        seen.add(original)
+        if original not in proven:
+            issues.append({'kind':'replacement_original_not_proven_terminal','name':name})
+        state = response.get('state')
+        if state in ('rejected', 'not_sent_stopping'):
+            planned.append({'name':original,'replacement':name,'reason':'replacement_' + state}); continue
+        argv = request.get('argv', [])
+        try: nodes = int(argv[argv.index('--worker-nodes') + 1])
+        except (ValueError, IndexError, TypeError): nodes = None
+        if nodes != 1:
+            issues.append({'kind':'invalid_replacement_node_count','name':name}); nodes = None
+        if state not in ('submitted', 'unknown'):
+            issues.append({'kind':'unknown_replacement_state','name':name}); state = 'unknown'
+        if state == 'unknown': issues.append({'kind':'replacement_submission_outcome_unknown','name':name})
+        by_name[name] = {'name':name,'replaces':original,'generation':'ops2','state':state,'expected_nodes':nodes,
+                         'active_workers_per_instance':request.get('operational_dispatch', {}).get('active_workers_per_cloud_instance'),
+                         'worker_ceiling':request.get('worker_ceiling'), 'receipt':str(directory)}
+    for name, request in proven.items():
+        if name in seen: continue
+        strategy = request.get('job', {}).get('strategy')
+        item = {'name':name,'reason':'visual_intentionally_held' if strategy == 'visual' else 'awaiting_replacement'}
+        planned.append(item)
+        if strategy == 'visual': holds.append(item)
+    active = _rate_generations(root,submissions_root.parent/'rate-replacements',list(by_name.values()),retired,planned,issues)
+    return active, retired, planned, holds
+
+
 def node_process_totals(root, local_counts, *, now_unix=None, local_identity=None,
                         submissions_root=None, local_observed_unix=None):
     """Observed PID-namespace counts; incomplete cloud coverage never becomes zero."""
@@ -261,6 +495,8 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
         if not count(nodes) or nodes < 1:
             registry_complete = False; nodes = None
         active.append({'name': item.get('name', path.stem), 'state': item.get('state'), 'expected_nodes': nodes})
+    active, retired_generations, planned_not_running, holds = _replacement_generations(root, submissions_root, active, issues)
+    if any(item['expected_nodes'] is None for item in active): registry_complete = False
     expected = sum(item['expected_nodes'] or 0 for item in active) if registry_complete else None
     if not registry_complete: issues.append({'kind': 'submission_registry_incomplete'})
     nodes, chosen = [], {}
@@ -275,6 +511,15 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
         key = (item.get('hostname'), item.get('boot_id'))
         if not all(isinstance(v, str) and v for v in key):
             issues.append({'kind': 'missing_node_identity', 'path': str(path)}); nodes.append(row); continue
+        retired = read_json(path.parent / 'retired.json')
+        identity_fields = ('hostname', 'boot_id', 'pid_namespace')
+        if (isinstance(retired, dict)
+                and all(isinstance(item.get(field), str) and item[field]
+                        and retired.get(field) == item[field] for field in identity_fields)):
+            row.update(status='retired_namespace', retired_at=retired.get('retired_at'),
+                       retirement_path=str(path.parent / 'retired.json'))
+            nodes.append(row)
+            continue
         try:
             timestamp = datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00'))
             if timestamp.tzinfo is None: raise ValueError('timezone required')
@@ -297,7 +542,7 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
         nodes.append(row)
     fresh = [row for row in chosen.values() if row['status'] == 'fresh']
     for row in fresh: row['counted'] = True
-    unknown_nodes = sum(row['status'] not in ('fresh', 'local_duplicate', 'duplicate_superseded') for row in nodes)
+    unknown_nodes = sum(row['status'] not in ('fresh', 'local_duplicate', 'duplicate_superseded', 'retired_namespace') for row in nodes)
     missing = max(0, expected - len(fresh)) if expected is not None else None
     local_age = max(0, now_unix - (now_unix if local_observed_unix is None else local_observed_unix))
     coverage = registry_complete and missing == 0 and unknown_nodes == 0 and not issues and local_age <= 90
@@ -314,6 +559,7 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
              'fresh_unique_remote_nodes': len(fresh), 'expected_active_cloud_nodes': expected,
              'missing_fresh_nodes': missing, 'unusable_telemetry_nodes': unknown_nodes,
              'active_submissions': active, 'submission_registry_complete': registry_complete,
+             'retired_generations': retired_generations, 'planned_not_running': planned_not_running, 'holds': holds,
              'coverage_complete': coverage, 'issues': issues,
              'matching_scope': 'Count coverage only: submission receipts do not identify host/boot. Queued/submitting nodes remain expected until a terminal receipt is recorded.'}
     total = {'complete': complete, 'fields': fields, 'local_identity': local_identity,
@@ -324,14 +570,16 @@ def node_process_totals(root, local_counts, *, now_unix=None, local_identity=Non
 
 
 def snapshot(root):
+    scan_started = datetime.now(timezone.utc).isoformat()
     monitor_rebuttal.SCRIPT_GROUPS.update({
+        'run_bc_campaign_v3_capacity1.py': 'core_bc_v3', 'run_bc_trial_v3_capacity1.py': 'core_bc_v3',
+        'run_dsh_eval_v3_capacity1.py': 'core_bc_v3',
+        'run_bc_campaign_v3_io2.py': 'core_bc_v3', 'run_bc_trial_v3_io2.py': 'core_bc_v3',
         'run_bc_campaign_v3.py': 'core_bc_v3', 'run_bc_trial_v3.py': 'core_bc_v3',
         'run_bc_campaign_v3_io.py': 'core_bc_v3', 'run_bc_trial_v3_io.py': 'core_bc_v3',
+        'run_bc_campaign_v3_io2.py': 'core_bc_v3', 'run_bc_trial_v3_io2.py': 'core_bc_v3',
         'hermes_bc_worker_v3.py': 'core_bc_v3', 'run_dsh_eval_v3.py': 'core_bc_v3',
         'monitor_bc_campaign_v3.py': 'resource_monitor'})
-    processes = monitor_rebuttal.process_snapshot()
-    process_observed_unix = time.time()
-    live = {k: v for k, v in processes.items() if v['state'] != 'Z'}
     attempts, rows, cells, purposes = [], [], defaultdict(list), defaultdict(list)
     for path in sorted((root / 'jobs').glob('*/*/*/attempts/attempt_*')):
         rel = path.relative_to(root / 'jobs').parts
@@ -344,10 +592,16 @@ def snapshot(root):
     requests, web = Counter(), Counter()
     for attempt in attempts:
         requests.update(attempt['requests']); web.update(attempt['web_cache'])
+    controller_rows=[{'path': str(p), 'status': read_json(p)} for p in sorted((root / 'controllers').glob('*/status.json'))]
+    processes = monitor_rebuttal.process_snapshot()
+    process_observed_unix = time.time()
+    live = {k: v for k, v in processes.items() if v['state'] != 'Z'}
     local_processes = {'visible_total': len(processes), 'visible_live': len(live),
                        'core_v3_subtree_live': sum(v['group'] == 'core_bc_v3' for v in live.values())}
     cloud_nodes, global_counts = node_process_totals(root, local_processes, local_observed_unix=process_observed_unix)
-    return {'schema': 'bc-v3-monitor-v1', 'as_of': datetime.now(timezone.utc).isoformat(), 'root': str(root),
+    scan_finished=datetime.now(timezone.utc).isoformat()
+    return {'schema': 'bc-v3-monitor-v1', 'as_of': scan_finished, 'scan_started_at':scan_started,
+            'scan_finished_at':scan_finished, 'root': str(root),
             'attempt_states': dict(states), 'attempt_count': len(attempts),
             'requests': dict(requests), 'web_cache': dict(web),
             'compression_count_known_subtotal': sum(r['compression_count_known_subtotal'] for r in attempts),
@@ -359,7 +613,7 @@ def snapshot(root):
             'sdk_client_seconds_missing_count': sum(r['sdk_client_seconds_missing_count'] for r in attempts),
             'usage': aggregate(rows), 'usage_by_cell': {k: aggregate(v) for k, v in cells.items()},
             'usage_by_purpose': {k: aggregate(v) for k, v in purposes.items()}, 'attempts': attempts,
-            'controllers': [{'path': str(p), 'status': read_json(p)} for p in sorted((root / 'controllers').glob('*/status.json'))],
+            'controllers':controller_rows,
             'processes': {'visible_total': len(processes), 'visible_live': len(live),
                           'core_v3_subtree_live': sum(v['group'] == 'core_bc_v3' for v in live.values()),
                           'scope': 'This local /proc namespace only; not cross-host concurrency or threads.'},

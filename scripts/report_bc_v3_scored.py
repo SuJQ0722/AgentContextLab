@@ -42,14 +42,17 @@ def observation(job, attempt, grading):
     route=lineage.get('actual_route') or result.get('model')
     grade_path=grading/'sources'/namespace(root)/'jobs'/job['job_id']/'grade.json'
     original_grade_path=grade_path;judge_selection='original_judge'
-    overlay_path=grading/'judge-retry1/selection.json'
-    if overlay_path.exists():
+    for generation in ('judge-retry1','judge-retry2'):
+        overlay_path=grading/generation/'selection.json'
+        if not overlay_path.exists():continue
         overlay=read(overlay_path)
-        if overlay.get('version')!='bc-v3-fixed-judge-retry1' or overlay.get('max_additional_requests')!=1:raise ValueError('Unknown judge overlay policy')
+        expected_version='bc-v3-fixed-'+generation
+        if overlay.get('version')!=expected_version or overlay.get('max_additional_requests')!=1:raise ValueError('Unknown judge overlay policy')
         matches=[e for e in overlay['entries'] if e['source_root']==str(root) and e['job_id']==job['job_id']]
         if len(matches)>1:raise ValueError('Duplicate judge overlay')
         if matches:
-            e=matches[0];expected=grading/'judge-retry1/jobs'/job['job_id']/'grade.json'
+            if judge_selection!='original_judge':raise ValueError('A prediction may receive only one additional judge attempt')
+            e=matches[0];expected=grading/generation/'jobs'/job['job_id']/'grade.json'
             if Path(e['original_grade_path'])!=original_grade_path or sha(original_grade_path)!=e['original_grade_sha256']:
                 raise ValueError('Original judge evidence changed')
             if Path(e['new_grade_path'])!=expected or e['prediction_result_sha256']!=sha(result_path):raise ValueError('Judge overlay changed prediction or destination')
@@ -134,7 +137,7 @@ def snapshot(parent,retry,grading,output,draws=10000):
     result={'at':time.time(),'selection_ledger_sha256':sha(Path(retry)/'retry-ledger.json'),'parent_plan_sha256':sha(Path(parent)/'plan.json'),
         'resource_interpretation':'Recovered results conditionally receive a second attempt; they are not a single-attempt fixed-budget experiment. Retain first-pass separately and sum original plus retry prediction usage/wall time for cumulative resource reporting.',
         'policy':'Every listed retry replaces its original outcome regardless of relative scores. Retained original completed results are not rerun. No retry is counted as an extra repeat.',
-        'judge_retry_policy':'One explicitly authorized disconnected judgment may have a fixed additional attempt. Original request and unknown usage remain preserved; add new usage without treating unknown original cost as zero. Prediction and repeat are unchanged.',
+        'judge_retry_policy':'Each explicitly authorized failed judgment may have at most one fixed additional attempt, in a separate immutable overlay. Original request and unknown usage remain preserved; add new usage without treating unknown original cost as zero. Prediction and repeat are unchanged.',
         'missing_policy':'Unscored completed, not_started, interrupted and unresolved predictions remain missing; explicit failed/timeout with confirmed cleanup count zero as operational failures.',
         'first_pass':analyze(first,draws),'fixed_retry_selected':analyze(chosen,draws)}
     output.mkdir(parents=True,exist_ok=True);atomic(output/'statistics.json',result)

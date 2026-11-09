@@ -44,20 +44,30 @@ def snapshot():
                     'placement': 'local' if value.get('hostname') == socket.gethostname() else 'cloud',
                     'status': value})
         active = [c for c in controllers if c['fresh']]
-        local = sum(c['status'].get('active_local', 0) for c in active if c['placement'] == 'local')
-        cloud = sum(c['status'].get('active_local', 0) for c in active if c['placement'] == 'cloud')
+        reported_local = sum(c['status'].get('active_local', 0) for c in active if c['placement'] == 'local')
+        reported_cloud = sum(c['status'].get('active_local', 0) for c in active if c['placement'] == 'cloud')
+        slot_area = root/('cloud-scale-ops3' if scale == .75 else 'cloud-scale-ops5' if scale == .7 else 'cloud-scale-ops2')
+        owners = [read(p) for p in (slot_area/'slots'/label).glob('[0-9][0-9]/owner.json')]
+        owners = [o for o in owners if o]
+        fresh_ids = {c['status'].get('controller_id') for c in active}
+        known = [o for o in owners if o.get('controller_id') in fresh_ids]
+        local = sum(o.get('hostname') == socket.gethostname() for o in known)
+        cloud = len(known)-local
         rows.append({'scale': scale, 'planned': 300, 'target_workers': 16,
             'active_local': local, 'active_cloud': cloud, 'active_trials': local+cloud,
+            'count_definition': 'Occupied slots of fresh controllers, including pre-launch reservations; not native process counts',
+            'occupied_slots': len(owners), 'unknown_owner_slots': len(owners)-len(known),
+            'reported_active_local': reported_local, 'reported_active_cloud': reported_cloud,
             'controllers': controllers,
             'state': 'active' if active else 'no_fresh_controller',
-            'outcome_source': str(ROOT/'outputs/grading/rq3-final-seven-v2/statistics.json')})
+            'outcome_source': str(ROOT/('outputs/grading/rq3-final-seven-v3/statistics.json' if (ROOT/'outputs/grading/rq3-final-seven-v3/statistics.json').exists() else 'outputs/grading/rq3-final-seven-v2/statistics.json'))})
     return {'version': 'rq3-runtime-ops6', 'as_of': datetime.now(timezone.utc).isoformat(),
         'final_scales': list(SCALES), 'planned': 2100, 'target_workers': 112,
         'active_cloud': sum(r['active_cloud'] for r in rows),
         'active_local': sum(r['active_local'] for r in rows),
         'active_trials': sum(r['active_trials'] for r in rows), 'scales': rows,
         'excluded_scale': .125, 'model_calls_by_monitor': 0,
-        'note': 'Runtime uses controller heartbeats without rescanning2100 attempts. Counts are supervised trials, not simultaneous HTTP requests or OS processes. Missing heartbeat is not proof of termination. Scientific outcomes and fixed interrupted recoveries remain in the statistical report.'}
+        'note': 'Runtime uses shared occupied slots of fresh controllers, including pre-launch reservations; not simultaneous HTTP requests or OS processes. Raw per-controller active counts are retained but asynchronous sums can transiently exceed the actual shared cap. Missing heartbeat is not proof of termination. Scientific outcomes and fixed recoveries remain in the statistical report.'}
 
 
 def main():

@@ -9,9 +9,9 @@
 | 新多模态 benchmark 泛化 | 有历史 Gemini 多模态日志、真实工具/图像传输验收和少量受控 prefix 调试；**尚没有完成、可直接报告的新 DeepSeek 全量多模态泛化结果**。 | BC-v3、MMBrowseComp、AgenticDataBench 的完整新版本、配对多方法评测仍缺；BC 的文本渲染成图不等于多模态输入 benchmark。 |
 | 实验 3：摘要/窗口 + 原生图像 | v5单例第三attempt完成并评分正确，六臂pilot实际token/原生图gate通过：BC-v3最大token差1.82%、MMBC0.72%。固定180臂扩展已运行，目标16，仍记录cache/non-cache/output及未知用量。[协议](experiment3/controlled-v4.md)。 | 07:39 UTC终态57中只有6个pilot completed，另51臂因prefix不合格未运行：15个MMBC prefix原题没有原生图（45臂），2个BC prefix未达16384阈值（6臂）。保留固定cohort，不换题、不放宽gate。两benchmark小队列不等于原计划三个benchmark全量。 |
 | 实验 4：显著性/方差 | 历史文本 avg@3 离线统计与配对分析已做，无需新 Gemini；[Table 1 来源审计](paper-table1/audit.md)。 | 用户已缩减范围，不补泛化 avg@4。提交论文 Table 1 全体来源仍未完全对应，不能将成功交集或缺失补零当无偏全表统计。新核心/RQ3 须按 question 聚类、同题同 repeat 配对。 |
-| RQ3：分辨率 | 最终0/.25/.5/.7/.75/.8/1各100×3，共2100。0.7原云节点被关闭后，本机以16并发接续219待运行题；15已付费中断题独立固定恢复，与主队列共享16slots。0/.25/.5/.8云端继续运行，.75已迁回agents且worker Running，1.0仍等待可用容量。[恢复说明](recovery-2026-11-09.md)。 | 新最终报告`rq3-final-seven-v2`固定替换15观测并累计费用；不增加repeat。完整覆盖前不发布完整avg3±std/显著性结论。 |
+| RQ3：分辨率 | 最终0/.25/.5/.7/.75/.8/1各100×3，共2100。0.7原云节点被关闭后，本机以16并发接续219待运行题；15已付费中断题独立固定恢复，与主队列共享16slots。七档云端均已运行，0.7新CCI接续，本机旧在途及恢复与云端共享16slots。[恢复说明](recovery-2026-11-09.md)。 | 新最终报告`rq3-final-seven-v3`固定替换15观测并累计费用；不增加repeat。完整覆盖前不发布完整avg3±std/显著性结论。 |
 | 实验 5：失败原因和轨迹长度 | 已从 14,920 条历史轨迹离线分析，并检查20个 VERA 失败 case，无新增模型调用。[报告](experiment5/experiment5.md) | 结论受历史 instrumentation 覆盖限制；缺少证据的失败不能硬分成 context 截断。新版本可另做补充，不替换历史分析。 |
-| 实验 6：信息损失 | 旧phase3质量停派证据保留。新phase4禁thinking已真实验证；完整像素分块与统一有界事实重建已冻结。大图base64上传超时后，imgbb URL传输已通过真实下载byte/pixel一致性检查，1x真实视觉QA已4题答对3题，正在完成其余五臂质量验证。[恢复说明](recovery-2026-11-09.md)。 | 质量门通过才自动放行固定队列；旧7调用+URL阶段183共190上限，开发题q004与其余9题主分析分开。尚无完成的信息损失曲线。 |
+| 实验 6：信息损失 | 旧phase3质量停派证据保留。新phase4禁thinking已真实验证；完整像素分块与统一有界事实重建已冻结。大图base64上传超时后，imgbb URL传输已通过真实下载byte/pixel一致性检查，五臂质量门已通过并自动进入完整固定队列，开始重建和语义事实评分。[恢复说明](recovery-2026-11-09.md)。 | 质量门已通过；旧7调用+URL阶段183共190上限，开发题q004与其余9题主分析分开。尚无完成的信息损失曲线；已观察到视觉重建输出超限负例，独立QA仍可评分，失败与覆盖率分开。 |
 | 可选 cache-aware VERA | 未执行冻结 canvas/离散分辨率的独立效果实验。 | 不能以已实现缓存记录代替 cache-aware 方法比较。 |
 | 代码 AST / GUI 展示 | 没有完整新数据集实验。 | 作为额外展示可另行明确数据集与公平对照；当前补充实验不包含它。 |
 
@@ -37,7 +37,7 @@
 
 - 核心额外一次恢复：`outputs/campaigns/bc100-r3-hermes-parity-v3-retry1/monitor/status.json`；固定963条的`retry-ledger.json`，未选择的原completed保留。原始first-pass费用不能删除。
 - 核心评分与avg@3：`outputs/grading/bc100-v3-deepseek-sfb-v1/status.json`、`analysis/summary.md`；RQ3独立目录见专页。
-- RQ3当前派发：`outputs/supervision/rq3-final-seven-runtime.json`；最终统计`outputs/grading/rq3-final-seven-v2/summary.md`。原ops1与原0.7云控制器均只作历史证据。
+- RQ3当前派发：`outputs/supervision/rq3-final-seven-runtime.json`；最终统计`outputs/grading/rq3-final-seven-v3/summary.md`。原ops1与原0.7云控制器均只作历史证据。
 - 受控baseline：`outputs/experiment3/controlled-native-v4/status.json`及ops3状态；六臂pilot已通过，固定180臂派发中，prefix资格阻断与实际完成分开。旧失败、校准和恢复费用保留，不自动第四次重跑。
 - 信息损失：旧`shared-full-canvas-phase3/quality-hold.json`保留；新`outputs/experiment6/paired-repair-phase4-url1/`保存真实URL门与后续固定队列。
 

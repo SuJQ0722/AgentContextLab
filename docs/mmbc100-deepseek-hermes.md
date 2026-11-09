@@ -70,14 +70,14 @@ before model dispatch. Do not inherit the root's historical remote-fetch address
 
 ## Vanilla and additional controls
 
-**Vanilla visual compression is pending definition and is not executable in this
-plan.** No existing named vanilla policy or frozen vanilla configuration was found.
-The renderer supports `plain`, `plain_no_header`, `highlight`, and
-`highlight_no_wrap`, but `plain` still wraps images/tables. It is a no-highlighting
-layout ablation, not automatically a complete plain-screenshot baseline. Defining
-vanilla requires an explicit policy/layout intervention while preserving the
-chosen evidence, trigger, retention rules, and relevant budgets. Adding it requires
-a separately versioned frozen scope after its definition is clarified, not relabeling an existing method.
+**Vanilla is now defined as rendering without visual evidence in the compressed history.**
+It runs as a separate, immutable 300-observation addon with its own CCI and 16 workers;
+see [the vanilla protocol](mmbc100-vanilla-visual.md). The five-method parent plan
+remains unchanged. Vanilla omits compressed-region images/crops/zooms without
+caption generation, retains original table cells as plain text, and preserves the
+same initial and uncompressed head/tail images. All other scientific parameters
+match VERA. This tests the contribution of visual evidence; it is not a matched
+image-token-budget experiment.
 
 `summarize_native` and `sliding_window_native` also exist in Hermes. They remove
 image blocks from the text compressor and restore unique original blocks to a

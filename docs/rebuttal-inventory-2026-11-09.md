@@ -6,9 +6,9 @@
 |---|---|---|
 | 所有方法×benchmark cached/non-cache/output/total/$/latency/acc | 历史报告中五方法共同已评分交集：BrowseComp 每方法164条/95题；BC-zh689/265；SEAL-0302/108；SEAL64k223/93；XBench275/96；BC-v3238/238；MMBrowseComp322/322。文本与多模态 Pareto 均已输出。 | **历史重建完成但非所有历史完整 cohort**。API 完整日志只覆盖部分，renderer 时间缺失；AgenticDataBench 缺 token 计量不能补造。美元为官方价格假设下重估。新 DeepSeek 汇总待有效版本+评分。 |
 | 两模型×两 harness 的可迁移性 | 历史 Gemini/Hermes；新 DeepSeek/Hermes+DSH 的 BC100×3×五策略真实执行。 | **部分完成**。新版本全量评分尚未收束；没有完成的新 DeepSeek 多模态 benchmark 泛化大表。工具图像 fixture 和 BC 文本 canvas 不等价。 |
-| 原生图像保留的摘要/窗口 baseline | 原两题 calibration 与 v2/v3 真实 prefix pilot 有失败和费用记录。新 v4 两题三臂 pilot 中5臂完成并评分，MMBC三臂实际token匹配通过；BC-v3摘要原运行及唯一补跑均连接失败。 | **六臂门未过，180臂扩展尚未运行**。网络恢复修复零付费验证中；不能以calibration用量替代失败actual请求。计划180=10题×3repeat×3方法×2benchmark，小规模固定 prefix continuation；第三个多模态 benchmark 与全轨迹配对仍缺。 |
+| 原生图像保留的摘要/窗口 baseline | v5明确授权的单例第三attempt完成，六臂pilot通过实际token/原生图gate；固定180臂队列已扩展运行，目标16。 | **部分运行**。07:39 UTC六个pilot完成，51臂因17个prefix资格阻断未跑：15个无原生图、2个未达阈值。不是51条有效比较；不替换题目。完整三benchmark与全轨迹公平对照仍缺。 |
 | 主表 avg@4、均值/std、bootstrap、paired test | 历史文本 avg@3 离线恢复与配对统计已做；用户后续要求无需新文本推理。 | **缩减后的文本统计完成**，不声称原 avg@4 范围完成。论文 Table1 整表映射、缺失处理仍有来源问题；不能用19题所有方法成功交集替代原全集。 |
-| Table5/RQ3 100题×3×多分辨率 | 老七点 aggregate 和绘图源码来源审计；旧 DeepSeek 七档新任务170终态/1800，复用1x旧终态34/300（旧 status）。 | **修复版2100条新队列已启动，尚未完成**。新SFB七档100×3含独立1x，ops1继续pending；旧renderer/wire缺图影响样本不能复用。另有Qwen旧运行失败，不能称“只缺judge”。 |
+| Table5/RQ3 100题×3×多分辨率 | 最终0/.25/.5/.7/.75/.8/1七档2100项，六档复用修复版，新.75独立300项；.125退出比较但保留费用。 | **实际运行中，未完成**。07:47 UTC五档各16活跃，另两台仍Pending；已启动最终来源固定报告与分scope评分。见[七档部署](rq3/final-seven-cloud.md)。旧renderer/wire缺图样本不能复用。 |
 | No Compression 失败原因、轨迹长度分桶、VERA弱项案例 | 14,920历史轨迹；20个 XBench/SEAL VERA 错例的离线分析与报告。 | **离线分析完成**，不把没有截断/API 证据的答错强行归因。 |
 | canvas 重建+probe，摘要/文本对照，1/.75/.5与距离 | 单轨迹 pilot：3片段相关、不等于3独立题；旧phase2：7独立题、34条件记录、106请求、37 missing usage，无完整三分辨率视觉 QA cohort。新phase3：10独立题、完整实际画布、五条件。 | **旧结果仅方法/失败 pilot，新phase3质量停派**。41次请求均已返回；视觉QA无有效配对，多个reasoning耗尽，另有明确不可读拒答，尚不能提交完整信息损失曲线。严格语义事实评分与字符串覆盖分开。年龄为历史原位置，不能证明因果衰减。新阶段最多190调用，不承诺10题全部有有效响应。 |
 | cache-aware VERA冻结画布/离散降档 | 缓存计量和 renderer 审计存在。 | **方法增强未跑**；计量存在不是该算法的实验结果。 |

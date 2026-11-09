@@ -40,7 +40,7 @@ def snapshot(root):
         if value is None:
             continue
         stamp = value.get('heartbeat_unix', value.get('at', 0))
-        controllers.append({'path': str(path), 'fresh': isinstance(stamp, (int, float)) and 0 <= now-stamp < 120,
+        controllers.append({'path': str(path), 'fresh': isinstance(stamp, (int, float)) and -5 <= time.time()-stamp < 120,
                             'status': value})
     nodes = []
     for path in (root / 'runtime/nodes').glob('*/telemetry.json'):
@@ -48,7 +48,7 @@ def snapshot(root):
         if value is None or value.get('version') != 'rq3-scale-node-telemetry-ops2':
             continue
         stamp = value.get('observed_at_unix', 0)
-        nodes.append({'path': str(path), 'fresh': 0 <= now-stamp < 120, 'telemetry': value})
+        nodes.append({'path': str(path), 'fresh': -5 <= time.time()-stamp < 120, 'telemetry': value})
     old = read(root / 'status-ops1.json')
     return {'version': 'rq3-cloud-scale-monitor-ops2', 'as_of': datetime.now(timezone.utc).isoformat(),
         'scientific_plan_size': len(plan['jobs']), 'target_nodes': 7, 'target_workers_per_node': 16,

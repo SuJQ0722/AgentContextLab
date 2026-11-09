@@ -67,3 +67,26 @@ source binding. Compare VERA and vanilla on paired question/repeat observations;
 report missing outcomes, per-repeat coverage, actual token/caching/timing data,
 and cost uncertainty. A lower score for vanilla is a hypothesis, not a condition
 for selecting attempts or reporting the arm.
+
+## Deployment observation (2026-11-09 12:31 UTC)
+
+The sixth CCI `acl-mmbc100-hermes-vanilla-v1` was submitted with 8 CPU,
+32 GiB and a 16-worker controller. UID: `99958a8ed12748e086a7b9bc45f8ac6a`.
+Its launch marker is published, so the validated bootstrap will start when the
+platform allocates the node. The current state is PROGRESSING / ready 0, with
+FailedScheduling 4300 waiting for a higher-priority job. There are zero native
+workers and zero model calls from this arm so far; target 16 is not measured
+active concurrency. Other compatible pools show the same priority blockage,
+so no speculative stop/recreate or priority escalation was performed.
+
+Independent lifecycle observer PID 343566 and private grader PID 344107 are
+running. The original five methods continue separately. The six-method report
+keeps all 1,800 planned observations, including the 300 currently missing vanilla
+observations, and never fills those missing scores with zero.
+
+Offline end-to-end rendering proof is stored in
+`outputs/preflight/mmbc-vanilla-split-proof/audit.json`: both conditions preserve
+the original head/tail image pixels; VERA renders both compressed-region images,
+whereas vanilla renders zero of those two. A separate real-PDF test confirms
+textual table facts survive while source image objects are absent. These are
+synthetic offline checks, not a claim of completed paid vanilla trajectories.

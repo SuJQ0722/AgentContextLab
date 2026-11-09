@@ -36,3 +36,11 @@
 逐调用实时统计读取独立只读 observer 的 `live-status.json`（最多60秒刷新，含 observed_at、worker_alive、calls_started/returned、in_flight_or_unknown、完整usage覆盖）；执行器 `status.json` 在每个条件结束更新，不应据其旧计数断言没有调用。observer不修改模型请求或执行状态。
 
 实际请求保留原 journal 的每页 `detail`，不擅自提升到 high。例如 q004 的3页为 low/low/high，1x请求8,499,266字节，尺寸1019×6115、1015×1523、1016×5213。三个尺度保持对应页面 detail 不变；provider仍可能自行缩放，故该实验不能独立测出纯像素分辨率的效应或provider内部图像token规律。
+
+## 2026-11-09 上传故障后的显式恢复
+
+原直连部署在第26次请求后按预定“三次连续基础设施失败”暂停，最后三次都是90秒 `WriteTimeout`，不是 AFS 故障。此前共26次 started/26次 response，5次上传失败的 usage 未知。请求未知费用保留，未重发已有26次。
+
+新增独立运维入口 `scripts/info_loss_phase3_ops.py --deployment proxy1-20261109`，只对尚未请求的条件使用已有内部代理；旧科学脚本及 manifest/hash 保持原样，完整图片字节、detail、model、输出预算、读写超时、prompt 不变。`operations/proxy1-20261109/deployment.json` 保存26次旧调用证据哈希、运维代码SHA、代理主机（不保存凭据）和明确迁移范围；每个新 HTTP 请求另存 bodySHA、字节数、客户端耗时、状态。既有 call ledger 继续负责禁止重复调用，旧 transport_error 仍是缺失观测，不能在新路径成功后补写为成功。
+
+无模型的直连/代理 HEAD 连通检查都返回404，说明端点可达，但不能证明大图上传成功；是否修复依赖下一个计划内完整画布请求的实际响应。不同传输部署的耗时不得当作同一网络条件比较。再次连续3个基础设施错误仍暂停，不自动重试失败条件。

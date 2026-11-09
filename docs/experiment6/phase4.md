@@ -1,0 +1,43 @@
+# 实验 6 phase4：配对质量修复协议
+
+新入口 `scripts/info_loss_phase4.py`，独立输出 `outputs/experiment6/paired-repair-phase4`。旧 phase3 的41次调用、拒读、8192 reasoning 耗尽及所有费用保持原样，不被此版本替换。
+
+## 已知问题与修复边界
+
+旧视觉 QA 的原始 response 没有最终答案，不能归咎解析器；密集画布/low detail 另有模型明确拒读。旧完整原文重建也截断，故仅提高 token 上限不足以分离原因。
+
+[DeepSeek 官方说明](https://api-docs.deepseek.com/guides/thinking_mode/)提供 `thinking: {type: disabled}`；[腾讯 TokenHub 指南](https://cloud.tencent.com/document/product/1823/132248)列出 exact 1017 支持开关。这是参数依据，不代表本研究的自建 SFB 路由已经验证透传。每次记录实际 reasoning token 和 reasoning content 长度，不能把请求字段当作关闭成功的证据。
+
+## 预先固定的两层 gate
+
+固定原10题、原事实/摘要（已存在且可验证者复用）、完整源历史；模型 `deepseek-v4.1-flash-1017/zijian/sfb`。全部方法统一 `max_tokens=8192`、显式禁 thinking、温度0。单并发，全部阶段共最多190次新调用，不因失败重置额度，不启动 Gemini。
+
+1. 固定第一题 q004 的五臂：完整原文、实际1x全画布、全画布0.75x、0.5x、摘要。原画布 bytes/detail 不变；只检查禁 thinking 的效果。五臂都必须 stop 且输出规定的短答案 JSON；原文及1x视觉各至少正确恢复一个已冻结事实。空输出、拒读或1x全 null不能算成功。低尺度有效 null保留为信息损失，不以低尺度准确率选择更容易的题。
+2. 若原画布 gate失败，保存全部证据后检查第二个预定义版本：相同 q004、同五臂，所有画布完整分块且 high detail。以1x画布1536行、32行重叠切分，在0.75/0.5画布用对应比例坐标切分，保持各尺度图片数量/顺序一致。所有原页面覆盖完整，逐像素重组与各自输入图完全相等，无重新渲染、无裁掉历史、无选择事实区域。这是**新图像输入布局和 detail 干预**，不能当作原生产画布策略的无影响修复。
+
+第二层仍失败则质量暂停，不扩大队列。gate使用同一题导致协议选择依赖该题：q004保留作开发验收，不能当独立验证。正式解释须优先看余下9题，并同时展示包含gate题的完整透明结果。失败gate仍计入新增费用；禁止选择更有利的一版替换旧结果。
+
+## 配对主队列
+
+通过 gate 后选定同一版本跑全部10题五臂。QA问题完全配对，评估请求无参考答案。重建只见相应表示、看不到事实答案；统一要求**最多1200词的有界事实重建**，不再承诺输出整个历史逐字转录。输出仍8192上限，超词数、length截断、拒答保留。语义judge单独看到参考事实，要求提供重建文本中的逐字证据；同模型judge偏差必须披露，不把词串覆盖称为语义召回。
+
+原始历史距离仅是观察性位置，非因果时间衰减；按分辨率、事实类型、距离报告真实分母和缺失。事实同属题目，不当独立样本；这10题来自文本历史，不是新的多模态benchmark泛化结果，也不是完整 BC100×3。
+
+每个调用有独占 started标记及原始响应，未知/失败不自动重发。请求字节数、全部图SHA/尺寸/detail、客户端HTTP耗时、原始usage与缺失分别保存；实际美元及provider内部延迟没有数据时为空。STOP/SIGTERM让在途响应自然保存后停止新请求。单题三视觉臂中两个以上无法产生有效QA则再暂停，避免把格式失败当正常研究继续消耗。
+
+## 零付费验收
+
+`python -m unittest discover -s tests -p 'test_info_loss_phase4.py' -v`：5项通过，包括实际localhost HTTP请求参数/图片字节、同调用resume不重发、缺缓存字段保留unknown、STOP和未知请求不发送、跨尺度完整像素覆盖、拒读不能通过gate、低尺度null不择优排除。
+
+准备/验收命令：
+
+```bash
+python scripts/info_loss_phase4.py --prepare
+python scripts/info_loss_phase4.py --resume --live --gate-only
+# 仅在gate成功后，沿用同一ledger与manifest：
+python scripts/info_loss_phase4.py --resume --live
+```
+
+实际状态以独立输出内 `live-status.json`、`gates/*.json`、`selected-protocol.json`、`results.json` 为准。本文不预先声称 gate成功或可读性已修复。
+
+独立只读观察器 `scripts/report_info_loss_phase4.py --watch` 生成 `holdout-analysis/{report.json,README.md,resolution-age.png,pdf}`（有真实观测才画图）。主分析排除 q004，固定其余9题；所有gate费用仍在统一usage中。6项相关测试通过，包括排除开发题但保留其成本、缺失分母上下界。

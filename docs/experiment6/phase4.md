@@ -67,3 +67,9 @@ URL准备期间有一次imgbb GET发生SSL EOF，尚未发送图像模型请求�
 实际URL版1x gate已返回HTTP200/stop、reasoning_tokens=0、4个固定事实答对3个，10张图的模型请求体降至2019字节，耗时10.04秒。这证明该条件存在真实事实恢复；尚不能由此提前声称五臂gate或九题holdout已经全部完成。
 
 后续同一已上传图的零模型下载对照显示：CDN直连ConnectError，而原代理HTTP200、1.22秒、字节SHA一致。`info_loss_phase4_url_ops3.py` 因此仅修正运维路由：imgbb API上传与模型POST直连，CDN下载使用原代理。继承ops2的每图累计attempt和2小时起点，成功上传receipt继续复用；保留所有旧失败。替换旧进程前验证2个模型started均有response、没有在途推理；旧进程只在零模型下载退避中。新增STOP在每次网络请求/退避之间检查。5项零付费测试通过，科学manifest、图片与推理预算均未更改。
+
+## 2026-11-09 09:46 UTC：五臂真实门槛通过，完整队列已运行
+
+`paired-repair-phase4-url1/gates/tiles_high.json` 已记录 `passed=true`，`selected-protocol.json` 时间09:46:53 UTC。固定q004的4个事实：text control 4/4、1x 3/4、0.75x 2/4、0.5x 1/4、summary 1/4；五臂均HTTP200、stop、有效JSON、reasoning_tokens=0。原始30张tile均经过上传后下载的字节/像素一致性校验。该开发题不进入主要九题统计，不能据此排序宣称总体优劣。
+
+程序已自动进入完整固定队列，随后真实完成text control的bounded reconstruction与semantic judge；此刻URL阶段7个模型调用全部返回、有usage，之前本地阶段7次请求中的4个unknown依然保留。运维worker PID311098、只读observer PID307184；实际动态状态以该输出根的 `live-status.json`、`results.json` 与 `holdout-analysis/report.json` 为准，不把本段瞬时计数当最终结果。观察器继续生成真实已完成条件的图表；未观测条件不填零。

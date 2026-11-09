@@ -49,3 +49,13 @@ python scripts/info_loss_phase4.py --resume --live
 首条原文QA已返回HTTP200、stop、reasoning_tokens=0（3.13秒）。随后原完整1x读取超时、0.75x上传超时，无返回usage。这不能判为视觉不可读。旧phase3曾验证代理上传，但当前核心/RQ3的SFB大图通过gateway NO_PROXY直连，不能沿用旧代理成功经验推断当前可用。
 
 新增独立 `scripts/info_loss_phase4_direct_ops.py` 仅在旧进程完全退出、所有started已有持久response后切换未来未开始请求到直连。原 payload、图像、detail、prompt、model、预算和timeout不变，原失败未知计量和190统一上限保留。运维记录绑定旧每call证据SHA，并检查结束后未变。旧hold归档到operations后才显式恢复；模型身份错误或未决请求拒绝恢复。2项零API测试验证直连移除proxy但保持body/timeout，且原失败响应被篡改会被拒绝。此运维入口不证明质量gate已经通过。
+
+## 精确图片 URL 资格阶段
+
+本机大图在代理和直连都出现上传/读取超时，已于安全边界暂停，旧phase4共7次请求：3次HTTP成功，4次usage未知。没有将这些超时当作视觉能力失败。
+
+独立入口 `scripts/info_loss_phase4_url.py`，输出 `outputs/experiment6/paired-repair-phase4-url1`。沿用已授权Hermes `_upload_imgbb` helper，模型只接收短URL而非大base64 body；图片内容、高detail、prompt、model和8192预算完全相同。每张图片上传后下载，文件SHA和decoded RGBA像素SHA必须同时相等，任一不等便在模型请求前拒绝。首张真实1019×1536 tile已实测通过（9.2秒，零模型调用）。上传/下载时延不计作模型API耗时。
+
+这是显式的新URL资格阶段，固定q004五臂再次测量，作为传输协议比较单独计量；不覆盖或择优替换旧unknown。gate成功后才自动执行固定完整队列。新manifest记录旧7次的证据SHA和剩余183次上限，整个运行持有父root独占锁；总新增研究上限仍190。旧phase3的41次是更早历史，另列成本，不能误以为此次190包括那些历史调用。
+
+主报告以 `holdout-analysis/report.json` 为准：`all_new_usage_including_failed_gates` 是URL阶段，`cumulative_usage_including_local_delivery_failures` 合并旧phase4七次与URL阶段各一次，不重复计费。q004始终从主要九题描述分析中排除。图片URL服务的模型侧下载过程不能被客户端拦截，因此只有真实事实恢复gate成功才可支持最终可读性。

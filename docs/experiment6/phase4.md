@@ -59,3 +59,5 @@ python scripts/info_loss_phase4.py --resume --live
 这是显式的新URL资格阶段，固定q004五臂再次测量，作为传输协议比较单独计量；不覆盖或择优替换旧unknown。gate成功后才自动执行固定完整队列。新manifest记录旧7次的证据SHA和剩余183次上限，整个运行持有父root独占锁；总新增研究上限仍190。旧phase3的41次是更早历史，另列成本，不能误以为此次190包括那些历史调用。
 
 主报告以 `holdout-analysis/report.json` 为准：`all_new_usage_including_failed_gates` 是URL阶段，`cumulative_usage_including_local_delivery_failures` 合并旧phase4七次与URL阶段各一次，不重复计费。q004始终从主要九题描述分析中排除。图片URL服务的模型侧下载过程不能被客户端拦截，因此只有真实事实恢复gate成功才可支持最终可读性。
+
+URL准备期间有一次imgbb GET发生SSL EOF，尚未发送图像模型请求。新增 `info_loss_phase4_url_ops.py` 只对非模型上传/下载最多尝试3次，并将成功上传URL写receipt，防止下载重试导致重复上传。模型POST保持单次发送；已有response直接复用，未知推理请求不重发。2项独立测试确认零模型GET可恢复，而模型WriteTimeout不会重试。此恢复不修改冻结URL协议或原科学入口。

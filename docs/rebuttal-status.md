@@ -5,13 +5,13 @@
 | 项目 | 当前可核实状态 | 仍缺的证据 |
 |---|---|---|
 | 实验 1：成本、缓存、延迟 | 历史 Gemini 日志重建已完成，已有方法×benchmark Markdown 大表及文本/多模态 Pareto 图；没有新增 Gemini 调用。[报告](experiment1/experiment1.md) | 历史渲染耗时缺失，API 耗时覆盖不全；美元值为标明价格假设的重估，非 TokenHub 实付。新 DeepSeek 全队列评分/有效版本汇总仍在推进。 |
-| 核心跨 harness 实验 | BC-100×3×5 策略×2 harnesses，固定 3,000 项。共享 Hermes 策略与图像传输修复版已大量实际执行；按明确授权的新 retry1 队列处理 963 项，保留旧失败和费用；10 个云 cell 已实跑并持续补位，每 cell 目标16；11月9日已将剩余Huoshan路由从1提高到16，本机停止新增；新图像压缩后请求和真实回复均已验收。[恢复与统计协议](statistics/bc100-v3-avg3-and-retry.md)。 | 当前是文本 BC 的跨 harness 实验；重试选择、路由、版本与基础设施失败必须分层，不能把重复 attempt 当新增题目。核心评分4并发、RQ3独立评分1并发、受控独立评分1并发均已部署；核心与RQ3统计watch自动更新。完整100×3覆盖前不发布完整mean±std/paired p。实际并发看实时monitor，不以提交目标代替。 |
-| 新多模态 benchmark 泛化 | 有历史 Gemini 多模态日志、真实工具/图像传输验收和少量受控 prefix 调试；**尚没有完成、可直接报告的新 DeepSeek 全量多模态泛化结果**。 | BC-v3、MMBrowseComp、AgenticDataBench 的完整新版本、配对多方法评测仍缺；BC 的文本渲染成图不等于多模态输入 benchmark。 |
+| 核心跨 harness 实验 | BC-100×3×5策略×2 harnesses的固定3,000观测：原完成2,037保留，固定retry1的963条均已终态（371 completed、487 timeout、105 failed）；10台补跑ACP均已结束。评分仍有3条缺失，不能为凑满avg3补零。[统计协议](statistics/bc100-v3-avg3-and-retry.md)。 | 这是文本BC跨harness实验，非MMBC。完成与答对分开，按原定attempt选择，保留所有费用。最新覆盖见核心评分summary。 |
+| 新多模态 benchmark 泛化 | **MMBC DeepSeek+Hermes新全轨迹队列已启动**：固定100题×3×5方法=1,500轨迹，5个CCI分别16并发；五台均已收到模型返回。69题有初始图、31题无初始图，74原图缓存并校验SHA。[冻结协议](mmbc100-deepseek-hermes.md)。 | 尚未完成；vanilla视觉压缩的具体定义待用户澄清，当前不在五臂队列。独立本机评分2并发。出现TokenHub后端数据库连接数耗尽导致的403及少量超时，失败原样保留；不得称为零错误运行。BC-v3和AgenticDataBench全量泛化仍缺。 |
 | 实验 3：摘要/窗口 + 原生图像 | v5单例第三attempt完成并评分正确，六臂pilot实际token/原生图gate通过：BC-v3最大token差1.82%、MMBC0.72%。固定180臂扩展已运行，目标16，仍记录cache/non-cache/output及未知用量。[协议](experiment3/controlled-v4.md)。 | 07:39 UTC终态57中只有6个pilot completed，另51臂因prefix不合格未运行：15个MMBC prefix原题没有原生图（45臂），2个BC prefix未达16384阈值（6臂）。保留固定cohort，不换题、不放宽gate。两benchmark小队列不等于原计划三个benchmark全量。 |
 | 实验 4：显著性/方差 | 历史文本 avg@3 离线统计与配对分析已做，无需新 Gemini；[Table 1 来源审计](paper-table1/audit.md)。 | 用户已缩减范围，不补泛化 avg@4。提交论文 Table 1 全体来源仍未完全对应，不能将成功交集或缺失补零当无偏全表统计。新核心/RQ3 须按 question 聚类、同题同 repeat 配对。 |
 | RQ3：分辨率 | 最终0/.25/.5/.7/.75/.8/1各100×3，共2100。0.7原云节点被关闭后，本机以16并发接续219待运行题；15已付费中断题独立固定恢复，与主队列共享16slots。七档云端均已运行，0.7新CCI接续，本机旧在途及恢复与云端共享16slots。[恢复说明](recovery-2026-11-09.md)。 | 新最终报告`rq3-final-seven-v3`固定替换15观测并累计费用；不增加repeat。完整覆盖前不发布完整avg3±std/显著性结论。 |
 | 实验 5：失败原因和轨迹长度 | 已从 14,920 条历史轨迹离线分析，并检查20个 VERA 失败 case，无新增模型调用。[报告](experiment5/experiment5.md) | 结论受历史 instrumentation 覆盖限制；缺少证据的失败不能硬分成 context 截断。新版本可另做补充，不替换历史分析。 |
-| 实验 6：信息损失 | 旧phase3质量停派证据保留。新phase4禁thinking已真实验证；完整像素分块与统一有界事实重建已冻结。大图base64上传超时后，imgbb URL传输已通过真实下载byte/pixel一致性检查，五臂质量门已通过并自动进入完整固定队列，开始重建和语义事实评分。[恢复说明](recovery-2026-11-09.md)。 | 质量门已通过；旧7调用+URL阶段183共190上限，开发题q004与其余9题主分析分开。尚无完成的信息损失曲线；已观察到视觉重建输出超限负例，独立QA仍可评分，失败与覆盖率分开。 |
+| 实验 6：信息损失 | 五臂URL传输质量门通过；后续因RPM429与连接超时停派，已使用独立ops4恢复未请求条件，观察到新的200/stop返回。串行、成功后20秒间隔，基础设施错误持久退避；不重发旧429/unknown。[协议](experiment6/phase4.md)。 | 旧7+URL183共190请求上限不变；开发题q004与9题主分析分开。视觉重建length等失败保留，QA与语义重建覆盖率独立，尚无完整信息损失曲线。 |
 | 可选 cache-aware VERA | 未执行冻结 canvas/离散分辨率的独立效果实验。 | 不能以已实现缓存记录代替 cache-aware 方法比较。 |
 | 代码 AST / GUI 展示 | 没有完整新数据集实验。 | 作为额外展示可另行明确数据集与公平对照；当前补充实验不包含它。 |
 

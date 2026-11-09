@@ -77,7 +77,7 @@ The renderer supports `plain`, `plain_no_header`, `highlight`, and
 layout ablation, not automatically a complete plain-screenshot baseline. Defining
 vanilla requires an explicit policy/layout intervention while preserving the
 chosen evidence, trigger, retention rules, and relevant budgets. Adding it requires
-a separately authorized frozen scope revision, not relabeling an existing method.
+a separately versioned frozen scope after its definition is clarified, not relabeling an existing method.
 
 `summarize_native` and `sliding_window_native` also exist in Hermes. They remove
 image blocks from the text compressor and restore unique original blocks to a

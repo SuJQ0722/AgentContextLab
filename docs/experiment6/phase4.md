@@ -41,3 +41,11 @@ python scripts/info_loss_phase4.py --resume --live
 实际状态以独立输出内 `live-status.json`、`gates/*.json`、`selected-protocol.json`、`results.json` 为准。本文不预先声称 gate成功或可读性已修复。
 
 独立只读观察器 `scripts/report_info_loss_phase4.py --watch` 生成 `holdout-analysis/{report.json,README.md,resolution-age.png,pdf}`（有真实观测才画图）。主分析排除 q004，固定其余9题；所有gate费用仍在统一usage中。6项相关测试通过，包括排除开发题但保留其成本、缺失分母上下界。
+
+原厂[视觉输入文档](https://api-docs.deepseek.com/guides/vision/)进一步说明：`low`会先降为512×512；一般视觉编码还会按约1300×1300像素总量缩放大图。约1015×6118的长画布存在内部降采样风险。1536行切块约1.56百万像素，因此选择该尺寸有可读性依据，仍需真实gate验证。此处是原厂规格说明，不是自建SFB网关内部处理的直接观测。
+
+## 2026-11-09 真实验收中的传输隔离
+
+首条原文QA已返回HTTP200、stop、reasoning_tokens=0（3.13秒）。随后原完整1x读取超时、0.75x上传超时，无返回usage。这不能判为视觉不可读。旧phase3曾验证代理上传，但当前核心/RQ3的SFB大图通过gateway NO_PROXY直连，不能沿用旧代理成功经验推断当前可用。
+
+新增独立 `scripts/info_loss_phase4_direct_ops.py` 仅在旧进程完全退出、所有started已有持久response后切换未来未开始请求到直连。原 payload、图像、detail、prompt、model、预算和timeout不变，原失败未知计量和190统一上限保留。运维记录绑定旧每call证据SHA，并检查结束后未变。旧hold归档到operations后才显式恢复；模型身份错误或未决请求拒绝恢复。2项零API测试验证直连移除proxy但保持body/timeout，且原失败响应被篡改会被拒绝。此运维入口不证明质量gate已经通过。

@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 from info_loss_phase3 import DEFAULT_OUT,METHODS,save
 
 def aggregate(root):
-    data=json.loads((root/'results.json').read_text());facts={p.stem:json.loads(p.read_text()) for p in (root/'facts').glob('*.json')}
+    data=json.loads((root/'results.json').read_text());
+    if (root/'quality-hold.json').exists():data['status']='quality_hold'
+    facts={p.stem:json.loads(p.read_text()) for p in (root/'facts').glob('*.json')}
     points=[]
     paired=set(data['paired_complete_cases'])
     for row in data['records']:
@@ -85,6 +87,8 @@ def live_status(root):
         'study_status':result['status'],'condition_report_updated_at':result['updated_at'],'conditions':len(result['records']),
         'calls_started':len(started),'calls_returned':len(returned),'in_flight_or_unknown':len(started)-len(returned),
         'missing_usage':usage['missing_usage'],'concurrency':running['concurrency'],'usage':usage}
+    if (root/'quality-hold.json').exists():
+        value['study_status']='quality_hold';value['quality_hold']=json.loads((root/'quality-hold.json').read_text())
     save(root/'live-status.json',value);return value
 
 def main():
@@ -94,7 +98,8 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);last=None
         while True:
             try:
-                live_status(root)
+                live=live_status(root)
+                if live['study_status']=='quality_hold':render(root);return
                 source=root/'results.json';stamp=source.stat().st_mtime_ns
                 if stamp!=last:
                     render(root);last=stamp

@@ -1,5 +1,7 @@
 # 实验6 phase3：真实完整画布的信息损失
 
+**最新状态：2026-11-09 05:53 UTC 已安全暂停为 quality_hold。41次请求全部返回，5次usage未知；7次视觉QA均无有效最终答案，不继续原190次计划。详见[质量诊断](phase3-quality-diagnostic.md)。原图、科学脚本及manifest保持不变。**
+
 2026-11-09 新启动的独立补充实验，代码 `scripts/info_loss_phase3.py`，输出 `outputs/experiment6/shared-full-canvas-phase3/`。原 phase2、无效初版 scale pilot 以及所有失败/费用保留，未覆盖历史结果或改动核心实验运行文件。
 
 **范围：10个不同 BC 问题、五条件、单并发、最多190次请求。** 模型固定 `deepseek-v4.1-flash-1017/zijian/sfb`，不调用 Gemini；8192 max output/reasoning tokens。最多每题3次事实生成+1次摘要+五条件各重建/QA/语义评分=19次。没有输出的重建不会再调用 judge。每个请求唯一标记并可恢复，未知或失败请求不自动重试。连续3个基础设施错误暂停新增请求；未知计量不补0。核心优先，进程空间拥挤时等待。

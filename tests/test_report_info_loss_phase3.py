@@ -34,6 +34,10 @@ class DescriptiveReportTests(unittest.TestCase):
             self.assertEqual(value['usage']['usage_in_flight_unknown'],1)
             self.assertIsNone(value['usage']['full_cached_input_tokens'])
             self.assertTrue(value['worker_alive'])
+            (root/'quality-hold.json').write_text('{"status":"quality_hold"}')
+            held=report.live_status(root)
+            self.assertEqual(held['study_status'],'quality_hold')
+            self.assertEqual(held['in_flight_or_unknown'],1)
     def test_age_boundaries(self):
         self.assertEqual([report.agebin(x) for x in [0,1,5,6,15,16]],['0','1-5','1-5','6-15','6-15','16+'])
 

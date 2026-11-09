@@ -41,6 +41,19 @@ def observation(job, attempt, grading):
     lineage=read(attempt/'route-lineage.json') if (attempt/'route-lineage.json').exists() else {}
     route=lineage.get('actual_route') or result.get('model')
     grade_path=grading/'sources'/namespace(root)/'jobs'/job['job_id']/'grade.json'
+    original_grade_path=grade_path;judge_selection='original_judge'
+    overlay_path=grading/'judge-retry1/selection.json'
+    if overlay_path.exists():
+        overlay=read(overlay_path)
+        if overlay.get('version')!='bc-v3-fixed-judge-retry1' or overlay.get('max_additional_requests')!=1:raise ValueError('Unknown judge overlay policy')
+        matches=[e for e in overlay['entries'] if e['source_root']==str(root) and e['job_id']==job['job_id']]
+        if len(matches)>1:raise ValueError('Duplicate judge overlay')
+        if matches:
+            e=matches[0];expected=grading/'judge-retry1/jobs'/job['job_id']/'grade.json'
+            if Path(e['original_grade_path'])!=original_grade_path or sha(original_grade_path)!=e['original_grade_sha256']:
+                raise ValueError('Original judge evidence changed')
+            if Path(e['new_grade_path'])!=expected or e['prediction_result_sha256']!=sha(result_path):raise ValueError('Judge overlay changed prediction or destination')
+            grade_path=expected;judge_selection='fixed_additional_judge_attempt_no_score_choice'
     grade=read(grade_path) if grade_path.exists() else {}
     if status=='completed':
         reason='ungraded_completed'
@@ -54,7 +67,8 @@ def observation(job, attempt, grading):
         'question_hash':hashlib.sha256(job['question'].encode()).hexdigest(),'repeat':int(job['repeat']),
         'attempt':str(attempt),'prediction_status':status,'failure_category':result.get('failure_category'),
         'score':score,'score_reason':reason,'actual_route':route,'runtime_route_version':lineage.get('runtime_route_version'),
-        'judge_model':grade.get('judge_model'),'judge_path':str(grade_path) if grade else None}
+        'judge_model':grade.get('judge_model'),'judge_path':str(grade_path) if grade else None,
+        'judge_selection':judge_selection,'original_judge_path':str(original_grade_path)}
 
 
 def analyze(rows,draws=10000,seed=20261109):
@@ -120,6 +134,7 @@ def snapshot(parent,retry,grading,output,draws=10000):
     result={'at':time.time(),'selection_ledger_sha256':sha(Path(retry)/'retry-ledger.json'),'parent_plan_sha256':sha(Path(parent)/'plan.json'),
         'resource_interpretation':'Recovered results conditionally receive a second attempt; they are not a single-attempt fixed-budget experiment. Retain first-pass separately and sum original plus retry prediction usage/wall time for cumulative resource reporting.',
         'policy':'Every listed retry replaces its original outcome regardless of relative scores. Retained original completed results are not rerun. No retry is counted as an extra repeat.',
+        'judge_retry_policy':'One explicitly authorized disconnected judgment may have a fixed additional attempt. Original request and unknown usage remain preserved; add new usage without treating unknown original cost as zero. Prediction and repeat are unchanged.',
         'missing_policy':'Unscored completed, not_started, interrupted and unresolved predictions remain missing; explicit failed/timeout with confirmed cleanup count zero as operational failures.',
         'first_pass':analyze(first,draws),'fixed_retry_selected':analyze(chosen,draws)}
     output.mkdir(parents=True,exist_ok=True);atomic(output/'statistics.json',result)
@@ -133,7 +148,7 @@ def snapshot(parent,retry,grading,output,draws=10000):
         avg=f"{row['mean_accuracy']*100:.2f} ± {row['std_across_three_repeats']*100:.2f}%" if row['avg3_ready'] else 'NA — grading/runs incomplete'
         ci=f"[{row['bootstrap95_low']*100:.2f}, {row['bootstrap95_high']*100:.2f}]%" if row['avg3_ready'] else 'NA'
         lines.append(f"| {row['harness']} | {row['method']} | {row['known_outcomes']} / {row['planned']} | {avg} | {ci} |")
-    lines+=['',result['resource_interpretation'],'',result['missing_policy'],'',result['fixed_retry_selected']['method'],'',result['fixed_retry_selected']['interpretation']]
+    lines+=['',result['resource_interpretation'],'',result['judge_retry_policy'],'',result['missing_policy'],'',result['fixed_retry_selected']['method'],'',result['fixed_retry_selected']['interpretation']]
     (output/'summary.md').write_text('\n'.join(lines)+'\n')
     return result
 

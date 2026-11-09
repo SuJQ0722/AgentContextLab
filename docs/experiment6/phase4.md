@@ -73,3 +73,5 @@ URL准备期间有一次imgbb GET发生SSL EOF，尚未发送图像模型请求�
 `paired-repair-phase4-url1/gates/tiles_high.json` 已记录 `passed=true`，`selected-protocol.json` 时间09:46:53 UTC。固定q004的4个事实：text control 4/4、1x 3/4、0.75x 2/4、0.5x 1/4、summary 1/4；五臂均HTTP200、stop、有效JSON、reasoning_tokens=0。原始30张tile均经过上传后下载的字节/像素一致性校验。该开发题不进入主要九题统计，不能据此排序宣称总体优劣。
 
 程序已自动进入完整固定队列，随后真实完成text control的bounded reconstruction与semantic judge；此刻URL阶段7个模型调用全部返回、有usage，之前本地阶段7次请求中的4个unknown依然保留。运维worker PID311098、只读observer PID307184；实际动态状态以该输出根的 `live-status.json`、`results.json` 与 `holdout-analysis/report.json` 为准，不把本段瞬时计数当最终结果。观察器继续生成真实已完成条件的图表；未观测条件不填零。
+
+后续首个1x bounded reconstruction虽HTTP200且reasoning_tokens=0，但finish=length，约2888词，末尾出现重复编码样式字符串。因此该条件重建失败/超限，保留原response，不重发、不作为有效semantic judge输入。QA门槛成功不等于重建成功；未完成重建的缺失/失败比例必须随总体分母报告，不能只统计成功文本。

@@ -28,7 +28,9 @@ class MMBCJudgeTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as d:
    root=Path(d)/'campaign';out=Path(d)/'grades';plan,cohort,answers,binding=fixture(root)
    result(root,plan['jobs'][0],'failed');result(root,plan['jobs'][1],'timeout',False);result(root,plan['jobs'][2]);directory=m.grade_dir(out,plan['jobs'][2]);m.atomic(directory/'request-started.json',{})
+   fourth=root/'jobs'/plan['jobs'][3]['job_id']/'attempts/attempt_001/result.json';m.atomic(fourth,{'job_id':plan['jobs'][3]['job_id'],'status':'not_started','slot_released':True,'unconfirmed_child_termination':[],'score':None})
    candidates,rows,info=m.inventory(root,out,plan,cohort,answers,binding)
+   self.assertEqual(rows[3]['score_reason'],'not_started_missing');self.assertIsNone(rows[3]['score'])
    self.assertEqual(rows[0]['score'],0);self.assertIsNone(rows[1]['score']);self.assertIsNone(rows[2]['score']);self.assertEqual(rows[2]['score_reason'],'judge_request_unresolved');self.assertEqual(candidates,[]);self.assertFalse(info['all_terminal'])
  def test_complete_clusters_and_missing_subgroup_are_not_filled(self):
   plan,cohort,_,_=fixture(Path('/unused'),4);rows=[]

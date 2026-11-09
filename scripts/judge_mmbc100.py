@@ -54,7 +54,8 @@ def inventory(root,out,plan,cohort,answers,binding):
  for job in plan['jobs']:
   attempt=root/'jobs'/job['job_id']/'attempts/attempt_001';rp=attempt/'result.json';directory=grade_dir(out,job);result=read(rp) if rp.exists() else {};state=result.get('status','no_terminal_result');cleanup=clean(result)
   row={'job_id':job['job_id'],'method':job['strategy'],'question_id':job['question_id'],'question_sha256':bc.sha_bytes(job['question'].encode()),'repeat':job['repeat'],'initial_images':bool(cohort[job['question_id']]['image']),'attempt':str(attempt),'prediction_status':state,'score':None,'score_reason':'prediction_missing','result_sha256':sha(rp) if rp.exists() else None}
-  if result and any(result.get(k)!=job[k] for k in ['job_id','harness','strategy','question_id','repeat','model']):raise ValueError('Result belongs to another job/model')
+  identity_fields=['job_id']+[k for k in ['harness','strategy','question_id','repeat','model'] if state!='not_started' or k in result]
+  if result and any(result.get(k)!=job[k] for k in identity_fields):raise ValueError('Result belongs to another job/model')
   if state in TERMINAL and cleanup:terminal+=1
   if state in {'failed','timeout'} and cleanup:row.update(score=0.,score_reason='confirmed_operational_failure_zero')
   elif state=='completed' and cleanup:
@@ -143,6 +144,12 @@ def report(rows,cohort,out,info,draws=10000,include_accounting=True):
   for s in g['summary']:
    mean=f"{100*s['mean']:.2f} ± {100*s['sample_std_across_three_repeats']:.2f}%" if s['complete'] else 'NA — incomplete';ci=str([round(v*100,2) for v in s['bootstrap95']]) if s['complete'] else 'NA';lines.append(f"|{name}|{s['method']}|{s['known']}/{s['planned']}|{mean}|{ci}|")
  lines+=['',stats['method'],'','Initial-image presence is fixed from the public input cohort, not inferred from eventual success or tool use. The no-initial-image subgroup may still retrieve images during the run. Accuracy confidence intervals are not equivalence tests. No USD estimate without validated gateway pricing.']
+ if include_accounting:
+  lines+=['','Known resource subtotals; parentheses count missing token fields/requests. These are not complete totals.','','|Method|Cached input|Noncache input|Output|Total|SDK seconds|Render seconds|End-to-end seconds|USD|','|---|---:|---:|---:|---:|---:|---:|---:|---|']
+  for method,resource in value['accounting']['prediction'].items():
+   fields=resource['tokens']['fields'];tokens=[f"{fields[k]['known_subtotal']} ({fields[k]['missing_count']} missing)" if resource['tokens']['observations'] else 'No calls observed' for k in ['cached_input','noncache_input','output','total']]
+   lines.append('|'+method+'|'+'|'.join(tokens)+f"|{resource['sdk_client_seconds_known']:.2f}|{resource['render_seconds_known']:.2f}|{resource['end_to_end_seconds_known']:.2f}|Unknown|")
+  lines+=['',value['accounting']['interpretation'],'Render/compression coverage flags and web cache hit/miss/unknown counts are in statistics.json. Zero subtotal with absent instrumentation is not a measured zero.']
  (out/'summary.md').write_text('\n'.join(lines)+'\n');return value
 
 def main():

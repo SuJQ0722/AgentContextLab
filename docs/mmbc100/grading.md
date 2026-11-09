@@ -24,3 +24,5 @@ python scripts/judge_mmbc100.py --watch --live --concurrency 2
 输出包括 `protocol.json`、`source-binding.json`、`status.json`、`statistics.json`、`observations.json`、`summary.md` 与每题独立请求/成绩文件。离线统计也不会发送 API。科学运行、受控 native-image baseline 和这个一般 MMBC 泛化队列是不同协议，不能互相冒充。
 
 五项零付费测试通过：固定100题的 gold/hash 隔离、操作性0及未知分数、完整三轮与子组缺失、真实 localhost HTTP 单次评分和结果SHA拒绝、未返回SDK调用及cache缺失统计。尚未启动付费评分，也不预先声称存在可用准确率。
+
+评审后补充：controller的最小 `not_started` 终态允许省略harness/method/repeat/model，但job_id必须匹配，存在的其他identity也必须匹配；仍为missing。其他状态继续要求完整identity。真实原huoshan请求的响应别名已核实：core Hermes none q001_r01的call `bc81d9e1-a34c-4b1f-bf37-8772e8962cfe`，`native/metrics/requests-responses.jsonl.gz`记录request model为huoshan/huoshan，raw stream_chunk.model为`deepseek-v4-1-flash-261017`；q002_r01与q003_r01同样，因此白名单与真实网关记录一致。

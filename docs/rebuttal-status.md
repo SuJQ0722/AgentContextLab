@@ -7,7 +7,7 @@
 | 实验 1：成本、缓存、延迟 | 历史 Gemini 日志重建已完成，已有方法×benchmark Markdown 大表及文本/多模态 Pareto 图；没有新增 Gemini 调用。[报告](experiment1/experiment1.md) | 历史渲染耗时缺失，API 耗时覆盖不全；美元值为标明价格假设的重估，非 TokenHub 实付。新 DeepSeek 全队列评分/有效版本汇总仍在推进。 |
 | 核心跨 harness 实验 | BC-100×3×5 策略×2 harnesses，固定 3,000 项。共享 Hermes 策略与图像传输修复版已大量实际执行；按明确授权的新 retry1 队列处理 963 项，保留旧失败和费用；10 个云 cell 已实跑并持续补位，每 cell 目标16，本机额外2；新图像压缩后请求和真实回复均已验收。[恢复与统计协议](statistics/bc100-v3-avg3-and-retry.md)。 | 当前是文本 BC 的跨 harness 实验；重试选择、路由、版本与基础设施失败必须分层，不能把重复 attempt 当新增题目。核心评分4并发、RQ3独立评分1并发、受控独立评分1并发均已部署；核心与RQ3统计watch自动更新。完整100×3覆盖前不发布完整mean±std/paired p。实际并发看实时monitor，不以提交目标代替。 |
 | 新多模态 benchmark 泛化 | 有历史 Gemini 多模态日志、真实工具/图像传输验收和少量受控 prefix 调试；**尚没有完成、可直接报告的新 DeepSeek 全量多模态泛化结果**。 | BC-v3、MMBrowseComp、AgenticDataBench 的完整新版本、配对多方法评测仍缺；BC 的文本渲染成图不等于多模态输入 benchmark。 |
-| 实验 3：摘要/窗口 + 原生图像 | 旧校准和 v2/v3 continuation pilot 未通过正式预算/图像 gate，未产出有效完整比较。新 v4 已实际运行两题三臂 pilot；MMBC 三臂 actual prompt 为5229/5267/5236，最大差0.72%。BC-v3摘要原attempt及独立attempt_002均因连接失败未获actual用量，当前未过六臂门，未启动第三次。5个completed均已独立评分；网络恢复修复已通过真实Hermes本地断线/有限恢复/预算越界测试，零付费；单例额外补跑等待用户明确许可。pilot4，六臂门通过后目标16；固定扩展180臂。[新协议](experiment3/controlled-v4.md) | 需两题三方法原生图一致、真实 token 匹配 gate、后续工具调用和终态评分通过，再扩固定队列。180 臂是两个 benchmark 的小队列，不是原计划三个 benchmark 全量。 |
+| 实验 3：摘要/窗口 + 原生图像 | 旧校准和 v2/v3 continuation pilot 未通过正式预算/图像 gate，未产出有效完整比较。新 v4 已实际运行两题三臂 pilot；MMBC 三臂 actual prompt 为5229/5267/5236，最大差0.72%。BC-v3摘要原attempt及独立attempt_002均因连接失败未获actual用量，前两次未过六臂门；用户已明确批准单例额外一次，v5 attempt_003已由持久ops3启动，实际gate仍待结果。5个completed均已独立评分；网络恢复修复已通过真实Hermes本地断线/有限恢复/预算越界测试，零付费；单例额外补跑已获明确许可并启动。pilot4，六臂门通过后目标16；固定扩展180臂。[新协议](experiment3/controlled-v4.md) | 需两题三方法原生图一致、真实 token 匹配 gate、后续工具调用和终态评分通过，再扩固定队列。180 臂是两个 benchmark 的小队列，不是原计划三个 benchmark 全量。 |
 | 实验 4：显著性/方差 | 历史文本 avg@3 离线统计与配对分析已做，无需新 Gemini；[Table 1 来源审计](paper-table1/audit.md)。 | 用户已缩减范围，不补泛化 avg@4。提交论文 Table 1 全体来源仍未完全对应，不能将成功交集或缺失补零当无偏全表统计。新核心/RQ3 须按 question 聚类、同题同 repeat 配对。 |
 | RQ3：分辨率 | 旧 DeepSeek 七档队列曾有 170 个新任务终态，但因旧图像送达错误暂停；历史 Table 5 来源审计已保存。[来源审计](rq3/provenance-audit.md) | 旧计数不是有效七档 100×3 结果。新的同路由SFB修复版已实际运行：100×3×7=2100，包括独立1x；目标16，资源准入下实际较低。已验证压缩后像素完整、实际provider回复与usage；ops1从旧调度器安全排空状态接续pending。[新协议](rq3/parity-v3-sfb.md)。不能混入旧无图结果。 |
 | 实验 5：失败原因和轨迹长度 | 已从 14,920 条历史轨迹离线分析，并检查20个 VERA 失败 case，无新增模型调用。[报告](experiment5/experiment5.md) | 结论受历史 instrumentation 覆盖限制；缺少证据的失败不能硬分成 context 截断。新版本可另做补充，不替换历史分析。 |
@@ -47,7 +47,7 @@
 
 信息损失phase3曾在26次已请求后因连续上传超时暂停；独立proxy运维入口已恢复仅未来未请求项，原26次请求未重发。首个新完整图请求已HTTP200并有守恒usage，但输出预算耗尽而没有最终QA，仍按缺失记录，不视为视觉QA成功。
 
-受控v5只修复transport恢复与诊断：localhost真实Hermes测试覆盖摘要断线、tool-call SSE断线后恢复、原生有限6次请求失败、actual预算越界硬停，未新增重试循环。一次失败补跑已用完，单例第三attempt须获得明确例外许可后才发起；其余核心队列不受此门影响。
+受控v5只修复transport恢复与诊断：localhost真实Hermes测试覆盖摘要断线、tool-call SSE断线后恢复、原生有限6次请求失败、actual预算越界硬停，未新增重试循环。用户已明确允许单例第三attempt，持久ops3已启动该尝试；成功通过六臂门后才能扩展180臂，不能再自动第四次。其余核心队列不受此门影响。
 
 信息损失质量停派记录：`outputs/experiment6/shared-full-canvas-phase3/quality-hold.json`。已观察到视觉QA的8192 reasoning耗尽而final为空；q017 1x重建另有完整最终回答，明确称图中文字低清而无法可靠还原。该拒答保留作可读性负面证据，不以HTTP200或像素传输验证代替有效重建，也不能断言只增加输出预算即可解决。
 

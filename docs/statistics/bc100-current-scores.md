@@ -1,6 +1,6 @@
 # BC-100 当前评分快照
 
-快照：2026-11-09T06:13:40.913335+00:00（北京时间14:13）。每组100题×3repeat＝300条。模型DeepSeek，比较DSH与Hermes。
+快照：2026-11-09T06:17:54.591382+00:00（北京时间14:17）。每组100题×3repeat＝300条。模型DeepSeek，比较DSH与Hermes。
 
 ## 固定补跑选用后的已知结果
 
@@ -8,16 +8,16 @@
 
 | Harness | 策略 | 答对/已知 | 已知部分准确率 | 覆盖/300 | 最终准确率可能范围 |
 |---|---|---:|---:|---:|---:|
-| dsh | Discard-All | 133/176 | 75.57% | 176/300 | 44.33–85.67% |
-| dsh | No Compression | 148/197 | 75.13% | 197/300 | 49.33–83.67% |
-| dsh | Sliding Window | 158/204 | 77.45% | 204/300 | 52.67–84.67% |
-| dsh | Summarization | 162/205 | 79.02% | 205/300 | 54.00–85.67% |
-| dsh | VERA / Visual | 134/185 | 72.43% | 185/300 | 44.67–83.00% |
-| hermes | Discard-All | 162/236 | 68.64% | 236/300 | 54.00–75.33% |
-| hermes | No Compression | 189/243 | 77.78% | 243/300 | 63.00–82.00% |
-| hermes | Sliding Window | 181/245 | 73.88% | 245/300 | 60.33–78.67% |
-| hermes | Summarization | 181/226 | 80.09% | 226/300 | 60.33–85.00% |
-| hermes | VERA / Visual | 151/197 | 76.65% | 197/300 | 50.33–84.67% |
+| dsh | Discard-All | 138/184 | 75.00% | 184/300 | 46.00–84.67% |
+| dsh | No Compression | 162/211 | 76.78% | 211/300 | 54.00–83.67% |
+| dsh | Sliding Window | 162/209 | 77.51% | 209/300 | 54.00–84.33% |
+| dsh | Summarization | 168/212 | 79.25% | 212/300 | 56.00–85.33% |
+| dsh | VERA / Visual | 141/192 | 73.44% | 192/300 | 47.00–83.00% |
+| hermes | Discard-All | 165/243 | 67.90% | 243/300 | 55.00–74.00% |
+| hermes | No Compression | 195/250 | 78.00% | 250/300 | 65.00–81.67% |
+| hermes | Sliding Window | 189/256 | 73.83% | 256/300 | 63.00–77.67% |
+| hermes | Summarization | 186/233 | 79.83% | 233/300 | 62.00–84.33% |
+| hermes | VERA / Visual | 155/201 | 77.11% | 201/300 | 51.67–84.67% |
 
 可能范围是假设所有未知结果分别全错/全对所得的确定性界，不是95%置信区间。补跑固定替换原失败；尚未完成的补跑变为unknown，从已知分母中移除旧失败，会机械抬高已知样本准确率。因此不能把下表首轮与上表的差异声称为恢复带来的提升，也不能把补跑当第四个repeat。费用必须累计原尝试与补跑。
 
@@ -25,15 +25,15 @@
 
 | Harness | 策略 | 答对/已知 | 全300条最终可能范围 |
 |---|---|---:|---:|
-| dsh | Discard-All | 133/285 | 44.33–49.33% |
-| dsh | No Compression | 148/276 | 49.33–57.33% |
-| dsh | Sliding Window | 158/285 | 52.67–57.67% |
-| dsh | Summarization | 162/288 | 54.00–58.00% |
-| dsh | VERA / Visual | 134/285 | 44.67–49.67% |
-| hermes | Discard-All | 161/279 | 53.67–60.67% |
-| hermes | No Compression | 189/282 | 63.00–69.00% |
-| hermes | Sliding Window | 181/280 | 60.33–67.00% |
-| hermes | Summarization | 181/280 | 60.33–67.00% |
-| hermes | VERA / Visual | 151/285 | 50.33–55.33% |
+| dsh | Discard-All | 138/291 | 46.00–49.00% |
+| dsh | No Compression | 162/290 | 54.00–57.33% |
+| dsh | Sliding Window | 162/289 | 54.00–57.67% |
+| dsh | Summarization | 168/294 | 56.00–58.00% |
+| dsh | VERA / Visual | 141/292 | 47.00–49.67% |
+| hermes | Discard-All | 164/286 | 54.67–59.33% |
+| hermes | No Compression | 195/289 | 65.00–68.67% |
+| hermes | Sliding Window | 189/290 | 63.00–66.33% |
+| hermes | Summarization | 186/287 | 62.00–66.33% |
+| hermes | VERA / Visual | 155/289 | 51.67–55.33% |
 
-来源：`outputs/grading/bc100-v3-deepseek-sfb-v1/progress-snapshot-20261109T0613/statistics.json` 与 `selected-observations.jsonl`；统计JSON SHA256：`b6ae2b5f153b4b39488d392ba712d9f74d49ef3efbe4f1b3b9b73d936cbef715`。这是时间点快照，不会随实时watch覆盖。
+来源：`outputs/grading/bc100-v3-deepseek-sfb-v1/progress-snapshot-20261109T0618/statistics.json` 与两份逐轨迹 observations；保存前逐组复核统计和逐条分数一致。统计JSON SHA256：`f183d3b9653cab0e2abbf26fdd7af4c8c5ee91ad09e2407574bc86b8a8bb7491`。这是时间点快照，不会随实时watch覆盖。

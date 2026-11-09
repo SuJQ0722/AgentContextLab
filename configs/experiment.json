@@ -74,5 +74,49 @@
     "shuffle_seed": 20261107,
     "resume_policy": "Skip terminal jobs; preserve all interrupted attempts, retry only interrupted jobs on explicit --resume. No native-session continuation claim.",
     "note": "Hermes uses DeepSeek under standing no-new-Gemini instruction unless user explicitly changes it. 3000 trajectories; two harnesses. Historical Gemini remains separate."
+  },
+  "mmbc100_campaign": {
+    "name": "mmbc100-hermes-deepseek-v1",
+    "questions": 100,
+    "repeats": 3,
+    "seed": 20261107,
+    "harnesses": [
+      "hermes"
+    ],
+    "strategies": [
+      "none",
+      "summarize",
+      "sliding_window",
+      "discard",
+      "visual"
+    ],
+    "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "concurrency_per_method": 16,
+    "max_rounds": 60,
+    "timeout_seconds": 1800,
+    "compression_threshold_tokens": 32768,
+    "context_window": 131072,
+    "max_output_tokens": 8192,
+    "cohort_selection": "First100 of all400 ordered by binary SHA256(20261107:mmbrowsecomp:original_id); no filtering by image presence or results",
+    "vanilla_visual": {
+      "status": "pending_definition",
+      "executable": false
+    },
+    "tools": [
+      "web_search",
+      "web_extract",
+      "image_search",
+      "image_crop",
+      "image_zoom_in"
+    ],
+    "web": {
+      "search_host": "10.120.4.249",
+      "search_port": 80,
+      "fetch_base_url": "http://127.0.0.1:18080",
+      "readiness_required": true
+    },
+    "resume_policy": "Pending only; skip all existing claims/attempts; no automatic paid retry",
+    "notes": "Independent new Hermes-only MMBC protocol; historical Gemini, BC, and matched-budget native-image controlled experiments remain separate. Vanilla is not authorized for dispatch until its definition is frozen."
   }
 }

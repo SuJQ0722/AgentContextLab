@@ -118,5 +118,31 @@
     },
     "resume_policy": "Pending only; skip all existing claims/attempts; no automatic paid retry",
     "notes": "Independent new Hermes-only MMBC protocol; historical Gemini, BC, and matched-budget native-image controlled experiments remain separate. Vanilla is not authorized for dispatch until its definition is frozen."
+  },
+  "mmbc_vanilla_campaign": {
+    "name": "mmbc100-hermes-vanilla-v1",
+    "root": "outputs/campaigns/mmbc100-hermes-vanilla-v1",
+    "parent_root": "outputs/campaigns/mmbc100-hermes-deepseek-v1",
+    "parent_plan_sha256": "d8c91ce30a886a1102cd82efbe73cb0a1ee9b74ad9399a802abc3be7575603d5",
+    "method_label": "vanilla_visual",
+    "harness": "hermes",
+    "engine_strategy": "visual",
+    "questions": 100,
+    "repeats": 3,
+    "planned_runs": 300,
+    "concurrency_per_cci": 16,
+    "cci_instances": 1,
+    "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "protocol": {
+      "status": "defined_and_authorized",
+      "compressed_region_images": "omitted",
+      "text_only": true,
+      "caption_generation": false,
+      "table_text": "preserve original text; disable structured extraction",
+      "initial_images_and_head_tail": "identical to VERA",
+      "image_tokens_matched": false
+    },
+    "scientific_parameters": "All other parameters inherited from parent frozen experiment.json; parent source/config/plan/results unchanged",
+    "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt"
   }
 }

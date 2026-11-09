@@ -1,0 +1,20 @@
+{
+  "version": "bc-retry1-dispatch-ops2-cap16",
+  "worker_ceiling_per_instance": 32,
+  "active_workers_per_cloud_instance": 16,
+  "local_target_workers": 0,
+  "per_route_cloud_caps": {
+    "deepseek-v4.1-flash-1017/huoshan/huoshan": 16,
+    "deepseek-v4.1-flash-1017/zijian/sfb": 16,
+    "deepseek-v4.1-flash-1017/huoshan/sfc": 0,
+    "deepseek-v4.1-flash-1017/zijian/sfc": 0
+  },
+  "per_route_local_caps": {
+    "deepseek-v4.1-flash-1017/huoshan/huoshan": 0,
+    "deepseek-v4.1-flash-1017/zijian/sfb": 0,
+    "deepseek-v4.1-flash-1017/huoshan/sfc": 0,
+    "deepseek-v4.1-flash-1017/zijian/sfc": 0
+  },
+  "reason": "Explicit user authorization: each core BC cell up to16 active trials on its fixed route; no route reassignment, no new prediction retry. Local dispatch disabled to keep total per cell16.",
+  "measurement_note": "These are trial caps, not provider RPM/TPM. Actual active trials can be below target as route-specific pending queues drain."
+}

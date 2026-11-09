@@ -1,76 +1,34 @@
-# Rebuttal work and supervision
+# Rebuttal 实验状态（2026-11-09）
 
-**2026-11-08: user approved the repaired version and requested resume/start.** Approval is recorded in `outputs/authorization/resume-v3.json`; the previous global pause marker is archived there. Legacy core/RQ3 STOP markers remain, and legacy trajectories/costs are preserved separately. New core execution uses `bc100-r3-hermes-parity-v3`; same-version terminal jobs are reusable, pending jobs can resume, unknown/interrupted requests are not automatically retried. SCO launch is authorized but currently blocked by missing login profile and unresolved cloud resource IDs. See [repair review](repair-review-v3.md) and [SCO plan](sco-review-plan.md).
+本页替换已过期的 11 月 8 日启动前状态。SCO 凭据与云资源已就绪，云端和本机核心实验已经实际运行；不能再将它们描述成“等待凭据”。执行结束不等于答对，传输验证不等于多模态 benchmark 完成。
 
-Updated 2026-11-08 (resume authorized; actual new worker activity is recorded under the new campaign, not inferred from old counts). New inference uses the exact configured DeepSeek route; no new Gemini calls, no fourth repeats, and no pinned-harness changes.
-
-| Work | Scope | Execution and evidence |
+| 项目 | 当前可核实状态 | 仍缺的证据 |
 |---|---|---|
-| Core transfer experiment | BC-100 × 3 × 5 strategies × 2 harnesses = 3,000 | Repaired native-image routing and file-tool isolation passed; approved new-version campaign has started two local visual trials, `hermes/visual/q_001_r01` and `dsh/visual/q_001_r01`, with real model request starts recorded. [New protocol](bc100-v3-campaign.md); The current machine is also running the pending-job pool toward a 32-worker cap. Cloud allocation awaits SCO credentials; consult new `monitor/status.json` for actual activity. Original 16 interrupted attempts and usage remain separate, without automatic retries. [Protocol](bc100-campaign.md). |
-| Experiment 3 | Summary + native images, window + native images, visual control | Historical-prefix budget calibration finished but failed formal gates. The original capture protocol timed out. The versioned fixed-prefix continuation pilot ended with failed readiness gates; no continuation workers are running. A frozen 180-arm small-cohort queue remains gated on six paired pilot outcomes; requested cap 16, shared process admission. [New protocol](experiment3/controlled-v3.md). This is not the original full-trajectory three-benchmark evaluation. [Status and blockers](experiment3/README.md). |
-| Existing text-table statistics | Reuse historical avg@3 records | Offline reconstruction and paired statistics completed. No extra inference. [Candidate Table 1 audit](paper-table1/audit.md); exact full submitted-table mapping remains unverified. |
-| Broad Experiment 4 expansion | Extra repeats across Table 1/2/5 | Skipped at the user's request. Earlier generic statistical drafts remain in `experiment4/` but are not the submitted Table 1. No avg@4 queue exists. |
-| Experiment 5 | Failure causes, length buckets, 20 VERA failure cases | Completed from 14,920 historical trajectories, no model calls. [Report](experiment5/experiment5.md). |
-| Experiment 6 | Real-trajectory reconstruction and fact probes | Single-trajectory pilot completed. The serial study over seven frozen, exactly matched real trajectories ended with missing/error observations and no complete cross-scale visual QA cohort; it is not running. [Phase 2](experiment6/phase2.md); [pilot failures and missing observations](experiment6/report.md). |
-| New RQ3 experiment | DeepSeek/Hermes BC-100 × 3, seven history scales | New dispatch held after confirmed missing-image evidence. Plan remains 1,800 new trials and 300 reused 1x core observations. Requested new-task concurrency 16; effective runtime concurrency is reported in status.json and remains subject to shared process admission. [Protocol](rq3/deepseek-bc100-r3.md). Latest progress is in `outputs/campaigns/rq3-deepseek-bc100-r3/status.json`. |
+| 实验 1：成本、缓存、延迟 | 历史 Gemini 日志重建已完成，已有方法×benchmark Markdown 大表及文本/多模态 Pareto 图；没有新增 Gemini 调用。[报告](experiment1/experiment1.md) | 历史渲染耗时缺失，API 耗时覆盖不全；美元值为标明价格假设的重估，非 TokenHub 实付。新 DeepSeek 全队列评分/有效版本汇总仍在推进。 |
+| 核心跨 harness 实验 | BC-100×3×5 策略×2 harnesses，固定 3,000 项。共享 Hermes 策略与图像传输修复版已大量实际执行；按明确授权的新 retry1 队列处理 963 项，保留旧失败和费用；主控已提交 10 个云 cell，每 cell 目标16，本机 canary 有真实 HTTP 成功。 | 当前是文本 BC 的跨 harness 实验；重试选择、路由、版本与基础设施失败必须分层，不能把重复 attempt 当新增题目。准确率需等待评分；实际并发看实时 monitor，不以提交目标代替。 |
+| 新多模态 benchmark 泛化 | 有历史 Gemini 多模态日志、真实工具/图像传输验收和少量受控 prefix 调试；**尚没有完成、可直接报告的新 DeepSeek 全量多模态泛化结果**。 | BC-v3、MMBrowseComp、AgenticDataBench 的完整新版本、配对多方法评测仍缺；BC 的文本渲染成图不等于多模态输入 benchmark。 |
+| 实验 3：摘要/窗口 + 原生图像 | 旧校准和 v2/v3 continuation pilot 未通过正式预算/图像 gate，未产出有效完整比较。新 v4 独立实现已通过 localhost 真工具循环验收，正在准备两题配对 pilot；固定扩展范围为 180 臂、最多4并发。[旧失败证据](experiment3/README.md) | 需两题三方法原生图一致、真实 token 匹配 gate、后续工具调用和终态评分通过，再扩固定队列。180 臂是两个 benchmark 的小队列，不是原计划三个 benchmark 全量。 |
+| 实验 4：显著性/方差 | 历史文本 avg@3 离线统计与配对分析已做，无需新 Gemini；[Table 1 来源审计](paper-table1/audit.md)。 | 用户已缩减范围，不补泛化 avg@4。提交论文 Table 1 全体来源仍未完全对应，不能将成功交集或缺失补零当无偏全表统计。新核心/RQ3 须按 question 聚类、同题同 repeat 配对。 |
+| RQ3：分辨率 | 旧 DeepSeek 七档队列曾有 170 个新任务终态，但因旧图像送达错误暂停；历史 Table 5 来源审计已保存。[来源审计](rq3/provenance-audit.md) | 旧计数不是有效七档 100×3 结果。新的修复版和评分由独立队列推进；须单独冻结新来源，不能直接把旧无图压缩结果混入。 |
+| 实验 5：失败原因和轨迹长度 | 已从 14,920 条历史轨迹离线分析，并检查20个 VERA 失败 case，无新增模型调用。[报告](experiment5/experiment5.md) | 结论受历史 instrumentation 覆盖限制；缺少证据的失败不能硬分成 context 截断。新版本可另做补充，不替换历史分析。 |
+| 实验 6：信息损失 | 旧单轨迹 pilot 和七题 phase2 已结束，但无完整跨分辨率视觉 QA 配对 cohort。新 phase3 冻结10个不同问题的真实完整 renderer 输入/画布，已启动单并发、最多190次 DeepSeek 请求。[新协议](experiment6/phase3.md) | 新结果尚在生成。比较完整原文、摘要、完整画布1/.75/.5；事实覆盖、语义重建与 QA 分开。距离仅观察关联，不声称因果时间衰减。 |
+| 可选 cache-aware VERA | 未执行冻结 canvas/离散分辨率的独立效果实验。 | 不能以已实现缓存记录代替 cache-aware 方法比较。 |
+| 代码 AST / GUI 展示 | 没有完整新数据集实验。 | 作为额外展示可另行明确数据集与公平对照；当前补充实验不包含它。 |
 
-## Process limits and ownership
+## 当前统计边界
 
-The main agent aggregates status. Separate subagents supervise core BC, native
-image controls, and information-loss/RQ3 work. Durable local observers continue
-when a conversational subagent is idle; this does not promise unsolicited future
-chat messages.
+原核心 monitor 的一个可复查快照（2026-11-09 04:37:58 UTC）记录 2,996 个 attempts：completed 2,037、timeout 572、failed 368、not_started 6、unfinished 13。这是旧主队列该时刻的执行状态，不是正确数，也不包含随后 retry1 的最终进展。最新状态以 `outputs/campaigns/` 对应版本的 `monitor/status.json`、retry manifest、judge 状态为准。
 
-The earlier single-machine allocation required fewer than 128 concurrent visible OS processes. The new requested multi-instance allocation (32 workers per method instance) is prepared separately in [the review plan](sco-review-plan.md); its aggregate exceeds 128 and has user authorization; cloud resource discovery remains blocked on credentials. Process counts
-are not model-request counts or thread counts. `scripts/monitor_rebuttal.py`
-records a 30-second census in `outputs/rebuttal-monitor/status.json` and
-`history.jsonl`, with totals for this `/proc` namespace and experiment process
-trees. Admission reserves capacity below the ceiling: RQ3 <100 live processes,
-native-prefix captures <104. The later user-requested targets are RQ3 16 and controlled baseline 16; shared admission must account for worker descendants and reserve core capacity. These targets do not authorize exceeding 128 processes.
-The old core used a separate 16-worker pool; it is now paused. Unrelated external processes can
-change the observed total, so counts are explicitly timestamped measurements.
+原实验3 v2 状态为 `blocked: pilot_realized_budget_or_native_gate_failed`；原 RQ3 的 `status.json` 时间停留在 11 月 7 日。这些旧状态必须保留作历史证据，不能当成新队列实时状态。主代理统一维护新队列启动/停止和评分，子任务不修改冻结核心文件。
 
-Observers:
+缓存、non-cache、output 使用 raw provider usage；缺字段为 unknown，不能使用 SDK 默认0补齐。API 客户端耗时、provider 内部延迟、渲染耗时、端到端时间分别记账。没有适用路由价目时，不报“实付美元”。模型缓存与 Serper/Jina 工具缓存分别统计。所有失败、预热、校准、重试费用保留。
 
-- Core: `scripts/watch_bc_health.py` and `scripts/monitor_bc_campaign.py`.
-- Native controls: `scripts/monitor_experiment3.py` if present; canonical status
-  is `outputs/experiment3/status.json`.
-- Information loss: `scripts/info_loss_report.py` (exits after pilot completion).
-- RQ3: `scripts/report_rq3_campaign.py` (does not call models).
+## 必须保留的负面与来源证据
 
-The core's standby `scripts/resume_bc_plan.py` uses the same exclusive
-coordinator lock. It cannot dispatch alongside the original coordinator. It
-preserves every terminal attempt and the 16,384-token DSH post-compression
-budget, classifies structurally proven budget-limit failures separately from
-unexpected infrastructure failures, and respects STOP/explicit pauses. The
-original result files and policy implementations are unchanged.
+- 匹配 BC-EN 59.8% 的旧候选 cohort 经过四个压缩方法成功筛选，并将41条缺失 No Compression 记录补零；审计复现该计算，但不认可缺失=答错。总体69.0%来源尚未完全匹配。
+- 旧 RQ3 绘图有 +0.9 个百分点平移，并将0.125标作0.1；原始未平移点和来源独立保存，不能由聚合点虚构 CI。
+- 旧 Text-only Rendering 表格路径会丢单元格；新完整原文 control 不冒称复现了该历史 ablation。
+- 旧 Hermes 压缩图像被错误转为 caption 的轨迹保留，[wire 审计](vision-routing-audit.md)明确区分实际有压缩、无压缩、未观测范围。修复版验收不使旧失败自动有效。
+- 七题信息损失 phase2 的106次请求中37次 usage 缺失。其字符串命中率不是 semantic key-fact recall，视觉 QA 缺失不能当成零准确率或拿不同分母比较。
 
-## Findings that must survive into the rebuttal
-
-1. The archived cohort matching BC-EN 59.8% was selected on the success of four
-   compression methods and imputed 41 absent No Compression records as zero.
-   The audit reproduces the legacy calculation but does not endorse missing=wrong.
-   Overall 69.0% has not been matched to its submitted source.
-2. One RQ3 plotting script shifted raw accuracy by +0.9 percentage points and
-   relabeled 0.125x as 0.1x. [Unshifted evidence and provenance](rq3/provenance-audit.md)
-   preserve the originals and distinguish aggregate points from per-run statistics.
-3. Current Text-only Rendering does not automatically caption every image.
-   A reproduced table path drops parsed cell values. [Appendix audit](experiment3/text-only-audit.md).
-4. Small snippets being readable does not establish full-canvas usability:
-   the original four-canvas reconstruction exhausted its output budget without
-   final text, and its QA request timed out. These failures remain in the pilot.
-5. Three repeats are not three independent question sets. New RQ3 statistics
-   will use question-cluster bootstrap and paired differences, not a claim of
-   300 independent questions. Non-significance is not proof of equivalence.
-
-All usage totals are known subtotals when any provider counters are missing.
-Cached/non-cache/output accounting, client API time, renderer time, and wall time
-remain distinct; actual TokenHub USD cost is unknown without an applicable tariff.
-
-The controlled-baseline token hypothesis and accounting rules are specified in [token-comparison.md](experiment3/token-comparison.md). Lower cached and non-cache token counts are to be tested independently; they are not selection criteria.
-
-## Native-image validation hold
-
-The old Hermes visual worker misclassified the configured route and replaced rendered canvases with failed caption text. See [wire-routing audit](vision-routing-audit.md) and [acceptance criteria](visual-evidence-acceptance.md). Rendering success is insufficient. Corrected workers and probes have separate versions; no frozen scientific plan is silently changed. Do not resume old visual queues or count their affected results as native-image evidence.
-
-Current repair/validation outcome: [visual-integrity/status.md](visual-integrity/status.md). Corrected image delivery passed local full-stack tests, but bounded real-model full-canvas reading remains unpassed. No bulk resumption is claimed.
+详细盘点与有效样本定义见[完整审计](rebuttal-inventory-2026-11-09.md)。

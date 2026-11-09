@@ -1,0 +1,26 @@
+import json,sys,tempfile,unittest
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
+import report_info_loss_phase3 as report
+
+class DescriptiveReportTests(unittest.TestCase):
+    def test_missing_qa_and_semantic_are_not_zero_filled(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);(root/'facts').mkdir()
+            (root/'facts/q_001.json').write_text(json.dumps([{'id':'f1','type':'number','position':0,'distance_rounds':20},{'id':'f2','type':'url','position':2,'distance_rounds':0}]))
+            (root/'results.json').write_text(json.dumps({'status':'running','updated_at':'now','paired_complete_cases':[],
+                'records':[{'case':'q_001','method':'canvas_1','qa_by_fact':{'f1':1,'f2':0},'semantic_judge':None},
+                  {'case':'q_001','method':'canvas_0.5','qa_by_fact':None,'semantic_judge':{'f1':{'supported':False},'f2':{'supported':True}}}]}))
+            data=report.aggregate(root)
+            full=next(g for g in data['groups'] if g['method']=='canvas_1' and g['distance_bucket']=='all')
+            half=next(g for g in data['groups'] if g['method']=='canvas_0.5' and g['distance_bucket']=='all')
+            self.assertEqual(full['qa_exact']['accuracy'],.5)
+            self.assertIsNone(full['semantic_supported']['accuracy'])
+            self.assertIsNone(half['qa_exact']['accuracy'])
+            self.assertEqual(half['semantic_supported']['accuracy'],.5)
+            self.assertEqual(data['paired_question_ids'],[])
+            self.assertEqual(full['source_questions'],1)
+    def test_age_boundaries(self):
+        self.assertEqual([report.agebin(x) for x in [0,1,5,6,15,16]],['0','1-5','1-5','6-15','6-15','16+'])
+
+if __name__=='__main__':unittest.main()

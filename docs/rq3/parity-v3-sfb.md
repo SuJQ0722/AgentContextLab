@@ -34,7 +34,7 @@ Repeat labels are not proof of independent random seeds. A non-significant test 
 
 ## Operational dispatch handoff
 
-The original controller entered its exception-drain path with `BlockingIOError` after ten launches. It stopped new dispatch and preserved its active native workers. The error type alone does not identify the failing filesystem/lock operation; the original traceback is retained when its drain finishes.
+The original controller entered its exception-drain path with `BlockingIOError` after ten launches. It stopped new dispatch and preserved its active native workers. After the original controller drained, its traceback identified `experiment_admission_v4.py:87`, `fcntl.flock(lock, LOCK_EX)`, raising EAGAIN. This matches the acquisition-only bounded wait in the operational repair; no process-spawn retry was introduced.
 
 `run_rq3_parity_ops1.py` is a separate operational entry, not a scientific source replacement. It verifies the frozen plan and a fresh, live, exact-identity acknowledgment that the original controller has permanently stopped dispatch in exception drain. Its `cutover-ops1.json` preserves that evidence. A separate exclusive lease prevents two operational dispatchers; original live trials are adopted for capacity accounting, all root slots still share the limit of 16, and all existing claims remain ineligible for launch. The unchanged original supervisors continue owning their native processes.
 

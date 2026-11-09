@@ -75,3 +75,13 @@ URL准备期间有一次imgbb GET发生SSL EOF，尚未发送图像模型请求�
 程序已自动进入完整固定队列，随后真实完成text control的bounded reconstruction与semantic judge；此刻URL阶段7个模型调用全部返回、有usage，之前本地阶段7次请求中的4个unknown依然保留。运维worker PID311098、只读observer PID307184；实际动态状态以该输出根的 `live-status.json`、`results.json` 与 `holdout-analysis/report.json` 为准，不把本段瞬时计数当最终结果。观察器继续生成真实已完成条件的图表；未观测条件不填零。
 
 后续首个1x bounded reconstruction虽HTTP200且reasoning_tokens=0，但finish=length，约2888词，末尾出现重复编码样式字符串。因此该条件重建失败/超限，保留原response，不重发、不作为有效semantic judge输入。QA门槛成功不等于重建成功；未完成重建的缺失/失败比例必须随总体分母报告，不能只统计成功文本。
+
+## 2026-11-09 限流后继续未发送条目（ops4）
+
+10:12旧队列在26次请求后暂停：q009 summary QA/重建均为HTTP429、`ModelAccountRpmRateLimitExceeded`，原始响应明确“Please try again later”；随后q017 text QA为ConnectTimeout。这是连续基础设施失败暂停，不是画布QA门槛重新失败。原429、unknown、length和成功结果全部保留。
+
+独立 `scripts/info_loss_phase4_rate_ops4.py` 只继续从未started的条目，**不重发上述429或unknown，也不替换负面结果**。原图、提示、模型、8192预算及190累计上限未变。每个成功响应后至少间隔20秒；新基础设施错误后持久退避60/120/240/480/900秒，若Retry-After更长则遵守。达到12次新增基础设施失败或24小时运维期限将明确hold；科学质量门槛、身份异常和STOP仍立即生效。每条新响应保留SHA和冷却原因，旧26条调用SHA在退出时验证未改。
+
+启动前RQ3 `.7` 最新8条轨迹的小样本、近10分钟23个已结束记录中，12个无error、11个APIConnectionError，未观测RateLimitError；这是局部样本，不能当全fleet错误率或保证网关稳定。新增负载为单路，并采用冷却控制。26项相关零模型测试通过，包含429不重发、Retry-After、第三次基础设施错误不重复POST、质量hold不被解除、length的semantic recall仍为unknown。报告额外单列重建finish/failure计数与semantic judge覆盖率，QA曲线不再隐含重建均成功。
+
+运维输出 `paired-repair-phase4-url1/operations/neverstarted-rate-ops4/`：deployment、rate-state、prior-quality-hold、rq3-recent-sample及launch证据。恢复worker PID323642，观察器PID323663；这些是启动时标识，实际进展以实时ledger为准。

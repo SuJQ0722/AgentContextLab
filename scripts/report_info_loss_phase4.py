@@ -3,7 +3,7 @@
 import argparse,json,time
 from pathlib import Path
 from datetime import datetime,timezone
-from collections import defaultdict
+from collections import defaultdict,Counter
 from info_loss_phase4 import DEFAULT,METHODS,read,save
 from info_loss_report import summarize_usage
 
@@ -14,7 +14,7 @@ def aggregate(root):
  total_facts=sum(len(facts.get(q,[])) for q in cohort);tables=[];points=[]
  for method in METHODS:
   selected=[r for r in rows if r['method']==method];known=[r for r in selected if r.get('qa_exact_correct') is not None];correct=sum(r['qa_exact_correct'] for r in known);den=sum(r['fact_count'] for r in known)
-  tables.append({'method':method,'qa_known_cases':len(known),'qa_correct':correct,'qa_observed_facts':den,'shared_fact_denominator_available_so_far':total_facts,'missing_bounds':[correct/total_facts,(correct+total_facts-den)/total_facts] if total_facts else None,'paired_complete_cases':len(pairs)})
+  tables.append({'method':method,'qa_known_cases':len(known),'qa_correct':correct,'qa_observed_facts':den,'shared_fact_denominator_available_so_far':total_facts,'missing_bounds':[correct/total_facts,(correct+total_facts-den)/total_facts] if total_facts else None,'paired_complete_cases':len(pairs),'condition_records':len(selected),'qa_missing_cases_observed':len(selected)-len(known),'qa_status_counts':dict(Counter(r.get('qa_status','unknown') for r in selected)),'reconstruction_finish_counts':dict(Counter(r.get('reconstruction_finish_reason') or r.get('reconstruction_status','unknown') for r in selected)),'reconstruction_complete_cases':sum(r.get('reconstruction_status')=='completed' and r.get('reconstruction_finish_reason')=='stop' for r in selected),'reconstruction_over_1200_words_cases':sum(bool(r.get('reconstruction_over_1200_words')) for r in selected),'semantic_judge_observed_cases':sum(r.get('semantic_judge') is not None for r in selected),'semantic_judge_missing_cases':sum(r.get('semantic_judge') is None for r in selected)})
  for r in rows:
   for f in facts.get(r['case'],[]):points.append({'case':r['case'],'method':r['method'],'fact_id':f['id'],'fact_type':f['type'],'distance_rounds':f['distance_rounds'],'qa_exact':(r.get('qa_by_fact') or {}).get(f['id']),'semantic_supported':(r.get('semantic_judge') or {}).get(f['id'],{}).get('supported')})
  started=list((root/'calls').glob('*/started.json'));responses=[read(p) for p in (root/'calls').glob('*/response.json')];usage=summarize_usage(responses,len(started))
@@ -28,6 +28,8 @@ def render(root):
  d=aggregate(root);out=root/'holdout-analysis';out.mkdir(exist_ok=True);save(out/'report.json',d)
  lines=['# Phase4: nine held-out source questions','',f"Status: {d['status']}; protocol: {(d['protocol'] or {}).get('stage')}; complete five-arm QA pairs: {len(d['paired_complete_question_ids'])}/9.",'','q004 is the fixed protocol-development gate and is excluded from this primary descriptive table. All of its calls remain in the cost ledger and full campaign report.','','|Method|QA cases|Correct / observed facts|Shared facts currently available|Missing-response accuracy bounds|','|---|---:|---:|---:|---|']
  for r in d['table']:lines.append(f"|{r['method']}|{r['qa_known_cases']}/9|{r['qa_correct']}/{r['qa_observed_facts']}|{r['shared_fact_denominator_available_so_far']}|{r['missing_bounds']}|")
+ lines+=['','QA and reconstruction coverage are separate; truncated/failed reconstruction has semantic recall unknown, never zero-filled.','','|Method|Condition records|Reconstruction stop|Reconstruction finish / failure counts|Semantic judge observed / missing|','|---|---:|---:|---|---:|']
+ for r in d['table']:lines.append(f"|{r['method']}|{r['condition_records']}|{r['reconstruction_complete_cases']}|{r['reconstruction_finish_counts']}|{r['semantic_judge_observed_cases']} / {r['semantic_judge_missing_cases']}|")
  lines+=['']+['- '+x for x in d['limitations']]
  if any(p['qa_exact'] is not None for p in d['points']):
   import matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt

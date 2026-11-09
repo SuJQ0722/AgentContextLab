@@ -11,8 +11,9 @@ class HoldoutTests(unittest.TestCase):
    for q in ['q004','q009']:report.save(r/'facts'/f'{q}.json',facts)
    rows=[{'case':q,'method':m,'fact_count':1,'qa_exact_correct':1,'qa_by_fact':{'f1':1}} for q in ['q004','q009'] for m in report.METHODS]
    rows[-1]['qa_exact_correct']=None;rows[-1]['qa_by_fact']=None
+   rows[-2].update(reconstruction_status='completed',reconstruction_finish_reason='length',semantic_judge=None)
    report.save(r/'results.json',{'status':'running','records':rows})
    report.save(r/'calls/gate/started.json',{});report.save(r/'calls/gate/response.json',{'usage':{'prompt_tokens':10,'completion_tokens':2,'total_tokens':12}})
    result=report.aggregate(r);self.assertEqual(result['primary_cohort'],['q009']);self.assertEqual(len(result['points']),5);self.assertEqual(result['paired_complete_question_ids'],[])
-   self.assertEqual(result['table'][-1]['missing_bounds'],[0,1]);self.assertEqual(result['all_new_usage_including_failed_gates']['calls_started'],1)
+   self.assertEqual(result['table'][-2]['reconstruction_finish_counts'],{'length':1});self.assertEqual(result['table'][-2]['semantic_judge_missing_cases'],1);self.assertIsNone(result['points'][-2]['semantic_supported']);self.assertEqual(result['table'][-1]['missing_bounds'],[0,1]);self.assertEqual(result['all_new_usage_including_failed_gates']['calls_started'],1)
 if __name__=='__main__':unittest.main()

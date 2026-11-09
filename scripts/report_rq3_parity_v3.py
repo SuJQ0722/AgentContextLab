@@ -13,6 +13,7 @@ from judge_bc_v3_completed import atomic, read, sha
 from run_rq3_parity_v3 import DEFAULT_ROOT, SCALES, MODEL, label
 from lab import ROOT
 GRADING=ROOT/'outputs/grading/rq3-parity-v3-deepseek-sfb-v1'
+RECOVERY=ROOT/'outputs/campaigns/rq3-deepseek-bc100-r3-parity-v3-pre-native-recovery1'
 
 
 def jsonlines(path):
@@ -80,15 +81,39 @@ def analyze(rows,draws=10000,seed=20261109):
     return {'summary':summary,'per_repeat':per_repeat,'paired_tests':paired,'draws':draws,'random_seed':seed}
 
 
-def snapshot(root,grading,output,draws=10000):
+def recovery_selection(root,recovery):
+    path=recovery/'recovery-authorization.json'
+    if not path.exists():return {},None
+    auth=read(path)
+    if auth.get('version')!='rq3-pre-native-reservation-recovery1' or auth.get('max_recovery_native_launches')!=1 or len(auth.get('entries',[]))!=1:
+        raise ValueError('Invalid fixed pre-native recovery authorization')
+    if Path(auth['parent_root']).resolve()!=root or Path(auth['recovery_root']).resolve()!=recovery:
+        raise ValueError('Recovery source root differs')
+    if auth['parent_plan_sha256']!=sha(root/'plan.json') or auth['recovery_plan_sha256']!=sha(recovery/'plan.json'):
+        raise ValueError('Recovery plan changed')
+    if sha(root/'cohort.jsonl')!=sha(recovery/'cohort.jsonl'):raise ValueError('Recovery cohort differs')
+    entry=auth['entries'][0];jid=entry['job_id']
+    if jid!='hermes/scale_0800/q_085_r03':raise ValueError('Unapproved RQ3 recovery job')
+    old=root/'jobs'/jid/'attempts/attempt_001';new=recovery/'jobs'/jid/'attempts/attempt_001'
+    if Path(entry['parent_attempt']).resolve()!=old or Path(entry['retry_attempt']).resolve()!=new:raise ValueError('Recovery attempt path differs')
+    return {jid:(new,Path(auth['grading_root']).resolve())},{'authorization_sha256':sha(path),'selection':auth['selection'],
+        'native_never_started_proof_available':(recovery/'never-started-proof.json').exists(),'job_id':jid,'recovery_root':str(recovery)}
+
+
+def snapshot(root,grading,output,draws=10000,recovery=RECOVERY):
     plan=read(root/'plan.json')
     if plan['definition'].get('version')!='rq3-hermes-parity-v3-sfb' or plan['definition']['model']!=MODEL:raise ValueError('Wrong RQ3 generation or route')
     if sha(root/'cohort.jsonl')!=plan['definition']['cohort_sha256']:raise ValueError('RQ3 cohort changed')
-    rows=[]
+    selected,selection_metadata=recovery_selection(root,recovery.resolve());rows=[];first=[]
     for job in plan['jobs']:
-        attempt=root/'jobs'/job['job_id']/'attempts/attempt_001';row=observation(job,attempt,grading)
-        row.update(scale=job['scale']);row.update(exposure(attempt));rows.append(row)
-    report={'at':time.time(),'plan_sha256':sha(root/'plan.json'),'model':MODEL,'planned_runs':2100,
+        original=root/'jobs'/job['job_id']/'attempts/attempt_001'
+        before=observation(job,original,grading);before.update(scale=job['scale']);before.update(exposure(original));first.append(before)
+        if job['job_id'] in selected:
+            attempt,judge=selected[job['job_id']];row=observation(job,attempt,judge)
+            row.update(scale=job['scale']);row.update(exposure(attempt));row['selection']='fixed_pre_native_recovery_no_score_choice'
+        else:row=dict(before,selection='original_attempt')
+        rows.append(row)
+    report={'at':time.time(),'plan_sha256':sha(root/'plan.json'),'model':MODEL,'planned_runs':2100,'pre_native_recovery_selection':selection_metadata,'first_pass':analyze(first,draws),
         'zero_semantics':'0x removes only far-history canvases; recent five-round canvases and retained head/tail evidence remain.',
         'inference_policy':'All 100 x 3 outcomes at both scales are required for paired inference. Resample 100 question clusters with repeats averaged within each question; sample std is across three repeat accuracies. Six two-sided paired sign-flip comparisons against fresh 1x, Holm only after all six ready.',
         'missing_policy':'Confirmed failed/timeouts count zero operational success. Incomplete/unknown/not-started/ungraded stay missing, with bounds. Exposed-only subgroups are descriptive, not randomized comparisons.',
@@ -96,6 +121,7 @@ def snapshot(root,grading,output,draws=10000):
         **analyze(rows,draws)}
     output.mkdir(parents=True,exist_ok=True);atomic(output/'statistics.json',report)
     for name in ('summary','per_repeat','paired_tests'):write_csv(output/(name+'.csv'),report[name])
+    write_csv(output/'first-pass-summary.csv',report['first_pass']['summary'])
     (output/'observations.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in rows))
     lines=['# RQ3: repaired native vision, fresh SFB runs','',report['zero_semantics'],'',
         '| Far-history scale | Known / 300 | Mean ± sample std | 95% bootstrap CI | Observed compression / instrumented |',
@@ -104,7 +130,7 @@ def snapshot(root,grading,output,draws=10000):
         mean=f"{100*r['mean_accuracy']:.2f} ± {100*r['std_across_three_repeats']:.2f}%" if r['avg3_ready'] else 'NA — incomplete'
         ci=f"[{100*r['bootstrap95_low']:.2f}, {100*r['bootstrap95_high']:.2f}]%" if r['avg3_ready'] else 'NA'
         lines.append(f"| {r['scale']:g}x | {r['known_outcomes']} / 300 | {mean} | {ci} | {r['compression_observed']} / {r['exposure_instrumented']} |")
-    lines+=['',report['inference_policy'],'',report['missing_policy'],'',report['limitations']]
+    lines+=['','Pre-native recovery: '+(json.dumps(selection_metadata) if selection_metadata else 'None authorized.'),'',report['inference_policy'],'',report['missing_policy'],'',report['limitations']]
     (output/'summary.md').write_text('\n'.join(lines)+'\n');return report
 
 

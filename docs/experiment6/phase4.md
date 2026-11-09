@@ -65,3 +65,5 @@ URL准备期间有一次imgbb GET发生SSL EOF，尚未发送图像模型请求�
 进一步零模型诊断确认同图代理上传SSL EOF（3.05秒），直连imgbb上传HTTP200（2.13秒）。采用独立 `info_loss_phase4_url_ops2.py` 后，imgbb上传和下载都走直连；冻结科学入口不改。零模型维护的每图attempt与下次重试时间持久保存，最多12次、2小时，基础退避30/60/120秒，若服务端Retry-After更长则遵守更长时间，超过期限暂停而非提前重试。已有成功上传receipt跨维护部署复用；模型POST依然单次发送。3项测试覆盖跨进程累计次数、Retry-After不被120秒缩短、模型POST不进入恢复循环。
 
 实际URL版1x gate已返回HTTP200/stop、reasoning_tokens=0、4个固定事实答对3个，10张图的模型请求体降至2019字节，耗时10.04秒。这证明该条件存在真实事实恢复；尚不能由此提前声称五臂gate或九题holdout已经全部完成。
+
+后续同一已上传图的零模型下载对照显示：CDN直连ConnectError，而原代理HTTP200、1.22秒、字节SHA一致。`info_loss_phase4_url_ops3.py` 因此仅修正运维路由：imgbb API上传与模型POST直连，CDN下载使用原代理。继承ops2的每图累计attempt和2小时起点，成功上传receipt继续复用；保留所有旧失败。替换旧进程前验证2个模型started均有response、没有在途推理；旧进程只在零模型下载退避中。新增STOP在每次网络请求/退避之间检查。5项零付费测试通过，科学manifest、图片与推理预算均未更改。

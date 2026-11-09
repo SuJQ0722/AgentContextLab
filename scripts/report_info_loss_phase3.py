@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Read-only descriptive resolution/age analysis; no model or worker operations."""
-import argparse,fcntl,json,time
+import argparse,fcntl,json,os,time
+from datetime import datetime,timezone
+from info_loss_report import summarize_usage
 from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
@@ -72,6 +74,19 @@ def render(root):
     lines+=['']+['- '+x for x in result['limitations']]
     if result['points']:lines+=['','![Resolution and original age](resolution-age.png)']
     (out/'README.md').write_text('\n'.join(lines)+'\n');print(json.dumps({'status':result['study_status'],'fact_observations':len(result['points']),'output':str(out)}))
+def live_status(root):
+    started=list((root/'calls').glob('*/started.json'));returned=list((root/'calls').glob('*/response.json'))
+    rows=[json.loads(p.read_text()) for p in returned];usage=summarize_usage(rows,len(started))
+    running=json.loads((root/'running.json').read_text());pid=running['pid']
+    try:os.kill(pid,0);alive=True
+    except ProcessLookupError:alive=False
+    result=json.loads((root/'results.json').read_text())
+    value={'observed_at':datetime.now(timezone.utc).isoformat(),'worker_pid':pid,'worker_alive':alive,
+        'study_status':result['status'],'condition_report_updated_at':result['updated_at'],'conditions':len(result['records']),
+        'calls_started':len(started),'calls_returned':len(returned),'in_flight_or_unknown':len(started)-len(returned),
+        'missing_usage':usage['missing_usage'],'concurrency':running['concurrency'],'usage':usage}
+    save(root/'live-status.json',value);return value
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--output',type=Path,default=DEFAULT_OUT);p.add_argument('--watch',action='store_true');a=p.parse_args();root=a.output
     if not a.watch:render(root);return
@@ -79,6 +94,7 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);last=None
         while True:
             try:
+                live_status(root)
                 source=root/'results.json';stamp=source.stat().st_mtime_ns
                 if stamp!=last:
                     render(root);last=stamp

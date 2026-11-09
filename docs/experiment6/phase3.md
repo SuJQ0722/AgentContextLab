@@ -32,3 +32,5 @@
 离线验证：`python -m unittest discover -s tests -p 'test_info_loss_phase3.py' -v`，5项通过，覆盖完整源/全部图保留、尺度变化、来源不匹配拒绝、答案泄漏拒绝、语义评分证据验证、共同分母及缺失区间。实际 q004 原画布已用图像工具查看，非空且有真实工具文本/URL；这只验证可见性，不宣称语义无损。
 
 只读绘图器 `scripts/report_info_loss_phase3.py --watch` 每60秒检查增量结果，出现真实观测后生成 `analysis/resolution-age.png`、PDF、事实类型/原距离明细与 Markdown；study completed/hold 后最后更新并退出。没有观测时不画虚构曲线。缺失分母与相关事实限制标在图及表中。
+
+逐调用实时统计读取独立只读 observer 的 `live-status.json`（最多60秒刷新，含 observed_at、worker_alive、calls_started/returned、in_flight_or_unknown、完整usage覆盖）；执行器 `status.json` 在每个条件结束更新，不应据其旧计数断言没有调用。observer不修改模型请求或执行状态。

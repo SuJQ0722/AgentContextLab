@@ -237,5 +237,17 @@
     "deployment_status": "prepared_not_launched",
     "historical_campaigns_modified": false,
     "new_paid_attempts_started": 0
+  },
+  "mmbc_transport_engineering_v3": {
+    "config": "configs/experiment.mmbc-hosted-v3.json",
+    "worker": "scripts/hermes_mmbc_hosted_worker_v3.py",
+    "image_transport": "verified-imgbb-url-v1",
+    "max_images": 10,
+    "scope": "MMBC new independent attempts only",
+    "deployment_status": "real_transport_diagnostic_passed_full_evaluation_not_launched",
+    "diagnostic_model_calls": 3,
+    "diagnostic_results": "outputs/preflight/visual-transport-engineering-v2",
+    "historical_campaigns_modified": false,
+    "cache_pixel_identity_required": true
   }
 }

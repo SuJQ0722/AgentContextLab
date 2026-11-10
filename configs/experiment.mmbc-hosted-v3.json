@@ -1,0 +1,187 @@
+{
+  "bc100": {
+    "concurrency": 1,
+    "fetch_max_output_chars": 15000,
+    "max_rounds": 60,
+    "search_max_results": 5,
+    "source": "../hermes-agent/Browsecomp_eval/data/browsecomp_subset_200/questions_100.jsonl",
+    "strategies": [
+      "summarize",
+      "visual_native"
+    ],
+    "timeout_seconds": 1800
+  },
+  "bc100_campaign": {
+    "adapter_only": true,
+    "max_rounds": 60,
+    "models": {
+      "hermes": "deepseek-v4.1-flash-1017/huoshan/huoshan"
+    },
+    "name": "mmbc-hosted-runtime-v3",
+    "note": "Legacy native worker configuration adapter; scientific scope comes exclusively from mmbc100_campaign and its plan",
+    "strategies": [
+      "none",
+      "summarize",
+      "sliding_window",
+      "discard",
+      "visual"
+    ],
+    "timeout_seconds": 1800
+  },
+  "bounded_transport_encoding": "bounded-canvas-lossless-webp-v1",
+  "bounded_visual_protocol": "bounded-multimodal-pages-v1",
+  "campaign_version": "mmbc-hosted-runtime-v3",
+  "comparison": [
+    {
+      "harness": "hermes",
+      "model": "gemini-3.5-flash-thinking",
+      "source": "historical"
+    },
+    {
+      "harness": "dsh",
+      "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+      "source": "new"
+    }
+  ],
+  "context_window": 131072,
+  "execution_version": "hermes-parity-v3",
+  "image_transport": "verified-imgbb-url-v1",
+  "input_modalities": [
+    "text",
+    "image"
+  ],
+  "max_output_tokens": 8192,
+  "mmbc100_campaign": {
+    "cohort_selection": "First100 of all400 ordered by binary SHA256(20261107:mmbrowsecomp:original_id); no filtering by image presence or results",
+    "compression_threshold_tokens": 32768,
+    "concurrency_per_method": 16,
+    "context_window": 131072,
+    "harnesses": [
+      "hermes"
+    ],
+    "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "max_output_tokens": 8192,
+    "max_rounds": 60,
+    "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "name": "mmbc100-hermes-deepseek-v1",
+    "notes": "Independent new Hermes-only MMBC protocol; historical Gemini, BC, and matched-budget native-image controlled experiments remain separate. Vanilla is not authorized for dispatch until its definition is frozen.",
+    "questions": 100,
+    "repeats": 3,
+    "resume_policy": "Pending only; skip all existing claims/attempts; no automatic paid retry",
+    "seed": 20261107,
+    "strategies": [
+      "none",
+      "summarize",
+      "sliding_window",
+      "discard",
+      "visual"
+    ],
+    "timeout_seconds": 1800,
+    "tools": [
+      "web_search",
+      "web_extract",
+      "image_search",
+      "image_crop",
+      "image_zoom_in"
+    ],
+    "vanilla_visual": {
+      "executable": false,
+      "status": "pending_definition"
+    },
+    "web": {
+      "fetch_base_url": "http://127.0.0.1:18080",
+      "readiness_required": true,
+      "search_host": "10.120.4.249",
+      "search_port": 80
+    }
+  },
+  "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+  "notes": "Exact route discovered through TokenHub /models on 2026-11-07. Text, red/blue image probes and tool round trip passed; configured context/output limits remain experimental limits, not verified provider capacity.",
+  "pilot": {
+    "compression_trigger_tokens": 32768,
+    "concurrency": 1,
+    "max_rounds": 60,
+    "post_compression_budget_tokens": 16384,
+    "questions_per_dataset": 10,
+    "repeats": 1,
+    "seed": 20261107
+  },
+  "review_approved": true,
+  "shared_policy": {
+    "post_compression_budget_enforcement": "Hermes native behavior; no DSH-only local-meter hard cap. Matched-budget native-image baselines use a separate protocol.",
+    "strategy_configs": {
+      "discard": {
+        "keep_rounds": 0
+      },
+      "sliding_window": {
+        "window_size": 5
+      },
+      "summarize": {
+        "protect_first_n": 3,
+        "protect_last_n": 20,
+        "summary_target_ratio": 0.2
+      },
+      "visual": {
+        "font_size": 16,
+        "history_max_image_height": 2048,
+        "history_scale": 0.75,
+        "image_width": 1024,
+        "keep_rounds": 1,
+        "max_image_height": 2048,
+        "recent_rounds": 5,
+        "text_only": false
+      }
+    },
+    "trigger_source": "latest provider prompt usage, including cached input",
+    "version": "hermes-shared-context-v1"
+  },
+  "source_experiment_sha256": "53585204a1d95af44c9f25fceee0ab6cee13facadcfa512bc6212e0f2c97cdf2",
+  "source_review_config_sha256": "5aac494b42a0d2ff9f20f9e67d4809910a95b48f7271a4dd05dc3d9f15bbe88e",
+  "visual_renderer": {
+    "font_size": 16,
+    "history_scale": 0.75,
+    "layout": "highlight",
+    "notes": "New bounded pages and pixel-identical WebP retry; original first-pass results unchanged."
+  },
+  "web": {
+    "fetch_base_url": "http://127.0.0.1:18080",
+    "notes": "Review candidate: SHA-pinned text Reader replica on each instance. Remote 10.13.64.17 unavailable in Nov8 checks. Must pass real fetch checks before user-approved dispatch.",
+    "preferred_fetch_base_url": "http://10.120.7.221:8080",
+    "search_host": "10.120.4.249",
+    "search_port": 80,
+    "tools": [
+      "web_search",
+      "web_extract",
+      "image_search",
+      "image_crop",
+      "image_zoom_in"
+    ]
+  },
+  "bounded_request_protocol": "bounded-multimodal-recent-ten-v1",
+  "bounded_max_images": 10,
+  "bounded_image_retention": "last_10_in_message_order",
+  "bounded_benchmark": "mmbc100",
+  "image_retention_reporting": {
+    "definition": "Keep only the final ten image_url occurrences in messages/content order at final HTTP boundary, including native images and rendered canvases together.",
+    "text_preserved": true,
+    "native_bytes_of_retained_images_unchanged": true,
+    "rendered_pages_not_merged_or_rescaled": true,
+    "record_before_and_after_image_positions_and_sha256": true,
+    "original_all_evidence_protocol_changed": true,
+    "request_body_limit_bytes": 8388608,
+    "deployment_status": "prepared_not_launched",
+    "paid_calls": 0
+  },
+  "source_parent_config_path": "outputs/campaigns/mmbc-vera-bounded-retry-v1/experiment.json",
+  "source_parent_config_sha256": "4c34ed6b38bc48172267df8cdcadc6d48715e3f6dc9c678c0f31f13c18a64ba2",
+  "transport_runtime_version": "visual-transport-runtime-v2",
+  "transport_runtime_policy": {
+    "connect_seconds": 10.0,
+    "write_seconds": 45.0,
+    "read_seconds": 120.0,
+    "pool_seconds": 10.0,
+    "stream_seconds": 300.0,
+    "max_failed_sends": 2
+  },
+  "transport_runtime_note": "Explicit hosted image engineering candidate; retained bytes verified via upload/download before inference. No claim of provider retrieval or benchmark improvement without actual response."
+}

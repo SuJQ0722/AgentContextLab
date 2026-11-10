@@ -265,5 +265,23 @@
     "historical_results_modified": false,
     "controlled_reporting": "Visual recovery only; not valid matched three-arm comparison against old text arms",
     "reporting": "Separate old observations and new failure-conditioned attempts; preserve all costs; mixed protocol overlay is not a clean single-protocol avg3"
+  },
+  "visual_hosted_transport_v4": {
+    "root": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v4",
+    "image_transport": "verified-imgbb-url-v2",
+    "hosted_runtime_version": "verified-hosted-images-v4",
+    "planned_runs": 1553,
+    "cci_count": 13,
+    "workers_per_cci": 16,
+    "global_concurrency_cap": null,
+    "selection": "All pending and confirmed failed/timeout from the drained predecessor; retain all completed regardless of answers",
+    "predecessor_results_preserved": true,
+    "upload_max_attempts_per_image_session": 2,
+    "download_proxy_attempts": 3,
+    "download_direct_fallback_attempts": 1,
+    "max_images": 10,
+    "model_request_retry_policy": "unchanged frozen visual-transport-runtime-v2; no automatic task replays",
+    "preflight": "actual search/fetch plus uncached byte/pixel-identical hosted download; DSH also unauthenticated GET and guarded POST",
+    "controlled_reporting": "Visual recovery only, not a matched comparison with historical text arms"
   }
 }

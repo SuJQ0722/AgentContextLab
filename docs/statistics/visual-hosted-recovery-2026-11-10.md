@@ -33,3 +33,33 @@ All old and new costs must remain separate and available. Combining old complete
 Validation: 814 root tests passed; 32 focused hosted tests passed; all 13 representative native commands passed dry-run without model calls. The continuous local grader uses four workers and separates judge usage from prediction usage.
 
 Artifacts: `outputs/campaigns/visual-hosted-failure-retry-v1/inventory.json`, per-cell plans and controller statuses, `outputs/cloud-runtime/visual-hosted-failure-retry-v1/release-summary.json`, and `outputs/grading/visual-hosted-failure-retry-v1`.
+
+## Transport-v4 operational recovery
+
+The first launch exposed intermittent hosted-image verification connections, permanent failed-verification markers, an inline-only 8 MiB check before URL substitution, and controlled uploads inheriting inference-only route validation. Dispatch was stopped and every native child drained; 30 newly completed trajectories were retained without consulting answers. All predecessor attempts and costs remain preserved.
+
+The successor has 1,553 attempts, with one independently isolated 16-worker CCI per cell. Core cells were released at 18:13:45 UTC; remaining cells at 18:14:12 UTC (2026-11-11 02:14 Beijing). Actual model activity must be read from current wire/usage records, not inferred from container status.
+
+| Cell | Successor attempts | CCI |
+|---|---:|---|
+| bc_hermes | 81 | acl-vhost-v4-bc-hermes |
+| bc_dsh | 107 | acl-vhost-v4-bc-dsh |
+| rq3_scale_0000 | 99 | acl-vhost-v4-rq3-scale-0000 |
+| rq3_scale_0250 | 104 | acl-vhost-v4-rq3-scale-0250 |
+| rq3_scale_0500 | 122 | acl-vhost-v4-rq3-scale-0500 |
+| rq3_scale_0700 | 128 | acl-vhost-v4-rq3-scale-0700 |
+| rq3_scale_0750 | 127 | acl-vhost-v4-rq3-scale-0750 |
+| rq3_scale_0800 | 129 | acl-vhost-v4-rq3-scale-0800 |
+| rq3_scale_1000 | 109 | acl-vhost-v4-rq3-scale-1000 |
+| mmbc_vera | 242 | acl-vhost-v4-mmbc-vera |
+| mmbc_vanilla | 276 | acl-vhost-v4-mmbc-vanilla |
+| controlled_bc | 15 | acl-vhost-v4-controlled-bc |
+| controlled_mmbc | 14 | acl-vhost-v4-controlled-mmbc |
+
+New image delivery reuses existing receipts, allows up to two upload attempts per session, retries transient download errors three times through the configured proxy and once directly, and requires identical bytes and pixels. The last ten images are retained. Only the final hosted request has the 8 MiB body limit; canvas dimensions and identity checks remain enforced before hosting. Inference task retries are not hidden in this transport policy.
+
+Every CCI performs actual search/fetch and uncached hosted-image validation before dispatch. DSH additionally validates unauthenticated GET and guarded POST with Unicode content against the gateway. The old DSH TypeError had no cause details and its precise cause remains unproven; v2 adds safe cause codes and has passed actual SDK/local-server integration and gateway preflight. Its first paid responses still need runtime verification.
+
+Validation: 860 root tests passed; all 13 successor native dry-runs passed. Source closure includes local recursive imports. New graded observations live in `outputs/grading/visual-hosted-transport-v4`, prediction plans in `outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v4`, and instance receipts in `outputs/cloud-runtime/visual-hosted-transport-v4`.
+
+Initial estimate from configured queue size and task deadlines: about 9–12 hours after release for predictions and grading (roughly 11:15–14:15 Beijing on November 11), subject to actual throughput and successful network/transport validation. This is an estimate, not a measured completion deadline.

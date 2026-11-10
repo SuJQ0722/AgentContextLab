@@ -144,5 +144,37 @@
     },
     "scientific_parameters": "All other parameters inherited from parent frozen experiment.json; parent source/config/plan/results unchanged",
     "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt"
+  },
+  "bounded_visual_repair_v1": {
+    "protocol": "bounded-multimodal-pages-v1",
+    "status": "diagnostic_only_not_full_campaign_resumed",
+    "worker": "scripts/hermes_bounded_mmbc_worker_v1.py",
+    "font_size": 16,
+    "dpi": 72,
+    "image_width": 1024,
+    "max_image_height": 2048,
+    "history_max_image_height": 2048,
+    "history_scale": 0.75,
+    "recent_scale": 1.0,
+    "detail": "high",
+    "pre_enlarge_before_downsample": false,
+    "vertical_merge": false,
+    "max_request_bytes": 8388608,
+    "max_images_per_request": 32,
+    "limit_basis": "Engineering guards, not verified provider limits; preserve native bytes and fail without dropping evidence.",
+    "reading_gate": "outputs/preflight/bounded-visual-reading-gate-v1",
+    "new_output_namespace_required": true,
+    "old_campaign_results_unchanged": true,
+    "lossless_transport": {
+      "version": "bounded-canvas-lossless-webp-v1",
+      "codec": "WebP",
+      "lossless": true,
+      "quality": 80,
+      "method": 4,
+      "exact": true,
+      "pixel_identity_verified": true,
+      "production_enabled": false,
+      "reason": "Small PNG/WebP pair both readable; one real10page request completed with2/3 reading checks. One prior WebP timeout retains unknown usage. Full trajectory reliability and new controlled token-budget matching remain unvalidated."
+    }
   }
 }

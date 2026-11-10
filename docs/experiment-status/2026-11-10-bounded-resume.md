@@ -74,3 +74,9 @@ BC 冻结实现 338 文件、RQ3 319 文件、MMBC 318 文件逐一 SHA-256 核�
 - 调度：`outputs/cloud-runtime/bc-priority-ops-v1/status.json`；CCI 生命周期：`outputs/cloud-runtime/{bc-bounded-retry-v1,rq3-bounded-failure-retry-v1}/lifecycle/status.json`。
 - 受控：`outputs/experiment3/controlled-native-bounded-v1/status.json` 与 `jobs/browsecomp_v3/q_001_r01/visual/compression-control.json`。
 - 信息损失：`outputs/experiment6/bounded-window-five-arm-v2/{report.json,report.md,completion-audit.json}`。
+
+## 快照之后的运行验证
+
+BC 两个 harness 均持续保持16 active，控制器没有本地派发错误。Hermes 至少6条轨迹在第一次压缩后获得完整模型回复；DSH 的 q021/q025/q028 已将实际最终 wire 的图像 SHA、请求 ID 与 HTTP200完整回复及 raw usage 逐一绑定。DSH 这三次含8–10张独立小图，最长边不超过2033，均为high detail，缓存/非缓存/输出计数守恒。成功证明分页路径能工作，不表示连接错误全部消失。DSH q018/q019 的失败请求仍保留。证据：`outputs/preflight/bc-dsh-bounded-audit-v1/post-compression-success.json`。
+
+受控校准的独立单次参数诊断已结束：在保持全部原生图、文本、工具和模型不变的前提下，调整了输出上限、tool choice 与 thinking；该请求上传阶段发生 WriteTimeout，客户端耗时300.241秒，未收到HTTP状态或usage。因此不能认定参数调整成功，也不能将失败归因为画布；当时尚未渲染。诊断费用/usage保留未知，没有自动重试。单独的原始请求代理路径诊断用于排查上传故障，其结果以对应独立诊断目录为准；不会改写已冻结受控结果。

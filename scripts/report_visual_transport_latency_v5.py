@@ -31,10 +31,20 @@ def blank():return {'values':collections.defaultdict(list),'request_ids':set(),'
 
 def cell_report(cell):
  issues=[];attempts=[];byroute=collections.defaultdict(blank);phase_files=0;render_missing=0;renders=[];sdk=[];sdk_missing=0
- for attempt in sorted((cell/'jobs').glob('**/attempts/attempt_*')):
+ plan=read(cell/'plan.json',issues)if(cell/'plan.json').exists()else{}
+ if 'jobs'in plan:
+  attempt_paths=[p for job in plan['jobs'] for p in (cell/'jobs'/job['job_id']/'attempts').glob('attempt_*')]
+ else:
+  attempt_paths=(cell/'jobs').glob('**/attempts/attempt_*')
+ for attempt in sorted(attempt_paths):
   if not attempt.is_dir():continue
   result=read(attempt/'result.json',issues)if(attempt/'result.json').exists()else{}
-  record={'attempt':str(attempt),'status':result.get('status','unfinished'),'end_to_end_seconds':result.get('end_to_end_seconds'),'native_end_to_end_seconds':result.get('native_end_to_end_seconds'),'queue_wait_before_dispatch_seconds':None,'dispatch_to_worker_start_seconds':None}
+  record={'attempt':str(attempt),'status':result.get('status','unfinished'),'end_to_end_seconds':result.get('end_to_end_seconds'),'native_end_to_end_seconds':result.get('native_end_to_end_seconds'),'queue_wait_before_dispatch_seconds':None,'dispatch_to_worker_start_seconds':None,'worker_initialization_to_first_model_attempt_seconds':None}
+  worker_start=None;first_model_attempt=None
+  if (attempt/'worker-started.json').exists():
+   worker=read(attempt/'worker-started.json',issues)
+   try:worker_start=datetime.fromisoformat(worker['started_at']).timestamp()
+   except (KeyError,ValueError,TypeError):pass
   if (attempt/'controller-dispatched.json').exists()and(attempt/'worker-started.json').exists():
    dispatch=read(attempt/'controller-dispatched.json',issues);worker=read(attempt/'worker-started.json',issues)
    try:
@@ -42,7 +52,11 @@ def cell_report(cell):
     if numeric(value):record['dispatch_to_worker_start_seconds']=value
    except (KeyError,ValueError,TypeError):pass
   attempts.append(record)
-  metrics={p.parent for p in attempt.glob('**/metrics/*.jsonl')}
+  metrics=set()
+  if (attempt/'native/metrics').is_dir():metrics.add(attempt/'native/metrics')
+  if (attempt/'native/workspace/metrics').is_dir():metrics.add(attempt/'native/workspace/metrics')
+  for native in (attempt/'native/visual_native').glob('*'):
+   if (native/'workspace/metrics').is_dir():metrics.add(native/'workspace/metrics')
   render_values=[];sdk_files=0
   for directory in sorted(metrics):
    if (directory/'render.jsonl').exists():render_values.extend(r.get('render_seconds')for r in rows(directory/'render.jsonl',issues))
@@ -59,6 +73,8 @@ def cell_report(cell):
     phase_files+=1;request_routes={};request_info=collections.defaultdict(dict)
     events=list(rows(ledger,issues))
     for r in events:
+     if r.get('event') in ('request_started','final_inline_request') and numeric(r.get('at_unix')):
+      at=r['at_unix'];first_model_attempt=at if first_model_attempt is None else min(first_model_attempt,at)
      rid=r.get('request_id')or r.get('attempt_id');route=r.get('route')or r.get('actual_model')
      if rid and route:request_routes[rid]=route
     for r in events:
@@ -91,6 +107,7 @@ def cell_report(cell):
   if not sdk_files:sdk_missing+=1
   if not render_values:render_missing+=1
   renders.extend(render_values)
+  if numeric(worker_start) and numeric(first_model_attempt) and numeric(first_model_attempt-worker_start):record['worker_initialization_to_first_model_attempt_seconds']=first_model_attempt-worker_start
   record['render_metric_records']=len(render_values);record['render_known_subtotal_seconds']=sum(x for x in render_values if numeric(x))if any(numeric(x)for x in render_values)else None
  routes={}
  for route,g in sorted(byroute.items()):
@@ -98,6 +115,7 @@ def cell_report(cell):
   routes[route]={'http_request_ids':len(g['request_ids']),'attempts_with_events':len(g['attempts']),'status_events':dict(g['status_codes']),'event_counts':dict(g['event_counts']),'client_metrics':{key:summary(g['values'][key])for key in fields},'provider_internal_latency_seconds':None,'http_request_details':list(g['request_details'].values())}
  return {'cell':cell.name,'attempts':len(attempts),'terminal_states':dict(collections.Counter(x['status']for x in attempts)),
   'queue_wait_before_dispatch':summary([x['queue_wait_before_dispatch_seconds']for x in attempts]),'dispatch_to_worker_start':summary([x['dispatch_to_worker_start_seconds']for x in attempts]),'trial_end_to_end':summary([x['end_to_end_seconds']for x in attempts]),'native_end_to_end':summary([x['native_end_to_end_seconds']for x in attempts]),
+  'worker_initialization_to_first_model_attempt':summary([x['worker_initialization_to_first_model_attempt_seconds']for x in attempts]),
   'trial_end_to_end_by_status':{status:summary([x['end_to_end_seconds']for x in attempts if x['status']==status])for status in sorted({x['status']for x in attempts})},
   'native_render':{**summary(renders),'attempts_without_render_records':render_missing},'sdk_client_logged_duration':{**summary(sdk),'attempts_without_sdk_logs':sdk_missing},'transport_ledgers_present':phase_files,
   'provider_internal_latency_seconds':None,'per_actual_route':routes,'attempt_details':attempts,'issues':issues}
@@ -112,13 +130,13 @@ def diagnostic():
 def report(root):
  root=Path(root);cells=[cell_report(p)for p in sorted((root/'cells').iterdir())if(p/'plan.json').exists()]if(root/'cells').exists()else[]
  return {'version':'visual-inline-client-latency-report-v5','at':time.time(),'root':str(root),'read_only':True,'model_calls':0,'population_scope':{'selection':'V5 conditional retry population: prior execution failures/timeouts or not-yet-started trials only; all prior completed trials retained without rerun.','representative_of_full_100x3_cohort':False,'directly_comparable_to_old_text_baseline_mean':False,'cross_version_pooling':False,'measurement_scope':'New-version retried trials only; this is not an all-method, full-cohort latency rerun.'},
-  'definitions':{'non_additivity':'Render, compression, SDK and E2E durations can overlap or contain one another; do not sum them as independent latency components.','queue_wait_before_dispatch':'Missing: no explicit queue-enqueue timestamp. Worker startup from dispatch is reported separately and is not queue wait.','route_request_identity':'Grouped by attempt path + ledger + actual route + HTTP request_id. Multiple route attempts for one sdk_request_id remain separate.','trial_end_to_end':'Measured trial runtime, includes worker overhead; unfinished trials remain missing.','request_upload':'Client send-request-body phase duration when instrumented; not inferred from headers.','time_to_request_body_sent':'DSH undici request:bodySent elapsed from HTTP-attempt start, includes connection/setup; kept separate from Python body-only phase.','bytes_offered_to_transport_elapsed':'Generator exhaustion; not socket-upload completion proof and not counted as upload latency.','time_to_response_headers':'Client elapsed from HTTP attempt start; includes upload and network.','response_stream':'Client header-to-stream-completion duration or explicit instrumented stream duration.','quota_backoff_wait':'Measured client wait; never attributed to provider inference latency.','native_render':'Native render events; absent instrumentation stays missing.','provider_internal_latency':'Unmeasured; always null.','known_subtotal':'Partial sum of observed values; not a complete total when instrumentation is absent.','per_actual_route':'Only explicit actual route instrumentation; missing route is not guessed from initial config.'},'cells':cells,'separate_nonbenchmark_diagnostic':diagnostic()}
+  'definitions':{'non_additivity':'Render, compression, SDK and E2E durations can overlap or contain one another; do not sum them as independent latency components.','queue_wait_before_dispatch':'Missing: no explicit queue-enqueue timestamp. Worker startup from dispatch is reported separately and is not queue wait.','route_request_identity':'Grouped by attempt path + ledger + actual route + HTTP request_id. Multiple route attempts for one sdk_request_id remain separate.','trial_end_to_end':'Measured trial runtime, includes worker overhead; unfinished trials remain missing.','worker_initialization_to_first_model_attempt':'Worker-start timestamp to first explicit model transport attempt; includes dependency/AFS initialization and setup, not API latency. Missing when no model attempt timestamp exists.','request_upload':'Client send-request-body phase duration when instrumented; not inferred from headers.','time_to_request_body_sent':'DSH undici request:bodySent elapsed from HTTP-attempt start, includes connection/setup; kept separate from Python body-only phase.','bytes_offered_to_transport_elapsed':'Generator exhaustion; not socket-upload completion proof and not counted as upload latency.','time_to_response_headers':'Client elapsed from HTTP attempt start; includes upload and network.','response_stream':'Client header-to-stream-completion duration or explicit instrumented stream duration.','quota_backoff_wait':'Measured client wait; never attributed to provider inference latency.','native_render':'Native render events; absent instrumentation stays missing.','provider_internal_latency':'Unmeasured; always null.','known_subtotal':'Partial sum of observed values; not a complete total when instrumentation is absent.','per_actual_route':'Only explicit actual route instrumentation; missing route is not guessed from initial config.'},'cells':cells,'separate_nonbenchmark_diagnostic':diagnostic()}
 
 def markdown(value):
- lines=['# Client latency — inline recovery','','All timings are client measurements in seconds. Missing instrumentation is shown as `missing`; provider inference latency is unmeasured. Render/compression/SDK/E2E measurements may overlap and must not be summed as independent components. Queue wait before dispatch is uninstrumented and separate from measured API quota backoff. V5 covers only previously failed or unstarted trials; old completed trials were not rerun. These conditional-sample means do not represent the complete 100×3 cohort and cannot be directly compared with historical text-baseline means. Old and new versions are not pooled.','','| Cell | Attempts | Completed / failed / unfinished | Trial mean | Trial p95 | Queue wait | Worker startup | Render observed subtotal | Transport ledgers |','|---|---:|---|---:|---:|---:|---:|---:|---:|']
+ lines=['# Client latency — inline recovery','','All timings are client measurements in seconds. Missing instrumentation is shown as `missing`; provider inference latency is unmeasured. Render/compression/SDK/E2E measurements may overlap and must not be summed as independent components. Queue wait before dispatch is uninstrumented and separate from measured API quota backoff. Worker initialization to the first model attempt includes dependency loading and AFS waits; it is separate from dispatch setup and API time. V5 covers only previously failed or unstarted trials; old completed trials were not rerun. These conditional-sample means do not represent the complete 100×3 cohort and cannot be directly compared with historical text-baseline means. Old and new versions are not pooled.','','| Cell | Attempts | Completed / failed / unfinished | Trial mean | Trial p95 | Queue wait | Dispatch to worker | Worker init to first model | Render observed subtotal | Transport ledgers |','|---|---:|---|---:|---:|---:|---:|---:|---:|---:|']
  def fmt(x):return f'{x:.3f}'if numeric(x)else'missing'
  for c in value['cells']:
-  s=c['terminal_states'];lines.append(f"| {c['cell']} | {c['attempts']} | {s.get('completed',0)} / {s.get('failed',0)} / {s.get('unfinished',0)} | {fmt(c['trial_end_to_end']['mean_seconds'])} | {fmt(c['trial_end_to_end']['p95_seconds'])} | {fmt(c['queue_wait_before_dispatch']['mean_seconds'])} | {fmt(c['dispatch_to_worker_start']['mean_seconds'])} | {fmt(c['native_render']['known_subtotal_seconds'])} | {c['transport_ledgers_present']} |")
+  s=c['terminal_states'];lines.append(f"| {c['cell']} | {c['attempts']} | {s.get('completed',0)} / {s.get('failed',0)} / {s.get('unfinished',0)} | {fmt(c['trial_end_to_end']['mean_seconds'])} | {fmt(c['trial_end_to_end']['p95_seconds'])} | {fmt(c['queue_wait_before_dispatch']['mean_seconds'])} | {fmt(c['dispatch_to_worker_start']['mean_seconds'])} | {fmt(c['worker_initialization_to_first_model_attempt']['mean_seconds'])} | {fmt(c['native_render']['known_subtotal_seconds'])} | {c['transport_ledgers_present']} |")
  lines+=['','| Cell / actual route | Upload mean | Headers mean | Stream mean | 429 wait observed subtotal |','|---|---:|---:|---:|---:|']
  for c in value['cells']:
   for route,r in c['per_actual_route'].items():

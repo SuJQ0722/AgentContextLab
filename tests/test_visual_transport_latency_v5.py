@@ -36,4 +36,16 @@ class LatencyTests(unittest.TestCase):
    self.assertEqual(routes['shared_route_cycle_wait']['client_metrics']['quota_backoff_wait']['mean_seconds'],60.5)
  def test_negative_or_unmeasured_is_not_zero(self):
   out=report.summary([None,-1,float('nan')]);self.assertEqual(out['missing_count'],3);self.assertIsNone(out['mean_seconds']);self.assertIsNone(out['known_subtotal_seconds'])
+ def test_worker_cold_initialization_is_separate_from_dispatch_and_api(self):
+  with tempfile.TemporaryDirectory()as d:
+   cell=Path(d);a=cell/'jobs/h/visual/q/attempts/attempt_001'
+   save(a/'controller-dispatched.json',{'at':100})
+   save(a/'worker-started.json',{'started_at':'1970-01-01T00:01:45+00:00'})
+   lines(a/'native/metrics/transport-phases-v3.jsonl',[{'event':'request_started','request_id':'a','route':'A','at_unix':405},{'event':'request_started','request_id':'b','route':'B','at_unix':410},{'event':'response_headers','request_id':'a','route':'A','elapsed_seconds':2}])
+   out=report.cell_report(cell)
+   self.assertEqual(out['dispatch_to_worker_start']['mean_seconds'],5)
+   self.assertEqual(out['worker_initialization_to_first_model_attempt']['mean_seconds'],300)
+   self.assertEqual(out['per_actual_route']['A']['client_metrics']['time_to_response_headers']['mean_seconds'],2)
+   lines(a/'native/metrics/transport-phases-v3.jsonl',[])
+   out=report.cell_report(cell);self.assertIsNone(out['worker_initialization_to_first_model_attempt']['mean_seconds'])
 if __name__=='__main__':unittest.main()

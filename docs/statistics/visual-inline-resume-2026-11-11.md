@@ -15,12 +15,12 @@ All four authorized routes use the same base model version:
 
 Workers distribute initial routes deterministically and keep a successful route for cache affinity. Eligible refusal, timeout, connection or server errors move to the next route. After all four routes fail, workers back off within the existing task deadline. A global credential failure is terminal. Each HTTP attempt records its actual route, timing and known or unknown usage; failed attempts are retained.
 
-Each cell has one 8-CPU/32-GiB CCI configured for 16 workers, with no global process cap. Only pending and confirmed failed/timeout tasks are selected. Every completed historical result is retained, including wrong answers. The new recovery queue contains 1,536 attempts.
+Each cell is configured for 16 workers, with no global process cap. Eleven cells run on separate 8-CPU/32-GiB CCIs. BC Hermes and BC DSH run locally on disjoint eight-CPU affinities because the cloud pool did not have capacity for all thirteen CCIs; the local controllers share the machine's 64-GiB memory. Their original CCIs are suspended to prevent duplicate execution. Only pending and confirmed failed/timeout tasks are selected. Every completed historical result is retained, including wrong answers. The new recovery queue contains 1,536 attempts.
 
-| Experiment | Attempts | CCI |
+| Experiment | Attempts | Execution location |
 |---|---:|---|
-| bc_hermes | 80 | acl-vhost-v5-bc-hermes |
-| bc_dsh | 107 | acl-vhost-v5-bc-dsh |
+| bc_hermes | 80 | Local, CPUs 0–7 |
+| bc_dsh | 107 | Local, CPUs 8–15 |
 | rq3_scale_0000 | 97 | acl-vhost-v5-rq3-scale-0000 |
 | rq3_scale_0250 | 102 | acl-vhost-v5-rq3-scale-0250 |
 | rq3_scale_0500 | 120 | acl-vhost-v5-rq3-scale-0500 |
@@ -47,4 +47,16 @@ Artifacts:
 - Latency report generator: `scripts/report_visual_transport_latency_v5.py`
 - Diagnostic: `outputs/preflight/inline-chunked-transport-v1/result.json`
 
-Deployment status and ETA must be filled from current controller and actual response evidence; CCI creation alone is not proof of model execution.
+## Observed execution and forecast
+
+As of 2026-11-10 19:24 UTC (2026-11-11 03:24 Beijing), the two local controllers and eleven cloud cells have started real model requests. Each cell is configured for 16 concurrent trials; the two small controlled queues contain only 15 and 14 trials, so the maximum simultaneous active trials in this recovery wave is 205. Background cloud lifecycle monitoring, local telemetry and grading are running. The grader has completed 24 grading requests without a grading error in the latest audit; this is a moving snapshot, not final experiment accuracy.
+
+DSH BC `q_028_r01` completed a real compressed-context request containing ten inline images (4,415,726 bytes), HTTP 200. Actual undici body-sent elapsed time was 0.397 s, response headers arrived at 190.038 s, and streaming completed at 191.391 s. These are client-observed timings. This successful example shows a remaining wait after body transmission; eliminating image hosting does not remove all provider/network response delay. Its measured usage was cached input 2,304, non-cache input 11,718, output 254, total 14,276.
+
+A separate DSH CLI issue affects the three repetitions of question 043, whose prompt starts with a hyphen. An isolated three-trial supplementary plan uses an explicit CLI argument separator. A persistent waiter starts it after the original DSH queue drains, keeping concurrency at 16. Repetition 1 retains its original failure; repetitions 2 and 3 were atomically deferred before execution and recorded as not_started with zero API calls. The original records and running V5 source remain unchanged. Supplementary plan: `outputs/campaigns/visual-hosted-failure-retry-v1/cells/dsh-cli-separator-v1`; launch receipt: `outputs/cloud-runtime/dsh-cli-separator-v1/launch.json`. No claim of zero failures is made.
+
+Estimated completion of this recovery wave, including grading, is **2026-11-11 12:00–15:00 Beijing time** (04:00–07:00 UTC), conditional on current worker availability and routes continuing to serve requests. This is a planning estimate from queue sizes, 16 workers per cell and existing trial deadlines, not a throughput measurement: the largest queue has 276 attempts, approximately eighteen batches at a 30-minute task deadline, plus startup, cleanup and grading. Most BC/RQ3 queues should finish earlier. Repeated service failures can extend recovery beyond this window, and finishing a retry does not guarantee a successful answer.
+
+See [the latency measurement boundaries](visual-inline-v5-latency.md). Token aliases or missing provider usage remain explicitly unknown; the audit found several conflicting DSH usage aliases, so known token totals must not be presented as complete billed totals.
+
+At 2026-11-11 03:27:42 Beijing, all eleven CCIs were RUNNING/ready1, both local controllers were alive, and 204 trial workers were active. All controllers had stop_dispatch=false. The original two BC CCIs remained suspended. Actual ten-image DSH success evidence is recorded in `outputs/preflight/dsh-inline-ten-image-success-v5.json`.

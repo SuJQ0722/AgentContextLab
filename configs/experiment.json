@@ -226,5 +226,16 @@
     "zero_scale": "Omit far history only; retain bounded recent and protected native head/tail",
     "old_results_deleted": false,
     "reporting": "Original, conditional failure retries and fixed execution-status overlay separated; mixed route/renderer overlay is not a clean new resolution ablation."
+  },
+  "mmbc_recent_ten_images_v1": {
+    "config": "configs/experiment.mmbc-recent-ten-v1.json",
+    "worker": "scripts/hermes_bounded_mmbc_recent_ten_worker_v1.py",
+    "bounded_request_protocol": "bounded-multimodal-recent-ten-v1",
+    "max_images": 10,
+    "retention": "last_10_in_message_order",
+    "count_scope": "native and canvas image_url blocks together",
+    "deployment_status": "prepared_not_launched",
+    "historical_campaigns_modified": false,
+    "new_paid_attempts_started": 0
   }
 }

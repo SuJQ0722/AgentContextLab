@@ -19,7 +19,7 @@ RESTORE=AREA/'restored-rq3'
 RQ_ROOT=rqcloud.DEFAULT_ROOT
 MM_ROOT=ROOT/'outputs/campaigns/mmbc-vera-bounded-retry-v1'
 HELD=('scale_0800','scale_1000')
-RESERVE=6
+RESERVE=8
 
 def restore_name(key):
  require(key in HELD,'Unapproved restore scale')
@@ -79,12 +79,12 @@ def cycle(live=False):
  restored=[]
  if complete(BC_ROOT,bcplan['jobs']):
   for key in HELD:
-   if complete(RQ_ROOT,[j for j in rqplan['jobs'] if j['scale_key']==key]):
-    restored.append({'scale_key':key,'state':'stopped','reason':'all_jobs_terminal_no_restore_needed'});continue
    marker=RESTORE/'markers'/(key+'.json');directory=RESTORE/restore_name(key)
    if marker.exists():
     with patch.object(rqmon,'app_name',restore_name):restored.append(rqmon.cycle(key,live,receipts=RESTORE))
     continue
+   if complete(RQ_ROOT,[j for j in rqplan['jobs'] if j['scale_key']==key]):
+    restored.append({'scale_key':key,'state':'stopped','reason':'all_jobs_terminal_no_restore_needed'});continue
    bound=mm+sum(scale_bound(RQ_ROOT,rqplan,k) for k in rqcloud.SCALE_KEYS)+16+RESERVE
    if bound>128:restored.append({'scale_key':key,'state':'restore_capacity_hold','projected':bound});continue
    platform=rqmon.query_app(rqcloud.app_name(key));require(platform['state'] in ('SUSPENDED','STOPPED'),'Old RQ3 allocation not yet stopped')

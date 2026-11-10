@@ -81,8 +81,10 @@ BC 两个 harness 均持续保持16 active，控制器没有本地派发错误�
 
 受控校准的独立单次参数诊断已结束：在保持全部原生图、文本、工具和模型不变的前提下，调整了输出上限、tool choice 与 thinking；该请求上传阶段发生 WriteTimeout，客户端耗时300.241秒，未收到HTTP状态或usage。因此不能认定参数调整成功，也不能将失败归因为画布；当时尚未渲染。诊断费用/usage保留未知，没有自动重试。单独的原始请求代理路径诊断用于排查上传故障，其结果以对应独立诊断目录为准；不会改写已冻结受控结果。
 
-07:10 UTC 补充：受控 MMBC pilot 的原图标定与带画布标定均返回成功。原图下界为4222 input tokens；后者保留2张原图并传入2页 .75画布，实测 cached4096 + non-cache1232 = input5328，output1、total5329，request2,591,992 bytes，guard通过；渲染5.560秒、编码0.629秒。真实 continuation 与三臂预算 gate 尚待验证，不能将这些校准值当成完整受控结果。首个 BC visual 已因连接故障失败，两文本臂没有可用目标而未运行；现有严格 pilot handoff 因此不会自动放行完整120臂，尚须处理这项阻塞。
+07:10 UTC 补充：受控 MMBC pilot 的原图标定与带画布标定均返回成功。原图下界为4222 input tokens；后者保留2张原图并传入2页 .75画布，实测 cached4096 + non-cache1232 = input5328，output1、total5329，request2,591,992 bytes，guard通过；渲染5.560秒、编码0.629秒。真实 continuation 与三臂预算 gate 尚待验证，不能将这些校准值当成完整受控结果。首个 BC visual 已因连接故障失败，两文本臂没有可用目标而未运行；当时跨组 pilot handoff 因单组失败阻塞；下面的独立 v2 调度已移除这一不必要的跨组条件。
 
 原始5,015,750-byte请求的单次代理路径诊断耗时120.849秒后 ReadTimeout，停在等待响应头阶段；没有HTTP状态或usage，未重试。代理未被证明能修复该问题，没有据此改写实验 spec。两次独立诊断的缺失 usage 与费用保持未知。
 
 最终稳定代码检查：`python -m unittest discover -s tests -v`，727项全部通过（130.548秒）。后台 BC/RQ3 控制器、评分器及容量/CCI生命周期监督继续运行，诊断与测试进程均不占用额外长期实验并发。
+
+07:20 UTC 运维更新：MMBC visual 的真实首次续答已报告 input5328，`passed=true`、原生图一致性通过；三臂组比较仍待文本两臂完成。已启动 `watch_controlled_bounded_pilot_v2.py`：等待 pilot 的六臂全部已知终态（含因 visual 失败而明确未运行的文本臂）、实际 worker 已回收且原协调器退出后，一次性续跑同一冻结计划的全部原40个可用组，仍限1 worker。每组自己的 visual target、±2%匹配及5%spread检查原样保留；单组API失败不再永久挡住无关组。失败/未知不会改成通过，既有尝试不重放，不替换问题。v1 已退出且无 full launch；v2 持有两代监督锁避免并存。新增7项调度测试通过，运行状态在 `outputs/experiment3/controlled-native-bounded-v1/pilot-full-handoff-v2/status.json`。

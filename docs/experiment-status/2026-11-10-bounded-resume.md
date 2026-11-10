@@ -1,5 +1,15 @@
 # Bounded resume 实验进展：2026-11-10
 
+## 08:51 UTC 更新：受控实验实际16并发
+
+用户要求受控实验提升到16并发，已由独立运维入口 `scripts/run_controlled_bounded_ops16_v1.py` 接管。08:42至08:51的重复观测均有16个实际 native worker；08:51:04状态为 running_native=16、unknown_reserved_slots=0。原先在途的 MMBC window 已计入这16个，没有重发；已有结果不覆盖，冻结实验计划与逐组 visual target、原图一致性、文本预算±2%及组间5% spread门槛保持不变。评分器以1并发持续处理完成结果，已包含在全局预留中。
+
+此时40个可用组共120臂：1 completed、1 timeout、3 failed、6臂因 visual target 不可用明确未运行，其余109臂包括16在途。API失败和因依赖失败未运行不算有效受控结果；尚不能据此宣称已经获得完整三臂比较。原前缀不可用的另60臂仍明确记录为不可运行，不替换题目。
+
+容量监督 `scripts/bc_controlled_capacity_ops_v3.py` 记录 BC32 + RQ3上限67 + 受控16 + 评分等预留6 = **121/128任务槽位**。RQ3 0.7暂时停领新题、余3个在途自然排空；0.8和1.0继续等待BC结束及容量允许后恢复。没有终止在途题目。此处是任务容量，不是 Linux OS 进程总数。实时证据：`outputs/experiment3/controlled-native-bounded-v1/ops16-v1/status.json`、`outputs/cloud-runtime/bc-controlled-capacity-ops-v3/status.json`。
+
+本次最终根检查768项通过（131.615秒）。下面的06:58至07:20记录为历史快照，其中受控单并发、旧调度器和旧容量数据已由本节取代。
+
 主快照：**2026-11-10 06:58:54 UTC**。工具日志补查截至 07:00 UTC。本页是该时点的只读统计；运行中的计数会继续变化。未触发任何新模型调用。
 
 当前 BC 两个 harness 各 16 并发；RQ3 的 0、0.25、0.5、0.7、0.75 五档各 16 并发。0.8 与 1.0 已自然排空、CCI 为 SUSPENDED，等待 BC 完成后由容量调度器自动恢复。

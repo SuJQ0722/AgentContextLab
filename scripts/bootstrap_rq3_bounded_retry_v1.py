@@ -18,7 +18,7 @@ def load_validate(root):
 
 VERSION = 'rq3-bounded-retry-bootstrap-v1'
 ROLES = {'run_rq3_bounded_retry_v1.py': 'controller',
-         'run_rq3_bounded_trial_v1.py': 'trial', 'hermes_bounded_rq3_worker_v1.py': 'worker'}
+         'run_rq3_bounded_retry_trial_v1.py': 'trial', 'hermes_bounded_rq3_worker_v1.py': 'worker'}
 
 
 def commands(args):

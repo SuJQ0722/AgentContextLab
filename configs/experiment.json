@@ -283,5 +283,28 @@
     "model_request_retry_policy": "unchanged frozen visual-transport-runtime-v2; no automatic task replays",
     "preflight": "actual search/fetch plus uncached byte/pixel-identical hosted download; DSH also unauthenticated GET and guarded POST",
     "controlled_reporting": "Visual recovery only, not a matched comparison with historical text arms"
+  },
+  "visual_inline_failure_retry_v5": {
+    "root": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v5",
+    "planned_runs": 1536,
+    "cci_count": 13,
+    "workers_per_cci": 16,
+    "global_concurrency_cap": null,
+    "image_transport": "inline-recent-ten-chunked-v1",
+    "compression_image_upload": false,
+    "max_images": 10,
+    "request_body_chunk_bytes": 65536,
+    "max_inline_body_bytes": 33554432,
+    "model_route_policy": "four-route-rotation-v1",
+    "approved_model_routes": [
+      "deepseek-v4.1-flash-1017/huoshan/huoshan",
+      "deepseek-v4.1-flash-1017/zijian/sfb",
+      "deepseek-v4.1-flash-1017/huoshan/sfc",
+      "deepseek-v4.1-flash-1017/zijian/sfc"
+    ],
+    "route_affinity": "Keep successful channel; rotate on failure; backoff after all four fail",
+    "selection": "Only pending or confirmed failed/timeout after predecessor drains; retain every completed result regardless of answer",
+    "latency_reporting": "New version only, conditional recovery population, per-route attempts plus E2E/render/send/wait/stream/backoff; provider internal time unknown",
+    "token_reporting": "Deduplicate HTTP attempt identity, retain failed/unknown usages, separate judge costs"
   }
 }

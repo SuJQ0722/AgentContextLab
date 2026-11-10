@@ -249,5 +249,21 @@
     "diagnostic_results": "outputs/preflight/visual-transport-engineering-v2",
     "historical_campaigns_modified": false,
     "cache_pixel_identity_required": true
+  },
+  "visual_hosted_failure_retry_v1": {
+    "version": "visual-hosted-failure-retry-v1",
+    "root": "outputs/campaigns/visual-hosted-failure-retry-v1",
+    "selection": "Only failed/timeout with no historically completed execution; retain completed regardless of score",
+    "planned_runs": 1583,
+    "cci_count": 13,
+    "workers_per_cci": 16,
+    "global_concurrency_cap": null,
+    "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "image_transport": "verified-imgbb-url-v1",
+    "max_images": 10,
+    "retention": "last_10_in_message_order_native_and_canvas_combined",
+    "historical_results_modified": false,
+    "controlled_reporting": "Visual recovery only; not valid matched three-arm comparison against old text arms",
+    "reporting": "Separate old observations and new failure-conditioned attempts; preserve all costs; mixed protocol overlay is not a clean single-protocol avg3"
   }
 }

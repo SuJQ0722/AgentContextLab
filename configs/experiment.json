@@ -195,5 +195,36 @@
     "image_transport": "bounded-canvas-lossless-webp-v1",
     "old_records": "preserve immutable original archive; exclude noncorrect originals only from new active completion view",
     "reporting": "Original first-pass, conditional new retries, and answer-selected union are separate; all original/new costs retained; union is not single-attempt avg3."
+  },
+  "rq3_bounded_failure_retry_v1": {
+    "version": "rq3-bounded-failure-retry-v1",
+    "root": "outputs/campaigns/rq3-bounded-failure-retry-v1",
+    "scope": "Only original RQ3 prediction status failed/timeout; retain all completed including wrong and ungraded",
+    "original_runs": 2100,
+    "retry_runs": 1227,
+    "retained_completed": 873,
+    "scales": [
+      0,
+      0.25,
+      0.5,
+      0.7,
+      0.75,
+      0.8,
+      1.0
+    ],
+    "maximum_new_attempts_per_selected_job": 1,
+    "cci_per_scale": 1,
+    "workers_per_cci": 16,
+    "rq3_prediction_capacity": 112,
+    "combined_inference_capacity": 128,
+    "judge_reserved_capacity": 4,
+    "release_policy": "Use remaining MMBC observations as a conservative upper bound; hold scale markers until capacity available",
+    "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "old_model_route": "deepseek-v4.1-flash-1017/zijian/sfb",
+    "renderer_protocol": "rq3-bounded-pages-v1",
+    "transport": "bounded-canvas-lossless-webp-v1",
+    "zero_scale": "Omit far history only; retain bounded recent and protected native head/tail",
+    "old_results_deleted": false,
+    "reporting": "Original, conditional failure retries and fixed execution-status overlay separated; mixed route/renderer overlay is not a clean new resolution ablation."
   }
 }

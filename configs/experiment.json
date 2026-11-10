@@ -176,5 +176,24 @@
       "production_enabled": false,
       "reason": "Small PNG/WebP pair both readable; one real10page request completed with2/3 reading checks. One prior WebP timeout retains unknown usage. Full trajectory reliability and new controlled token-budget matching remain unvalidated."
     }
+  },
+  "vera_retry_v1": {
+    "version": "mmbc-vera-bounded-retry-v1",
+    "scope": "MMBC Hermes VERA only; BC/RQ3 scope awaiting user clarification",
+    "root": "outputs/campaigns/mmbc-vera-bounded-retry-v1",
+    "original_observations": 300,
+    "retained_correct": 26,
+    "new_attempts": 274,
+    "maximum_new_attempts_per_selected_job": 1,
+    "cci_count": 3,
+    "workers_per_cci": 16,
+    "global_worker_cap": 48,
+    "cpu_per_cci": 8,
+    "memory_gib_per_cci": 32,
+    "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "image_protocol": "bounded-multimodal-pages-v1",
+    "image_transport": "bounded-canvas-lossless-webp-v1",
+    "old_records": "preserve immutable original archive; exclude noncorrect originals only from new active completion view",
+    "reporting": "Original first-pass, conditional new retries, and answer-selected union are separate; all original/new costs retained; union is not single-attempt avg3."
   }
 }

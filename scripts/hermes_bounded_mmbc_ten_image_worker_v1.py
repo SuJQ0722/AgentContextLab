@@ -23,8 +23,8 @@ def validate(spec, config, out):
         raise ValueError('Independent ten-image worker supports only explicit MMBC100')
     if not isinstance(spec.get('question_id'), str) or not spec['question_id'].startswith('mmbc_'):
         raise ValueError('Expected original MMBC question identity')
-    if not isinstance(spec.get('image'), list) or not spec['image']:
-        raise ValueError('Expected original MMBC native-image references')
+    if not isinstance(spec.get('image'), list):
+        raise ValueError('Expected original MMBC image list; empty retrieval-only items are valid')
     root = Path(spec.get('campaign_root', '/missing')).resolve()
     config_path = Path(spec.get('config_path', '/missing')).resolve()
     out = Path(out).resolve()

@@ -62,7 +62,8 @@ class TenImageTests(unittest.TestCase):
    root=Path(d);campaign=root/'outputs/campaigns/new-mmbc-ten';campaign.mkdir(parents=True);cp=campaign/'experiment.json';config=cfg();cp.write_text(json.dumps(config));spec={'bounded_benchmark':'mmbc100','question_id':'mmbc_131','image':['fixture-native.png'],'bounded_visual_protocol':worker.previous.PROTOCOL,'bounded_request_protocol':worker.PROTOCOL,'bounded_max_images':10,'strategy':'visual','harness':'hermes','campaign_root':str(campaign),'config_path':str(cp),'config_sha256':hashlib.sha256(cp.read_bytes()).hexdigest()};out=campaign/'jobs/hermes/visual/q/attempts/attempt_001/native'
    with patch.object(worker,'ROOT',root),patch.object(worker.previous,'ROOT',root):
     self.assertTrue(worker.validate(spec,config,out))
-    for change in ({'bounded_benchmark':'bc100'},{'question_id':'q_001'},{'image':[]},{'bounded_max_images':11},{'bounded_max_images':True},{'bounded_request_protocol':'old'},{'config_sha256':None}):
+    self.assertTrue(worker.validate({**spec,'image':[]},config,out))
+    for change in ({'bounded_benchmark':'bc100'},{'question_id':'q_001'},{'image':None},{'bounded_max_images':11},{'bounded_max_images':True},{'bounded_request_protocol':'old'},{'config_sha256':None}):
      with self.assertRaises(ValueError):worker.validate({**spec,**change},config,out)
     with self.assertRaises(ValueError):worker.validate(spec,config,root/'outputs/campaigns/mmbc-vera-bounded-retry-v1/old')
     out.mkdir(parents=True);(out/'bounded-protocol.json').write_text('{}')

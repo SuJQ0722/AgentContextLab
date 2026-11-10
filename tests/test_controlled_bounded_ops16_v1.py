@@ -41,6 +41,29 @@ class Ops16Tests(unittest.TestCase):
             'actual_route':MODEL,'bounded_native_protocol':PROTOCOL,'bounded_transport_encoding':ENCODING}
         (Path(visual['out'])/'compression-control.json').write_text(json.dumps(control))
         self.assertEqual(ops.inspect(self.plan,self.root)['states'][summary['job_id']],'ready')
+    def test_no_future_local_bc_reservation_admits_16_at_59_visible(self):
+        # Two visible processes per new trial, plus reserved growth to four.
+        snapshot={i:{'identity':str(i),'ppid':0,'argv':['fixture']} for i in range(1,60)}
+        reservations=[]
+        with patch.object(ops.admission,'CORE_WORKERS',2):
+            ops.configure_local_admission()
+            for index in range(16):
+                ok,report,_=ops.admission.capacity(snapshot,reservations,4)
+                self.assertTrue(ok,(index,report));self.assertEqual(report['core_reserved_growth'],0)
+                pid=1000+index*10
+                snapshot[pid]={'identity':str(pid),'ppid':0,'argv':['python','fixture-supervisor']}
+                snapshot[pid+1]={'identity':str(pid+1),'ppid':pid,'argv':['python','fixture-native']}
+                reservations.append({'pid':pid,'identity':str(pid),'process_cost':4,'owner':ops.VERSION,'job_id':str(index)})
+            self.assertEqual(report['projected'],127)
+            self.assertFalse(ops.admission.capacity(snapshot,reservations,4)[0])
+    def test_actual_existing_local_bc_growth_is_still_reserved(self):
+        snapshot={100:{'identity':'core','ppid':0,'argv':['python',str(ops.ROOT/'scripts/run_bc_trial_v3.py'),
+            '--out',str(ops.ROOT/'outputs/campaigns/bc100-r3-hermes-parity-v3/jobs/existing')]},
+            101:{'identity':'native','ppid':100,'argv':['python','native']}}
+        with patch.object(ops.admission,'CORE_WORKERS',2):
+            ops.configure_local_admission();ok,report,_=ops.admission.capacity(snapshot,[],4)
+        self.assertTrue(ok);self.assertEqual(report['core_reserved_growth'],3)
+        self.assertEqual(report['limit'],127)
     def test_marker_rejects_over128_and_wrong_source(self):
         (self.root/'plan.json').write_text('{}');p=self.root/'marker.json'
         marker={'version':ops.MARKER_VERSION,'ready':True,'controlled_native_slots':16,'global_cap':128,'judge_reserve':6,'global_reserved_total':128,

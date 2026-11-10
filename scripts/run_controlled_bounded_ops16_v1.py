@@ -25,6 +25,17 @@ ALLOWED_STOPS={558793:('897942253','run_controlled_bounded_v1.py'),
 THREAD_ENV={k:'1' for k in ('OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS',
     'NUMEXPR_NUM_THREADS','VECLIB_MAXIMUM_THREADS','BLIS_NUM_THREADS')}
 PENDING={'ready','waiting_visual','running','interrupted_unknown_no_replay'}
+LOCAL_ADMISSION_DEPLOYMENT={'reserved_future_local_bc_workers':0,
+    'inherited_default_future_local_bc_workers':2,'reason':'BC prediction trials run on two CCI instances; no future local BC slots are reserved by this dispatcher',
+    'actual_existing_local_bc_growth_preserved':True,'visible_os_process_limit':127,
+    'memory_capacity_check_unchanged':True,'admission_module_file_modified':False}
+
+
+def configure_local_admission():
+    # Only remove hypothetical future local BC slots. admission.capacity still
+    # sums CORE_COST minus actual descendants for every existing local BC trial.
+    admission.CORE_WORKERS=0
+    return dict(LOCAL_ADMISSION_DEPLOYMENT)
 
 
 def validate_marker(path,root):
@@ -150,7 +161,8 @@ def queue(root,plan,directory,marker_path,marker_sha):
         state='finished' if info['all_eligible_resolved'] and info['no_active_native'] else 'blocked_unknown' if info['unknown_reserved_slots'] and not ready_jobs(plan,info) and info['no_active_native'] else 'running'
         status={**info,'state':state,'pid':os.getpid(),'identity':process_identity(os.getpid()),'at':now(),
             'queue_lock_owned':True,'capacity':16,'capacity_marker_sha256':marker_sha,'admission':last_admission,
-            'thread_environment':THREAD_ENV,'operational_version':VERSION,'provider_latency_seconds':None}
+            'thread_environment':THREAD_ENV,'local_admission_deployment':LOCAL_ADMISSION_DEPLOYMENT,
+            'operational_version':VERSION,'provider_latency_seconds':None}
         atomic(directory/'status.json',status)
         if time.monotonic()-last_report>=60 or state=='finished':
             report=snapshot(root,plan,False)
@@ -176,13 +188,14 @@ def main():
         marker=validate_marker(a.capacity_marker,root);marker_sha=sha(a.capacity_marker)
         immutable(directory/'protocol.json',{'version':VERSION,'plan_sha256':sha(root/'plan.json'),'source_sha256':sha(__file__),
             'frozen_trial_sha256':sha(ROOT/'scripts/run_controlled_bounded_v1.py'),'capacity_marker_sha256':marker_sha,
-            'capacity':16,'unknown_attempts_reserve_slots':True,'new_paid_retry_loop':False,'thread_environment':THREAD_ENV})
+            'capacity':16,'unknown_attempts_reserve_slots':True,'new_paid_retry_loop':False,'thread_environment':THREAD_ENV,
+            'local_admission_deployment':LOCAL_ADMISSION_DEPLOYMENT})
         if a.takeover:takeover(root,marker,directory)
         else:
             if any(verify_coordinator(pid,v[0],root) for pid,v in ALLOWED_STOPS.items()):raise ValueError('Old coordinator live; explicit takeover required')
         with (root/'queue.lock').open('a') as queue_lock:
             fcntl.flock(queue_lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-            load_validate(root);os.environ.update(THREAD_ENV)
+            load_validate(root);os.environ.update(THREAD_ENV);configure_local_admission()
             queue(root,plan,directory,a.capacity_marker,marker_sha)
 
 if __name__=='__main__':main()

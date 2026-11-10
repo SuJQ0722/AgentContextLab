@@ -57,4 +57,4 @@ RQ3 .7在08:25 UTC停止新dispatch，现有native不被kill；按现有1800秒t
 
 .7的新dispatch被主动暂停，因此其恢复速度使用停派前窗口，避免把停派产生的低吞吐解释成模型慢；.8/1的零当前吞吐也不直接外推。受控记录没有finished_at，未编造其实际30/60分钟终态吞吐。
 
-证据：同目录 `report-controlled16.json` 包含原始finished时间、状态、情景模拟和UTC/北京时间字段；`outputs/preflight/controlled16-launch-audit-v1.json` 包含8次容量监控、旧native保留与精确marker hash。运行源为 `scripts/bc_controlled_capacity_ops_v3.py` 与冻结的 `scripts/run_controlled_bounded_ops16_v1.py`。本次ETA计算未触发模型请求或改动队列。
+证据：`outputs/preflight/experiment-eta-20261110/report-controlled16.json` 包含原始finished时间、状态、情景模拟和UTC/北京时间字段；`outputs/preflight/controlled16-launch-audit-v1.json` 包含8次容量监控、旧native保留与精确marker hash。运行源为 `scripts/bc_controlled_capacity_ops_v3.py` 与冻结的 `scripts/run_controlled_bounded_ops16_v1.py`。本次ETA计算未触发模型请求或改动队列。

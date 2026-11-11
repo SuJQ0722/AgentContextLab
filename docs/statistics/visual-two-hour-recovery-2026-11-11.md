@@ -37,3 +37,7 @@
 部署安排为本机两个 BC 组和 11 个独立 CCI；每组固定 16 并发，无全局推理并发上限。新结果目录为 `outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour`。本文件记录恢复定义；实际启动和存活状态以该目录的启动收据与监控记录为准。
 
 旧结果、旧超时、原始费用记录全部保留。两小时恢复产生的 token、缓存、延迟和评分单独记录；缺失的 provider usage 不按零计算，客户端请求耗时不称为 provider 内部 API 延迟。跨版本合并的成功率应注明失败恢复与成功条件筛选，不能视为同一协议重新运行的完整基准结果。
+
+## 启动验证
+
+完整根目录测试：980 项通过，153.072 秒（`/tmp/acl-two-hour-v7-tests-final.log`）。13 组真实原生入口 dry-run 均退出 0，未调用模型；所有 job/config/native outer deadline 均为 7,200 秒。证据位于 `outputs/preflight/visual-inline-two-hour-v7/readiness.json` 与 `native-dryrun/results.json`。

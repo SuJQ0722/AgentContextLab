@@ -41,7 +41,7 @@ def metric_directories(attempt,harness):
     candidates=[attempt/'native/metrics']
     if known is not None:candidates.append(known)
     # Bounded DSH uses this fixed layout; avoid a walk through images/workspaces.
-    if harness=='dsh':candidates.extend((attempt/'native/visual_native').glob('*/workspace/metrics'))
+    if harness=='dsh':candidates.extend((attempt/'native').glob('*/*/workspace/metrics'))
     return sorted({p for p in candidates if p.is_dir()})
 
 def collect_transport(attempt,events,issues=None):
@@ -126,10 +126,27 @@ def inspect_attempt(attempt,harness):
                          'failed':bool(raw.get('error_type'))or bool(raw.get('_incomplete')),
                          'failed_cost_unknown':(bool(raw.get('error_type'))or bool(raw.get('_incomplete'))),
                          'actual_usd':None})
+    terminal=_read(attempt/'result.json')or{}
+    zero_proven=not rows and type(terminal.get('api_calls'))is int and terminal['api_calls']==0
+    coverage='observed_requests'if rows else'proven_zero_model_calls'if zero_proven else'missing_usage_instrumentation'
     summary={'attempt_path':str(attempt.absolute()),'source':source,'http_ledger_files':ledger_files,
+             'instrumentation_coverage':coverage,'zero_model_calls_proven':zero_proven,
              'observations':len(rows),'sdk_observations_suppressed':suppressed,
              'sdk_fallback_only_if_no_transport_attempts':True,'waits':waits,'issues':issues}
     return rows,summary
+
+def native_attempts(attempt):
+    """V8 parent is an aggregate, never a second billable native execution.
+
+    Discover started child attempts even before the question-level aggregate is
+    published. Do not rely on the final successful attempt's artifact pointer.
+    """
+    attempt = Path(attempt)
+    runs = attempt / 'runs'
+    if runs.is_dir():
+        return sorted(p for p in runs.glob('attempt_*') if p.is_dir())
+    return [attempt]
+
 
 def resources(cells,out):
     out=Path(out);result={}
@@ -139,7 +156,8 @@ def resources(cells,out):
             directory=Path(data['root'])/'jobs'/job['job_id']/'attempts'
             for attempt in sorted(directory.glob('attempt_*')):
                 if not attempt.is_dir():continue
-                observed,info=inspect_attempt(attempt,job['harness']);rows.extend(observed);details.append(info);waits.extend(info['waits'])
+                for native in native_attempts(attempt):
+                    observed,info=inspect_attempt(native,job['harness']);rows.extend(observed);details.append(info);waits.extend(info['waits'])
             gd=out/'cells'/cell/'jobs'/job['job_id']
             if (gd/'request-started.json').exists():
                 grade=_read(gd/'grade.json')or{}
@@ -147,7 +165,15 @@ def resources(cells,out):
                     judges.append({'raw_provider_usage':grade.get('raw_provider_usage'),'_incomplete':not bool(grade)})
         by_route=defaultdict(list)
         for row in rows:by_route[row.get('actual_route')or'unknown'].append(row)
-        result[cell]={'new_prediction_all_attempts':aggregate(rows),
+        missing_instrumentation=[d['attempt_path']for d in details if d['instrumentation_coverage']=='missing_usage_instrumentation']
+        prediction=aggregate(rows)
+        prediction['attempt_instrumentation_complete']=not missing_instrumentation
+        prediction['missing_instrumentation_attempt_count']=len(missing_instrumentation)
+        if missing_instrumentation:
+            for field in prediction['fields'].values():field['complete_total']=None
+        result[cell]={'new_prediction_all_attempts':prediction,
+           'missing_instrumentation_attempts':missing_instrumentation,
+           'proven_zero_model_call_attempts':sum(d['zero_model_calls_proven']for d in details),
            'prediction_by_actual_route':{route:aggregate(group)for route,group in sorted(by_route.items())},
            'judge':aggregate(judges),'private_judge_separate_from_prediction':True,
            'observed_attempts':len(details),'http_attempts':sum(r['source']=='http_transport'for r in rows),
@@ -161,6 +187,6 @@ def resources(cells,out):
            'http_attempt_records':rows,'attempt_accounting':details,
            'actual_usd':None,'provider_api_latency_seconds':None}
     return {'at':datetime.now(timezone.utc).isoformat(),'version':VERSION,'cells':result,
-       'scope':'New campaign predictions only, all attempted routes including failures. One observation per (prediction attempt path, HTTP request/attempt ID). SDK usage is suppressed when transport evidence exists; never added to the same prediction attempt. Judge usage remains separate.',
+       'scope':'New campaign predictions only, all sequential timeout-retry children and attempted routes including failures; question-level retry aggregates are not counted again. One observation per (prediction attempt path, HTTP request/attempt ID). SDK usage is suppressed when transport evidence exists; never added to the same prediction attempt. Judge usage remains separate.',
        'missing_policy':'Missing or conflicting raw usage remains unknown; no failed request is assumed free. Cached/non-cache splits require provider evidence. Dollar cost and provider-internal latency are not inferred.',
        'wait_policy':'Backoff is client waiting, not provider API latency; waiting after a mixed-failure cycle with HTTP429 is labeled separately, not attributed wholly to rate limiting.'}

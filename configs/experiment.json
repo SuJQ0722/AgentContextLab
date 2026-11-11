@@ -360,5 +360,29 @@
     "retention": "last_10_in_message_order",
     "historical_hosted_entries": "disabled; historical results preserved",
     "information_loss_worker": "scripts/info_loss_phase4.py"
+  },
+  "visual_inline_one_hour_retry_v8": {
+    "version": "visual-inline-one-hour-retry5-v8",
+    "timeout_seconds": 3600,
+    "max_timeout_retries": 5,
+    "max_attempts": 6,
+    "retry_only_status": "timeout",
+    "retry_requires_confirmed_cleanup": true,
+    "retry_execution": "sequential_within_same_slot",
+    "concurrency_per_cell": 16,
+    "global_cap": null,
+    "http_attempt_deadline_seconds": 300,
+    "route_policy": "four-route-rotation-v1",
+    "max_output_tokens": 8192,
+    "compression_image_upload": false,
+    "retain_recent_images": 10,
+    "dsh_buffered_watchdog_version": "dsh-buffered-sdk-watchdog-one-hour-v3",
+    "controller": "scripts/run_visual_inline_retry5_v8.py",
+    "trial": "scripts/run_visual_inline_retry5_trial_v8.py",
+    "rollout": "new frozen campaign only; existing V7 manifests and successful results are immutable",
+    "accounting": "all attempts contribute cost and latency; retries are not extra avg3 seeds",
+    "excluded_benchmarks": [
+      "agenticdatabench"
+    ]
   }
 }

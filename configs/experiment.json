@@ -241,14 +241,16 @@
   "mmbc_transport_engineering_v3": {
     "config": "configs/experiment.mmbc-hosted-v3.json",
     "worker": "scripts/hermes_mmbc_hosted_worker_v3.py",
-    "image_transport": "verified-imgbb-url-v1",
     "max_images": 10,
     "scope": "MMBC new independent attempts only",
-    "deployment_status": "real_transport_diagnostic_passed_full_evaluation_not_launched",
+    "deployment_status": "retired_compression_hosting_removed",
     "diagnostic_model_calls": 3,
     "diagnostic_results": "outputs/preflight/visual-transport-engineering-v2",
     "historical_campaigns_modified": false,
-    "cache_pixel_identity_required": true
+    "cache_pixel_identity_required": true,
+    "enabled": false,
+    "historical_image_transport": "verified-imgbb-url-v1",
+    "compression_image_upload": false
   },
   "visual_hosted_failure_retry_v1": {
     "version": "visual-hosted-failure-retry-v1",
@@ -259,16 +261,18 @@
     "workers_per_cci": 16,
     "global_concurrency_cap": null,
     "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
-    "image_transport": "verified-imgbb-url-v1",
     "max_images": 10,
     "retention": "last_10_in_message_order_native_and_canvas_combined",
     "historical_results_modified": false,
     "controlled_reporting": "Visual recovery only; not valid matched three-arm comparison against old text arms",
-    "reporting": "Separate old observations and new failure-conditioned attempts; preserve all costs; mixed protocol overlay is not a clean single-protocol avg3"
+    "reporting": "Separate old observations and new failure-conditioned attempts; preserve all costs; mixed protocol overlay is not a clean single-protocol avg3",
+    "enabled": false,
+    "deployment_status": "retired_compression_hosting_removed",
+    "historical_image_transport": "verified-imgbb-url-v1",
+    "compression_image_upload": false
   },
   "visual_hosted_transport_v4": {
     "root": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v4",
-    "image_transport": "verified-imgbb-url-v2",
     "hosted_runtime_version": "verified-hosted-images-v4",
     "planned_runs": 1553,
     "cci_count": 13,
@@ -282,7 +286,11 @@
     "max_images": 10,
     "model_request_retry_policy": "unchanged frozen visual-transport-runtime-v2; no automatic task replays",
     "preflight": "actual search/fetch plus uncached byte/pixel-identical hosted download; DSH also unauthenticated GET and guarded POST",
-    "controlled_reporting": "Visual recovery only, not a matched comparison with historical text arms"
+    "controlled_reporting": "Visual recovery only, not a matched comparison with historical text arms",
+    "enabled": false,
+    "deployment_status": "retired_compression_hosting_removed",
+    "historical_image_transport": "verified-imgbb-url-v2",
+    "compression_image_upload": false
   },
   "visual_inline_failure_retry_v5": {
     "root": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v5",
@@ -344,5 +352,13 @@
     "http_attempt_deadline_seconds": 300,
     "route_policy": "four-route-rotation-v1",
     "reporting": "New two-hour operational recovery version; record old and new costs separately; not a fresh independent avg3"
+  },
+  "compression_image_delivery": {
+    "transport": "inline_data_uri",
+    "hosting_allowed": false,
+    "max_images_per_request": 10,
+    "retention": "last_10_in_message_order",
+    "historical_hosted_entries": "disabled; historical results preserved",
+    "information_loss_worker": "scripts/info_loss_phase4.py"
   }
 }

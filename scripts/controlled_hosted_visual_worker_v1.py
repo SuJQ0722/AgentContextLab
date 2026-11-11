@@ -66,48 +66,8 @@ def annotate(value, out):
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--spec', type=Path, required=True)
-    p.add_argument('--out', type=Path, required=True)
-    p.add_argument('--live', action='store_true')
-    a = p.parse_args(); job = read(a.spec); out = a.out.resolve()
-    spec, cfg = validate(job, out)
-    if not a.live:
-        print(json.dumps({'live': False, 'model_calls': 0, 'visual_only': True})); return
-    out.mkdir(parents=True, exist_ok=True)
-    with (out / 'attempt-started.json').open('x') as f:
-        json.dump({'job_id': job['job_id'], 'original_spec_sha256': job['controlled_spec_sha256']}, f)
-    adapter = bounded.BoundedAdapter(spec, out)
-    original_write = adapter.write
-    def write(path, value):
-        if Path(path).name == 'compression-control.json':
-            value = annotate(value, out)
-        elif Path(path).name == 'result.json' and 'control_gate' in value:
-            value = copy.deepcopy(value)
-            value['control_gate'] = annotate(value['control_gate'], out)
-            value['old_matched_three_arm_comparison_valid'] = False
-        return original_write(path, value)
-    env, _ = environment(ROOT, 'hermes', job['config_path'])
-    h1 = runtime_install(cfg['transport_runtime_policy'], out / 'metrics',
-                         approved_base_url=env['TOKENHUB_BASE_URL'])
-    h2 = hosted_install(out / 'metrics', rendered_registry=lambda: adapter.registry,
-                         host=VerifiedImageHost(out / 'hosted-image-cache', env),
-                         approved_base_url=env['TOKENHUB_BASE_URL'])
-    try:
-        with patch.object(bounded.v5, 'render_prefix', adapter.render_prefix), \
-             patch.object(bounded.v5, 'compose', adapter.compose), \
-             patch.object(bounded.v5, 'write', write):
-            bounded.v5.run(spec, out)
-    finally:
-        h2['uninstall'](); h1['uninstall']()
-    result = read(out / 'result.json') if (out / 'result.json').exists() else {}
-    conversation = read(out / 'conversation.json') if (out / 'conversation.json').exists() else {}
-    final = conversation.get('final_response') or ''
-    (out / 'native-result.json').write_text(json.dumps({
-        'status': 'completed' if result.get('status') == 'completed' and final else 'failed',
-        'final': {'text': final}, 'source_controlled_status': result.get('status'),
-        'error_type': result.get('error_type'), 'old_matched_three_arm_comparison_valid': False,
-        'controlled_source_spec_sha256': job['controlled_spec_sha256']}, ensure_ascii=False, indent=2))
+    from compression_inline_only import removed
+    removed()
 
 
 if __name__ == '__main__':

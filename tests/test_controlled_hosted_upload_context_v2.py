@@ -15,34 +15,12 @@ import run_visual_hosted_retry_v2 as controller
 
 
 class ControlledUploadContextTests(unittest.TestCase):
-    def test_only_host_context_isolated_and_restored_on_success_and_error(self):
-        inference = contextvars.ContextVar('reviewed_inference_fixture', default=False)
-        visited = []
-        def host(raw):
-            visited.append(inference.get())
-            if raw == b'fail':
-                raise ValueError('fixture failure')
-            return {'verified': raw}
-        with patch.object(hosting, 'OriginalHost', return_value=host):
-            isolated = worker.IsolatedVerifiedImageHost('cache', {})
-        token = inference.set(True)
-        try:
-            self.assertEqual(isolated(b'ok'), {'verified': b'ok'})
-            self.assertTrue(inference.get())
-            with self.assertRaises(ValueError):
-                isolated(b'fail')
-            self.assertTrue(inference.get())
-            self.assertEqual(visited, [False, False])
-        finally:
-            inference.reset(token)
-
-    def test_wrapper_only_replaces_host_and_restores(self):
-        original = worker.parent.VerifiedImageHost
-        def main():
-            self.assertIs(worker.parent.VerifiedImageHost, worker.IsolatedVerifiedImageHost)
-        with patch.object(worker.parent, 'main', main):
+    def test_retired_host_and_worker_cannot_execute_upload(self):
+        from compression_inline_only import CompressionHostingRemoved
+        with self.assertRaises(CompressionHostingRemoved):
+            hosting.IsolatedVerifiedImageHost('unused', {})(b'canvas')
+        with self.assertRaises(CompressionHostingRemoved):
             worker.main()
-        self.assertIs(worker.parent.VerifiedImageHost, original)
 
     def test_trial_replaces_controlled_entry_only_and_keeps_output_timeout(self):
         spec = {'controlled_spec_path': 'frozen.json', 'hosted_runtime_version': 'verified-hosted-images-v4', 'image_transport': 'verified-imgbb-url-v2'}

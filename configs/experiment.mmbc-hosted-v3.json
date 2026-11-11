@@ -183,5 +183,7 @@
     "stream_seconds": 300.0,
     "max_failed_sends": 2
   },
-  "transport_runtime_note": "Explicit hosted image engineering candidate; retained bytes verified via upload/download before inference. No claim of provider retrieval or benchmark improvement without actual response."
+  "transport_runtime_note": "Explicit hosted image engineering candidate; retained bytes verified via upload/download before inference. No claim of provider retrieval or benchmark improvement without actual response.",
+  "enabled": false,
+  "retired_reason": "Compressed-context hosting removed; use inline experiment configuration"
 }

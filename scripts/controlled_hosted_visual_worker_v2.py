@@ -29,11 +29,8 @@ def annotate(value, out):
     value['passed'] = bool(value.get('passed') and allowed and native == 0)
     return value
 def main():
-    from verified_hosted_images_v4 import install, VERSION as HOSTED
-    with patch.object(parent, 'VerifiedImageHost', IsolatedVerifiedImageHost), \
-         patch.object(parent, 'hosted_install', install), patch.object(parent, 'HOSTED', HOSTED), \
-         patch.object(parent, 'annotate', annotate):
-        parent.main()
+    from compression_inline_only import removed
+    removed()
 
 
 if __name__ == '__main__':

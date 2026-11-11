@@ -54,7 +54,7 @@
 
 原 `agents`、`dev-infra`、`toolcall` 池受到更高优先级训练任务的队列阻塞，已将尚未启动的相关任务安全迁出。每次迁移均保留旧 UID 停稳、前后零执行证据及新 UID/配置绑定；已运行任务未迁移。每组仍固定 8 核 32G、16 并发，预测 plan、输入图像和两小时时限未变。各新部署有独立生命周期监控，完成并确认子进程退出后释放实例。
 
-北京时间 13:19 的进一步核验确认：全部 13 组均已有完整 HTTP 响应及原始 provider usage，六项持久服务均存活。该非原子快照记录已完成 14 条、失败 3 条；失败包括 MMBC VERA 两条图像引用解析失败和 DSH 一条连接错误，不能报告为零失败或超时问题已根治。各组仍持续取新题，原始错误、费用和失败结果保留。证据：`outputs/preflight/visual-inline-two-hour-v7/live-startup-snapshot.json`、`service-health.json`。
+北京时间 13:19 的进一步核验确认：全部 13 组均已有完整 HTTP 响应及原始 provider usage，六项持久服务均存活。该非原子快照记录已完成 14 条、失败 3 条；失败包括 MMBC VERA 两条远程缩略图下载 TLS EOF，以及 DSH 原生 image offload 后图片数量与 wire guard 预期不符导致的本地拒绝发送（表面显示 Connection error），不能报告为零失败或超时问题已根治。各组仍持续取新题，原始错误、费用和失败结果保留。证据：`outputs/preflight/visual-inline-two-hour-v7/live-startup-snapshot.json`、`service-health.json`。三条失败的根因与证据另见 `outputs/preflight/visual-inline-v7-execution-failure-diagnosis/diagnosis.json`。
 
 以下是按每题耗尽两小时预算、每组 16 并发计算的波次工期，**不是实测平均耗时或承诺截止时间**；不包含排队、初始化、清理、评分及额外补跑：
 

@@ -306,5 +306,18 @@
     "selection": "Only pending or confirmed failed/timeout after predecessor drains; retain every completed result regardless of answer",
     "latency_reporting": "New version only, conditional recovery population, per-route attempts plus E2E/render/send/wait/stream/backoff; provider internal time unknown",
     "token_reporting": "Deduplicate HTTP attempt identity, retain failed/unknown usages, separate judge costs"
+  },
+  "visual_inline_repair_v6": {
+    "transport_runtime_version": "visual-transport-runtime-v4",
+    "gateway_proxy": "http://10.120.0.246:7890",
+    "dsh_buffered_watchdog_version": "dsh-buffered-sdk-watchdog-v1",
+    "canary_trials": 8,
+    "concurrency_per_cell": 16,
+    "global_cap": null,
+    "compression_image_upload": false,
+    "retain_recent_images": 10,
+    "scientific_output_budget_changed": false,
+    "task_deadlines_changed": false,
+    "full_recovery_requires_canary_review": true
   }
 }

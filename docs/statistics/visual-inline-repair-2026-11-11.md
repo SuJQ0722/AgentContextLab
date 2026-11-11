@@ -20,3 +20,9 @@ The V5 retry wave did not establish reliable execution. Its 1,536 selected prior
 - Root checks during repair: 932 tests passed in 141.510 seconds. Later transport changes require their own focused verification before release.
 
 The next validation population consists of eight prespecified old timeout cases, each in its own versioned cell, with unchanged questions, repeats, compression policy and scientific budgets. These are engineering canaries, not a replacement for complete-cohort results. A whole-wave rerun must not be described as fixed until the new transport and actual trajectories have been checked.
+
+## Same-window transport diagnostic
+
+Two sequential, nonrandomized paid diagnostic requests used the same ten-image payload (5,280,272 bytes), SHA and huoshan/huoshan route, with no automatic retries. Explicit proxy: HTTP 200, client POST body phase 0.00499 s, end-to-end 103.30 s, input 7,213 / cached 0 / output 56. Direct: HTTP 200, body phase 239.74 s, end-to-end 247.93 s, input 7,213 / cached 7,168 / output 56. Both reproduced the same 2/3 reading-check result. The cache conditions differ, so this is not a controlled estimate of population speedup; it supports direct-path transmission delay as a material mechanism. A quick client-to-proxy write is not proof of quick provider ingress. Evidence: `outputs/preflight/python-gateway-proxy-v1/result.json` and `direct-current/result.json`.
+
+After V5 drained and its missing grades were recovered, the idle V5 grader and resource observer received SIGTERM to finish their last snapshots and stop repeatedly scanning static AFS logs. This does not stop prediction workers: all V5 workers were already finished. Audit: `outputs/preflight/visual-inline-v6-canary/old-observers-drain.json`.

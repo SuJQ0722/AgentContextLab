@@ -1,0 +1,17 @@
+# DSH buffered SDK watchdog repair (2026-11-11)
+
+The V5 BC retry queue ended with 84 timeouts, 10 completed, 11 failed and two explicitly deferred CLI jobs. The separate CLI supplement ended with one completed (judged incorrect), one timeout and one output-limit failure. These are failure retries, not a fresh accuracy cohort.
+
+Nine of the original eleven failures were single-call output truncations. All nine final provider responses reported `completion_tokens=8192` and `reasoning_tokens=8192`; seven occurred on the first model call, before any compression. The other two occurred on calls 18 and 4. DSH maps provider `length` to `max-tokens` in `deepseekHarness/packages/llm/llm-pi-ai/src/stream.ts`. This is not a cumulative trajectory cap. Both frozen Hermes and DSH configurations specify 8192 output tokens. This repair preserves that budget and the existing thinking behavior. Increasing output or changing thinking would require a separately declared comparison; it is not a transport fix.
+
+The other two failures were the independently repaired leading-hyphen CLI parsing issue and a provider `PI_AI_ERROR` content rejection.
+
+A separate buffering mismatch is repairable without changing experimental budgets. The DSH inline transport buffers each complete SSE response to prevent mixing partial answers across channel retries. Its caller, pi-ai, defaults to a 300-second SDK stream idle watchdog. Since the SDK cannot see buffered intermediate events, that watchdog can cancel an ongoing multi-route recovery. Across the 84 timeout trajectories there were 43 explicit `LLM_STREAM_IDLE_TIMEOUT` transport events. There were also 74 generic Error events, 14 ECONNRESET events and 12 UND_ERR_SOCKET events; generic errors are not attributed to a particular cause without evidence.
+
+These 84 trajectories contained 1,610 completed HTTP attempts, with 12–29 completed calls per trajectory (median 19). Successful attempt client durations had median 9.06 seconds and p90 173.00 seconds. Thus accumulated slow calls also consume the task deadline; repairing the SDK watchdog does not establish that every timeout will disappear. These are client measurements, not provider-internal latency.
+
+`scripts/dsh_inline_bc_worker_v5.py` retains the v4 CLI delimiter fix and sets the provider SDK watchdog to the existing explicit task timeout. It requires `dsh_buffered_watchdog_version="dsh-buffered-sdk-watchdog-v1"` in a new configuration. The task stays at 1800 seconds or its shorter configured limit, the wire attempt limit stays at 300 seconds, and output stays at 8192. Existing frozen V5 source and results are untouched. The native metrics include `buffered-sdk-watchdog-v1.json` recording all three limits.
+
+The V6 campaign uses `inline_route_contract_v2.py` and the explicit approved gateway proxy. The worker applies that proxy to the DSH launch environment and checks the real pinned DSH proxy resolver, rejecting a `NO_PROXY` gateway bypass before dispatch. The campaign policy is `visual-transport-runtime-v4`; DSH still executes its independent `dsh-inline-wire-v1` JavaScript transport, not the Python runtime. Both identities are recorded separately.
+
+Validation: five watchdog/proxy tests (including the pinned Node provider configuration resolver), five CLI/claim lifecycle tests, and a real worker command-line dry-run passed without model calls. Dry-run receipt: `outputs/preflight/dsh-buffered-watchdog-v1/dryrun.json`. Live improvement remains to be measured by the separately prepared canary.

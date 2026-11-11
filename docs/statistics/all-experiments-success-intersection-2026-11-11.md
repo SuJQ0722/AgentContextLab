@@ -101,3 +101,7 @@ AgenticDataBench未运行（沙箱不可用）。没有同一题完整三repeat�
 - 受控与信息损失：`outputs/reports/controlled-info-loss-common-completed.json`。
 
 此次统计零模型调用；未修改、删除或重跑任何预测。
+
+## 新版八题工程验证快照
+
+北京时间2026-11-11 12:05：1题completed且答对（BC Hermes），5题按原30分钟预算timeout（BC DSH、MMBC VERA/vanilla、RQ3 0.75/1.0），2个受控题仍在原60分钟预算内运行。多次压缩图请求成功不等于完整题目成功；未把timeout当作共同完成样本。持续状态见 `outputs/monitoring/visual-inline-canary-v6/monitor.md`。

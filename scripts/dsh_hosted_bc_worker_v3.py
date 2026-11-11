@@ -12,7 +12,7 @@ BOUNDED_SOURCE_FILES = list(dict.fromkeys(parent.BOUNDED_SOURCE_FILES + [
     'dsh_hosted_wire_v3.mjs', 'dsh_inline_transport_bridge_v1.py', 'inline_visual_transport_v1.py',
     'inline_route_contract_v1.py', 'verified_canvas_registry_cache.py', 'recent_ten_hosted_selection_v1.py',
     'recent_ten_images_transport_v1.py', 'bounded_ten_image_guard_v1.py',
-    'bounded_visual_request_guard_v1.py', 'visual_transport_runtime_v3.py')]))
+    'bounded_visual_request_guard_v1.py', 'visual_transport_runtime_v3.py', 'sse_completion.py', 'sse_completion.mjs', 'dsh_pre_sdk_images.mjs')]))
 
 
 def main():
@@ -37,6 +37,7 @@ def main():
         metrics = Path(env['ACL_BOUNDED_WIRE_LEDGER']).parent
         env['ACL_INLINE_DSH_LEDGER'] = str(metrics / 'inline-images-wire-dsh-v1.jsonl')
         env['ACL_INLINE_DSH_JOB_ID'] = worker_key
+        env['ACL_INLINE_DSH_RETAIN_IMAGES'] = '10'
         (metrics.parent.parent / 'inline-dsh-protocol.json').write_text(json.dumps({
             'version': 'dsh-inline-wire-v1', 'max_images': 10, 'image_transport': 'inline-recent-ten-chunked-v1',
             'wire_ledger': env['ACL_INLINE_DSH_LEDGER'], 'body_chunk_bytes': 65536,

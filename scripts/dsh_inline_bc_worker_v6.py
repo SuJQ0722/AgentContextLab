@@ -32,6 +32,10 @@ def adapt_patches(patches, *, timeout_seconds):
         raise ValueError('Unexpected existing SDK watchdog override')
     provider['streamIdleTimeoutMs'] = timeout_seconds * 1000
     provider['timeoutMs'] = timeout_seconds * 1000
+    # The audited four-route transport is the sole retry owner.
+    provider['retryPolicy'] = {'mode': 'normal', 'maxRetries': 0}
+    # Never let native offload silently remove additional evidence.
+    result.append({'id': 'compaction-image-offload', 'disabled': True})
     return result
 
 
@@ -100,6 +104,8 @@ def main():
             'dsh_wire_implementation': 'dsh-inline-wire-v2',
             'transport_deadline_seconds': args.timeout,
             'python_transport_runtime_executed': False,
+            'provider_retry_policy': {'mode': 'normal', 'maxRetries': 0},
+            'retry_owner': 'audited_four_route_transport',
             'output_budget_changed': False, 'task_budget_changed': True,
             'previous_task_timeout_seconds': 1800,
             'reason': 'SDK cannot observe progress while complete route responses are buffered',

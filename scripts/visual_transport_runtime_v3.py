@@ -10,6 +10,7 @@ import random
 from datetime import timezone
 from email.utils import parsedate_to_datetime
 import re
+from sse_completion import SSECompletion
 
 VERSION = 'visual-transport-runtime-v3'
 MAX_RATE_LIMIT_ATTEMPTS = 5
@@ -94,7 +95,7 @@ def install(policy, out, *, approved_base_url, route_policy=None, worker_key=Non
     class ObservedStream(httpx.SyncByteStream):
         def __init__(self,inner,key,rid,start):self.inner,self.key,self.rid,self.start=inner,key,rid,start;self.closed=False;self.done=False;self.failed=False
         def __iter__(self):
-            size=0;first=True;tail=b''
+            size=0;first=True;framing=SSECompletion()
             try:
                 for chunk in self.inner:
                     elapsed=time.monotonic()-self.start
@@ -103,12 +104,17 @@ def install(policy, out, *, approved_base_url, route_policy=None, worker_key=Non
                         terminal('stream_wall_budget',self.key,self.rid)
                     if first:emit({'event':'first_response_bytes','request_id':self.rid,'elapsed_seconds':elapsed});first=False
                     size+=len(chunk)
-                    framed=tail+chunk
-                    if not self.done and any(line.strip()==b'data: [DONE]' for line in framed.split(b'\n')[:-1]):
+                    framing.feed(chunk)
+                    if framing.done:
+                        keep = len(chunk) - (size - framing.done_offset)
+                        chunk = chunk[:keep]
+                        size = framing.done_offset
                         self.done=True;failures.pop(self.key,None)
                         emit({'event':'stream_complete','request_id':self.rid,'completion_evidence':'sse_done','response_bytes':size,'elapsed_seconds':time.monotonic()-self.start})
-                    tail=framed[-256:]
                     yield chunk
+                    if self.done:break
+                if framing.saw_sse and not framing.done:
+                    raise httpx.RemoteProtocolError('SSE ended before terminal event')
                 if not self.done:
                     self.done=True;failures.pop(self.key,None)
                     emit({'event':'stream_complete','request_id':self.rid,'completion_evidence':'http_eof','response_bytes':size,'elapsed_seconds':time.monotonic()-self.start})
@@ -297,7 +303,7 @@ def install_four_routes(policy,out,*,approved_base_url,worker_key,deadline_secon
             try:
                 response=original(client,outgoing);headers_at=time.monotonic()
                 emit({**meta,'event':'response_headers','status_code':response.status_code,'elapsed_seconds':headers_at-start})
-                first=True
+                first=True; framing=SSECompletion()
                 for chunk in response.iter_bytes():
                     if first:
                         emit({**meta,'event':'first_response_bytes','elapsed_seconds':time.monotonic()-start,
@@ -305,8 +311,15 @@ def install_four_routes(policy,out,*,approved_base_url,worker_key,deadline_secon
                     buffer.extend(chunk)
                     if time.monotonic()>=deadline:raise httpx.ReadTimeout('Worker route deadline',request=outgoing)
                     if time.monotonic()-start>policy['stream_seconds']:raise httpx.ReadTimeout('Route stream wall budget',request=outgoing)
+                    if response.is_success:
+                        framing.feed(chunk)
+                        if framing.done:
+                            del buffer[framing.done_offset:]
+                            break
+                if response.is_success and not framing.done and (framing.saw_sse or 'text/event-stream' in response.headers.get('content-type','')):
+                    raise httpx.RemoteProtocolError('SSE ended before terminal event',request=outgoing)
                 raw=bytes(buffer);usage=_usage_from_buffer(raw)
-                emit({**meta,'event':'stream_complete','completion_evidence':'http_eof','response_bytes':len(raw),
+                emit({**meta,'event':'stream_complete','completion_evidence':'sse_done' if framing.done else 'http_eof','response_bytes':len(raw),
                       'elapsed_seconds':time.monotonic()-start,'client_stream_seconds':time.monotonic()-headers_at,
                       'usage_known':usage is not None,'raw_provider_usage':usage})
                 # iter_bytes produced decoded bytes. Avoid double content decoding.

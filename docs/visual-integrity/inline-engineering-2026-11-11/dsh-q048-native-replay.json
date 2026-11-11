@@ -1,0 +1,139 @@
+{
+  "api_calls": 0,
+  "network_requests": 0,
+  "expected_path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_048_r01/attempts/attempt_001/native/visual_native/q_048/workspace/metrics/expected-wire.json",
+  "projection": {
+    "version": "dsh-pre-sdk-last-ten-v1",
+    "original_image_count": 34,
+    "retained_image_count": 10,
+    "removed": [
+      {
+        "message_index": 0,
+        "part_index": 0,
+        "attachment_id": "sha256:a759658d7cb27d843b5a85d71e7b2cc85263588887a229b329faa5e29506a7eb"
+      },
+      {
+        "message_index": 0,
+        "part_index": 1,
+        "attachment_id": "sha256:3c4506f4473badb127ac9a4561c64a266e947f92fa9f6970d922cce0171051c3"
+      },
+      {
+        "message_index": 0,
+        "part_index": 2,
+        "attachment_id": "sha256:df8c963492c79235ebcce80f9c2c1b3dc45332c37f5b55458670629d5cae017c"
+      },
+      {
+        "message_index": 0,
+        "part_index": 3,
+        "attachment_id": "sha256:708c262802e7e113e4f2738ceeebf038861f72667df4ec2420647cd0b6c79f65"
+      },
+      {
+        "message_index": 0,
+        "part_index": 4,
+        "attachment_id": "sha256:4f210b76c420ab343f583f72f799457d6424f6ed030a2ce1a8ca7692047de5ec"
+      },
+      {
+        "message_index": 0,
+        "part_index": 5,
+        "attachment_id": "sha256:1014be3932b88602d7d72002c56f5e1df55b2c72ea6f76ec148d2e6692606803"
+      },
+      {
+        "message_index": 0,
+        "part_index": 6,
+        "attachment_id": "sha256:d329c2fb24a4311a070ee523ef5673b30ba91c4aa06db45c36064beced47bcc4"
+      },
+      {
+        "message_index": 0,
+        "part_index": 7,
+        "attachment_id": "sha256:1925701c33b2da9fc15b0e447149ddf7e0d9b75f824fca6f6500acb81851ac1d"
+      },
+      {
+        "message_index": 0,
+        "part_index": 8,
+        "attachment_id": "sha256:d6b248293b792e85df8ccf70901b9c5a8f29745c271d988f6f72ffda3d50e361"
+      },
+      {
+        "message_index": 0,
+        "part_index": 9,
+        "attachment_id": "sha256:70810f8eeda0f5533a22098dfec30ff801c2e9b021ce1785c5b2bbb693d901b5"
+      },
+      {
+        "message_index": 0,
+        "part_index": 10,
+        "attachment_id": "sha256:b787117c974fe1c43ccbe3d2e37f106be740ab50d9901dc88a447eef4eef96fc"
+      },
+      {
+        "message_index": 0,
+        "part_index": 11,
+        "attachment_id": "sha256:d5f407f710a83028023ba8c55de4ce6f0f43f567fcd14a99e1f5ba1ae724e3ff"
+      },
+      {
+        "message_index": 0,
+        "part_index": 12,
+        "attachment_id": "sha256:e8817789819bd609a7d40101a96532a48c4bfa5057b1145a9b4199c1d91bb2ce"
+      },
+      {
+        "message_index": 0,
+        "part_index": 13,
+        "attachment_id": "sha256:837cc42a0b57159bff7a7b1ba2736797e859caa38b4daae580b2822240e7a322"
+      },
+      {
+        "message_index": 0,
+        "part_index": 14,
+        "attachment_id": "sha256:6ddf390b3a972d7f599f57cad43e5e6d36bd927e5b9c49a77f983b3393e46763"
+      },
+      {
+        "message_index": 0,
+        "part_index": 15,
+        "attachment_id": "sha256:d6bf5ed5177f1cf6035acce5b4212076cf9bfaae8ec14d337ca25d7ca91669a9"
+      },
+      {
+        "message_index": 0,
+        "part_index": 16,
+        "attachment_id": "sha256:79352ba719b3ef8e392bed9a45af1cb1701d96912ba9ff72cfc96cdaa880e1ab"
+      },
+      {
+        "message_index": 0,
+        "part_index": 17,
+        "attachment_id": "sha256:15a6f951eaf6df348c3ff591acfe73070e8f17440c93d7998ae84e9eb23582fc"
+      },
+      {
+        "message_index": 0,
+        "part_index": 18,
+        "attachment_id": "sha256:8401d47daeca4901f9cc1bed7289d5b830bfff330d9fba642c2cb5980c6fd074"
+      },
+      {
+        "message_index": 0,
+        "part_index": 19,
+        "attachment_id": "sha256:af8e0dde397b92f4b47d8bda9097ae3e878db9463286a3e58727d09cf32bcc2d"
+      },
+      {
+        "message_index": 0,
+        "part_index": 20,
+        "attachment_id": "sha256:8a3d7cc59acfded10bf55c17815c08615948904b0e39b6bfb52540df0237d866"
+      },
+      {
+        "message_index": 0,
+        "part_index": 21,
+        "attachment_id": "sha256:a0bd2b83186c3aeeaaee19bf675ff808a71adeb6abbab34ae2c2dda27a9ea31f"
+      },
+      {
+        "message_index": 0,
+        "part_index": 22,
+        "attachment_id": "sha256:dffb677befa99ca02342776bc3361e6829ea76b80479017abadc55c660bbf770"
+      },
+      {
+        "message_index": 0,
+        "part_index": 23,
+        "attachment_id": "sha256:8a884d47f541fa50b1af718eb91b244b8581fc0736ebae41a8ab0cc057e36c7a"
+      }
+    ],
+    "history_mutated": false,
+    "pixels_reencoded": false
+  },
+  "wire_images": 10,
+  "attachment_reads": 10,
+  "native_sdk_budget_bytes": 20971520,
+  "all_retained_hashes_and_details_match": true,
+  "history_unchanged": true
+}

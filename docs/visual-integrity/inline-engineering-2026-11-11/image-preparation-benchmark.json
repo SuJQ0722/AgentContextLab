@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "measurement": "local client preparation only; zero model/API calls; warm filesystem cache, not cold disk",
+  "image_count": 10,
+  "raw_bytes": 5303020,
+  "data_url_bytes": 7070938,
+  "json_bytes": 7071580,
+  "first_verified_cache_fill_ms": 20.413595000000015,
+  "attachment_reads_including_fill": 8,
+  "cache_limit_bytes": 16777216,
+  "stats": {
+    "path_read_encode": {
+      "n": 30,
+      "median_ms": 21.936733000000004,
+      "p95_ms": 27.129528999999934
+    },
+    "in_memory_encode": {
+      "n": 30,
+      "median_ms": 3.245256500000039,
+      "p95_ms": 5.33486199999993
+    },
+    "verified_cache_hit": {
+      "n": 30,
+      "median_ms": 0.025979000000035057,
+      "p95_ms": 0.04909299999997074
+    },
+    "reused_data_urls": {
+      "n": 30,
+      "median_ms": 0.001164500000015778,
+      "p95_ms": 0.0031269999999494758
+    },
+    "json_serialize_only": {
+      "n": 30,
+      "median_ms": 6.536523499999987,
+      "p95_ms": 9.182283999999981
+    }
+  },
+  "source": [
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_history_001.webp",
+      "sha256": "965386df95060447fe932a2d6024552c07f5d81df246d75d4b5a1d60b2594314",
+      "bytes": 557972
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_history_002.webp",
+      "sha256": "284f387cf1fcd1676aae862169323566b9c859c2dadb4a184171516c6f7a28cf",
+      "bytes": 636492
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_history_003.webp",
+      "sha256": "30b4563daa760cba8c53f3512994d26f05db63b5d6e07b8e29f6e0bed295783e",
+      "bytes": 668998
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_history_004.webp",
+      "sha256": "c4e1ecd5427c66f06f47574c6945e4a7e8fd7fe4bfe99203318917e25923456a",
+      "bytes": 643678
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_history_005.webp",
+      "sha256": "afda68f7f8508d87b7d5d0335cdee0b9d580966b2fe1ef3fa059634e1dd1b04c",
+      "bytes": 679240
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_history_006.webp",
+      "sha256": "77cfcb971c1ff523c25a143d58bb60e70d011daec4fe379fc0cdbbef5cfd84cc",
+      "bytes": 589732
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_recent_001.webp",
+      "sha256": "12037359ec8702100916129bc976126ab5639f5c215fd23532ff4abcb12a6572",
+      "bytes": 204978
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_1_recent_002.webp",
+      "sha256": "c10aea2bd2086b7702cdc3ab6ad239e89f74a1a3204ab7c3a83a817821d1f280",
+      "bytes": 127466
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_2_history_001.webp",
+      "sha256": "965386df95060447fe932a2d6024552c07f5d81df246d75d4b5a1d60b2594314",
+      "bytes": 557972
+    },
+    {
+      "path": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour/cells/bc_dsh/jobs/dsh/visual/q_004_r01/attempts/attempt_001/native/visual_native/q_004/workspace/metrics/raw-canvases/compact_2_history_002.webp",
+      "sha256": "284f387cf1fcd1676aae862169323566b9c859c2dadb4a184171516c6f7a28cf",
+      "bytes": 636492
+    }
+  ]
+}

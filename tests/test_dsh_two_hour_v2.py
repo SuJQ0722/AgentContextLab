@@ -29,12 +29,14 @@ class TwoHourTests(unittest.TestCase):
                                 env=env, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_sdk_http_and_idle_budgets_only(self):
+    def test_sdk_budgets_and_single_retry_owner(self):
         source = self.fixture(); before = copy.deepcopy(source)
         changed = worker.adapt_patches(source, timeout_seconds=7200)
         provider = changed[1]['config']['providers']['tokenhub']
         self.assertEqual(provider.pop('timeoutMs'), 7200000)
         self.assertEqual(provider.pop('streamIdleTimeoutMs'), 7200000)
+        self.assertEqual(provider.pop('retryPolicy'), {'mode':'normal','maxRetries':0})
+        self.assertEqual(changed.pop(), {'id':'compaction-image-offload','disabled':True})
         self.assertEqual(changed, before)
         self.assertEqual(source, before)
         for value in (1800, 3600, 7201, 0, True, 7200.0):
@@ -48,7 +50,7 @@ class TwoHourTests(unittest.TestCase):
 import assert from 'node:assert/strict';
 import {resolveProfiles} from './deepseekHarness/packages/llm/llm-pi-ai/src/config.ts';
 const p=resolveProfiles(PROVIDERS).get('tokenhub');
-assert.equal(p.timeoutMs,7200000);assert.equal(p.streamIdleTimeoutMs,7200000);
+assert.equal(p.retryPolicy.maxRetries,0);assert.equal(p.timeoutMs,7200000);assert.equal(p.streamIdleTimeoutMs,7200000);
 assert.equal(p.configuredMaxTokens.get(MODEL),8192);
 """.replace('PROVIDERS', json.dumps(providers)).replace('MODEL', json.dumps(ROUTES[0])))
 

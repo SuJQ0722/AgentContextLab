@@ -1,4 +1,5 @@
 /** Direct inline images, exact four-route rotation, client transport telemetry. */
+import {SSECompletion} from './sse_completion.mjs';
 import {spawn} from 'node:child_process';
 import {createInterface} from 'node:readline';
 import {appendFileSync,mkdirSync} from 'node:fs';
@@ -101,15 +102,18 @@ export function guardedFetch({original,transform,endpoint,emit:emitOuter,workerK
     response=await diagnosticContext.run({id,model,started,emit,endpoint},()=>original.call(this,url,{...init,method,body:bodyStream(wire,emit,id,model,started),headers,duplex:'half',signal}));
     emit({event:'response_headers',attempt_id:id,actual_model:model,http_status:response.status,client_seconds:(performance.now()-started)/1000});
     if(response.ok){
-     const reader=response.body?.getReader(),chunks=attemptChunks;let bytes=0,first=true,tail='';
+     const reader=response.body?.getReader(),chunks=attemptChunks;let bytes=0,first=true;const framing=new SSECompletion();
      if(reader)while(true){const part=await reader.read();if(part.done)break;chunks.push(Buffer.from(part.value));bytes+=part.value.byteLength;
       if(first){first=false;emit({event:'first_response_bytes',attempt_id:id,actual_model:model,client_seconds:(performance.now()-started)/1000});}
-      tail=(tail+Buffer.from(part.value).toString('utf8')).slice(-256);
-      if(/data:\s*\[DONE\]/.test(tail)){await reader.cancel();break;}
+      framing.feed(Buffer.from(part.value));
+      if(framing.done){void reader.cancel().catch(()=>{});break;}
      }
-     clearTimeout(timer);const result=Buffer.concat(chunks);
+     if(!framing.done&&(framing.sawSSE||response.headers.get('content-type')?.includes('text/event-stream'))){
+      const error=Error('SSE ended before terminal event');error.code='ACL_INCOMPLETE_SSE';throw error;
+     }
+     clearTimeout(timer);const result=Buffer.concat(chunks).subarray(0,framing.doneOffset??bytes);
      const usage=providerUsage(result);
-     emit({event:'stream_complete',attempt_id:id,actual_model:model,response_bytes:bytes,client_seconds:(performance.now()-started)/1000,
+     emit({event:'stream_complete',attempt_id:id,actual_model:model,response_bytes:result.length,completion_evidence:framing.done?'sse_done':'http_eof',client_seconds:(performance.now()-started)/1000,
       request_wall_seconds:(now()-startedWall)/1000,response_buffered_for_safe_route_retry:true,
       usage_known:usage!==null,raw_provider_usage:usage});
      const responseHeaders=new Headers(response.headers);responseHeaders.delete('content-length');responseHeaders.delete('content-encoding');
@@ -134,7 +138,7 @@ export function guardedFetch({original,transform,endpoint,emit:emitOuter,workerK
     const detail=safeError(error),usage=providerUsage(Buffer.concat(attemptChunks));emit({event:'route_transport_error',attempt_id:id,actual_model:model,...detail,usage_known:usage!==null,raw_provider_usage:usage,client_seconds:(performance.now()-started)/1000});
     if(callerSignal?.aborted||detail.cause_codes.some(x=>['UND_ERR_INVALID_ARG','ACL_AUTH_REJECTED'].includes(x)))throw error;
     retry=true;
-   }finally{clearTimeout(timer);}
+   }finally{clearTimeout(timer);bodySentAttempts.delete(id);}
    if(retry)failedRoutes++;
    if(failedRoutes===ROUTES.length){
     const delay=Math.max(cycleRetryAfter,Math.min(120000,60000*2**cycle))+100+Math.max(0,Math.min(1,random()))*4900;

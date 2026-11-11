@@ -1,3 +1,4 @@
+import {imageDataURL} from './image-data-url-cache.mjs';
 /** Separate native image evidence from text without changing attachment references. */
 export function separateImages(messages) {
   const images = new Map();
@@ -33,19 +34,15 @@ export async function inlineImagesForRenderer(messages, attachments, signal, occ
       if (block.offloaded) throw new Error('Visual evidence has been offloaded; cannot render original pixels');
       const ref = block.attachment;
       if (!ref?.attachmentId) throw new Error('Visual evidence has no durable attachment identity');
-      let stored = cache.get(ref.attachmentId);
-      if (!stored) {
-        stored = await attachments.readImage(ref, signal);
-        if (!stored?.data?.length) throw new Error('Visual evidence bytes are missing');
-        cache.set(ref.attachmentId, stored);
-      }
-      const mediaType = stored.ref?.mediaType ?? ref.mediaType;
-      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(mediaType)) {
-        throw new Error(`Unsupported visual evidence media type: ${mediaType}`);
+      const cacheKey = `${ref.attachmentId}:${ref.mediaType??''}`;
+      let url = cache.get(cacheKey);
+      if (!url) {
+        url = await imageDataURL(attachments, ref, signal);
+        cache.set(cacheKey, url);
       }
       content.push({
         type: 'image_url',
-        image_url: { url: `data:${mediaType};base64,${Buffer.from(stored.data).toString('base64')}`, ...(block.aclImageDetail?{detail:block.aclImageDetail}:{}) },
+        image_url: { url, ...(block.aclImageDetail?{detail:block.aclImageDetail}:{}) },
         source_attachment_id: ref.attachmentId,
         source_occurrence: `${message.id ?? `message-${occurrenceOffset + messageIndex}`}:block-${blockIndex}`,
       });

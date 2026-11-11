@@ -2,7 +2,9 @@
 
 Prediction snapshot: 2026-11-11 18:32 UTC (北京时间 2026-11-12 02:32); information-loss launch verified at 18:37 UTC. Deployment commit on dev: `8e698f02d`. This is an operational recovery report, not a new scientific score table.
 
-## Deployed experiments
+Latest all-container check, **2026-11-11 18:37:33 UTC / 北京时间 11 月 12 日 02:37:33**: all 15 CCIs RUNNING/ready=1; all 14 prediction controllers have `stop_dispatch=false`, `error=null`, heartbeat age at most 34.4 seconds. Prediction totals: **63 completed, 2 output-limit failures, zero terminal timeouts**; 219 controller-reported active slots (218 observed by the sequential per-job scan during a dispatch transition). Information loss has eight completed conditions, including seven reused completions; its new requests include seven HTTP 200 completions and 26 transport errors. Full receipt: `outputs/cloud-runtime/inline-model-alias-v10/final-fifteen-live-snapshot.json`. All running containers remain running.
+
+## Deployed experiments (18:32 prediction snapshot)
 
 Twelve V8 cells and two V9 replacement cells have current controller heartbeats and `stop_dispatch=false`. Thirteen containers have 16 active prediction workers each; controlled MMBC has 11 jobs and 11 active workers. Total: **14 containers, 219 active prediction workers**. No global concurrency cap applies. The V9 cells replace stopped V8 DSH/shared executions; they are not extra independent seeds.
 

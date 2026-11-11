@@ -99,7 +99,9 @@ def prepare(out, old, stop_proof):
     if out == old or out.is_relative_to(old) or old.is_relative_to(out):
         raise ValueError('Independent V10 output generation required')
     proof = previous.phase.read(stop_proof)
-    if proof.get('state') != 'SUSPENDED' or proof.get('ready_replicas') != 0 or not proof.get('uid'):
+    state = proof.get('after', proof)
+    if (state.get('state') != 'SUSPENDED' or state.get('ready_replicas') != 0
+            or not state.get('uid') or state['uid'] != proof.get('uid')):
         raise ValueError('V9 CCI must be confirmed suspended with zero replicas')
     prior = previous.phase.read(old / 'manifest.json')
     runtime.verify(old, prior)

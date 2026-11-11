@@ -35,7 +35,7 @@
       "visual_native"
     ],
     "max_rounds": 60,
-    "timeout_seconds": 7200,
+    "timeout_seconds": 1800,
     "concurrency": 1,
     "search_max_results": 5,
     "fetch_max_output_chars": 15000
@@ -58,7 +58,7 @@
     "repeats": 3,
     "concurrency": 16,
     "max_rounds": 60,
-    "timeout_seconds": 7200,
+    "timeout_seconds": 1800,
     "strategies": [
       "none",
       "summarize",
@@ -94,7 +94,7 @@
     "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
     "concurrency_per_method": 16,
     "max_rounds": 60,
-    "timeout_seconds": 7200,
+    "timeout_seconds": 1800,
     "compression_threshold_tokens": 32768,
     "context_window": 131072,
     "max_output_tokens": 8192,
@@ -143,8 +143,7 @@
       "image_tokens_matched": false
     },
     "scientific_parameters": "All other parameters inherited from parent frozen experiment.json; parent source/config/plan/results unchanged",
-    "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt",
-    "timeout_seconds": 7200
+    "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt"
   },
   "bounded_visual_repair_v1": {
     "protocol": "bounded-multimodal-pages-v1",

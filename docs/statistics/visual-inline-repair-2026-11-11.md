@@ -17,7 +17,7 @@ The V5 retry wave did not establish reliable execution. Its 1,536 selected prior
 - Additional judge calls and raw usage: `outputs/grading/visual-inline-judge-recovery-v1`.
 - Merged V5 scoring observations: `outputs/grading/visual-inline-judge-recovery-v1/observations-merged.json`. All 299 V5 completed predictions now have a score; the separately graded CLI supplement remains separate.
 - Judge recovery: five focused tests pass, including preservation of incorrect scores, no replay of unresolved paid requests, source changes, and offline canonical-model validation.
-- Root checks during repair: 932 tests passed in 141.510 seconds. Later transport changes require their own focused verification before release.
+- Final root checks after the transport repairs: 942 tests passed in 153.764 seconds. All eight actual native worker dry-runs also exited successfully with zero model calls. The transport deadline implementation passed eight focused tests and an independent review.
 
 The next validation population consists of eight prespecified old timeout cases, each in its own versioned cell, with unchanged questions, repeats, compression policy and scientific budgets. These are engineering canaries, not a replacement for complete-cohort results. A whole-wave rerun must not be described as fixed until the new transport and actual trajectories have been checked.
 
@@ -26,3 +26,20 @@ The next validation population consists of eight prespecified old timeout cases,
 Two sequential, nonrandomized paid diagnostic requests used the same ten-image payload (5,280,272 bytes), SHA and huoshan/huoshan route, with no automatic retries. Explicit proxy: HTTP 200, client POST body phase 0.00499 s, end-to-end 103.30 s, input 7,213 / cached 0 / output 56. Direct: HTTP 200, body phase 239.74 s, end-to-end 247.93 s, input 7,213 / cached 7,168 / output 56. Both reproduced the same 2/3 reading-check result. The cache conditions differ, so this is not a controlled estimate of population speedup; it supports direct-path transmission delay as a material mechanism. A quick client-to-proxy write is not proof of quick provider ingress. Evidence: `outputs/preflight/python-gateway-proxy-v1/result.json` and `direct-current/result.json`.
 
 After V5 drained and its missing grades were recovered, the idle V5 grader and resource observer received SIGTERM to finish their last snapshots and stop repeatedly scanning static AFS logs. This does not stop prediction workers: all V5 workers were already finished. Audit: `outputs/preflight/visual-inline-v6-canary/old-observers-drain.json`.
+
+## Live canary evidence
+
+The eight selected old timeouts were released locally in independent namespaces after review. Each controller is configured for 16 workers but has only one selected trial. No whole-wave retry or new CCI was launched.
+
+- BC Hermes q004 r01 completed in 110.282 seconds (native runtime 98.062 seconds) and was judged correct. Its predecessor timed out at approximately 1,802 seconds. This one-case comparison also includes initialization and trajectory differences; it is not a population speedup estimate. It did not compress images and is not used as a visual acceptance check.
+- RQ3 0.75 has multiple successful requests containing ten independently retained canvases. RQ3 1.0 has successful six-canvas requests. Request identities, original ledgers, exact usage and phase timings are in `outputs/preflight/visual-inline-v6-canary/canvas-success.json`.
+- DSH's first eight-canvas request completed with HTTP 200: 4,906,640 bytes, body-sent elapsed 0.397 s, headers 72.038 s, completion 82.441 s; cached input 2,304, non-cache input 9,567, output 1,646, total 13,517. Evidence: `outputs/preflight/visual-inline-v6-canary/dsh-canvas-success.json`.
+- Controlled BC completed a request containing five native evidence images plus one canvas. MMBC vanilla recovered after a per-request 300-second deadline by switching route; unreturned usage remains unknown rather than free.
+
+The controlled MMBC canary initially failed before a model call with a transient urllib image-download error. Its original captured images already existed locally. A separate worker and supplemental namespace now validate original URLs/order, ledger hash, actual file hash/size and membership in the frozen prefix before staging identical bytes. Missing or mismatched assets fail closed; no replacement image is fetched. Three focused tests, the actual worker dry-run and exact-byte staging check passed. The supplemental trial has completed its first model request successfully. The original failed trial remains intact. Root: `outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v6-canary/cells/input-reuse-v1`.
+
+These observations verify repaired execution paths, not completion of all eight canaries or elimination of all future timeouts. Native output-budget exhaustion remains a separate limitation. The full recovery wave remains unreleased pending canary review.
+
+The input-reuse controlled MMBC trial subsequently completed a mixed request containing two native images and four canvases after route recovery. Request-level deadlines still occur: some requests had partial response bytes before the 300-second cutoff, while another had no first byte. Existing instrumentation does not record every chunk's timestamp, so these cannot all be labeled continuously generating responses. Neither the repair nor these limited successes establishes elimination of service latency or all future timeouts.
+
+A durable read-only monitor now refreshes every 60 seconds at `outputs/monitoring/visual-inline-canary-v6/monitor.md` and `monitor.json`. It uses the input-reuse supplemental outcome for controlled MMBC while retaining the original failure, keeps prediction and judging usage separate, and does not automatically retry or launch the full wave. It exits after all eight effective observations have terminal outcomes and grading or explicit grading errors.

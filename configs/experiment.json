@@ -35,7 +35,7 @@
       "visual_native"
     ],
     "max_rounds": 60,
-    "timeout_seconds": 1800,
+    "timeout_seconds": 7200,
     "concurrency": 1,
     "search_max_results": 5,
     "fetch_max_output_chars": 15000
@@ -58,7 +58,7 @@
     "repeats": 3,
     "concurrency": 16,
     "max_rounds": 60,
-    "timeout_seconds": 1800,
+    "timeout_seconds": 7200,
     "strategies": [
       "none",
       "summarize",
@@ -94,7 +94,7 @@
     "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
     "concurrency_per_method": 16,
     "max_rounds": 60,
-    "timeout_seconds": 1800,
+    "timeout_seconds": 7200,
     "compression_threshold_tokens": 32768,
     "context_window": 131072,
     "max_output_tokens": 8192,
@@ -143,7 +143,8 @@
       "image_tokens_matched": false
     },
     "scientific_parameters": "All other parameters inherited from parent frozen experiment.json; parent source/config/plan/results unchanged",
-    "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt"
+    "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt",
+    "timeout_seconds": 7200
   },
   "bounded_visual_repair_v1": {
     "protocol": "bounded-multimodal-pages-v1",
@@ -319,5 +320,30 @@
     "scientific_output_budget_changed": false,
     "task_deadlines_changed": false,
     "full_recovery_requires_canary_review": true
+  },
+  "visual_inline_two_hour_v7": {
+    "root": "outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-v7-two-hour",
+    "timeout_seconds": 7200,
+    "transport_runtime_version": "visual-transport-runtime-v4",
+    "gateway_proxy": "http://10.120.0.246:7890",
+    "dsh_buffered_watchdog_version": "dsh-buffered-sdk-watchdog-v2",
+    "concurrency_per_cell": 16,
+    "global_cap": null,
+    "compression_image_upload": false,
+    "retain_recent_images": 10,
+    "max_output_tokens": 8192,
+    "excluded_benchmarks": [
+      "agenticdatabench"
+    ],
+    "scope": "Current V5 recovery slots plus their V6/CLI/input-reuse successors; resume terminal execution failures only",
+    "selection": "Retain every completed result including wrong answers; never modify prior frozen campaigns",
+    "question_deadline_changed": true,
+    "prior_question_deadlines_seconds": [
+      1800,
+      3600
+    ],
+    "http_attempt_deadline_seconds": 300,
+    "route_policy": "four-route-rotation-v1",
+    "reporting": "New two-hour operational recovery version; record old and new costs separately; not a fresh independent avg3"
   }
 }

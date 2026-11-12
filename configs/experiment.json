@@ -24,9 +24,10 @@
     "questions_per_dataset": 10,
     "repeats": 1,
     "concurrency": 1,
-    "max_rounds": 60,
+    "max_rounds": 500,
     "compression_trigger_tokens": 32768,
-    "post_compression_budget_tokens": 16384
+    "post_compression_budget_tokens": 16384,
+    "timeout_seconds": 3600
   },
   "bc100": {
     "source": "../hermes-agent/Browsecomp_eval/data/browsecomp_subset_200/questions_100.jsonl",
@@ -34,8 +35,8 @@
       "summarize",
       "visual_native"
     ],
-    "max_rounds": 60,
-    "timeout_seconds": 1800,
+    "max_rounds": 500,
+    "timeout_seconds": 3600,
     "concurrency": 1,
     "search_max_results": 5,
     "fetch_max_output_chars": 15000
@@ -57,8 +58,8 @@
     "questions": 100,
     "repeats": 3,
     "concurrency": 16,
-    "max_rounds": 60,
-    "timeout_seconds": 1800,
+    "max_rounds": 500,
+    "timeout_seconds": 3600,
     "strategies": [
       "none",
       "summarize",
@@ -93,8 +94,8 @@
     "model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
     "judge_model": "deepseek-v4.1-flash-1017/huoshan/huoshan",
     "concurrency_per_method": 16,
-    "max_rounds": 60,
-    "timeout_seconds": 1800,
+    "max_rounds": 500,
+    "timeout_seconds": 3600,
     "compression_threshold_tokens": 32768,
     "context_window": 131072,
     "max_output_tokens": 8192,
@@ -143,7 +144,9 @@
       "image_tokens_matched": false
     },
     "scientific_parameters": "All other parameters inherited from parent frozen experiment.json; parent source/config/plan/results unchanged",
-    "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt"
+    "resume_policy": "Only unclaimed pending jobs; never automatically rerun any existing attempt",
+    "max_rounds": 500,
+    "timeout_seconds": 3600
   },
   "bounded_visual_repair_v1": {
     "protocol": "bounded-multimodal-pages-v1",
@@ -426,5 +429,19 @@
     "gemini": "historical only",
     "attempt_scope": "three total in this new campaign; prior attempt records and costs preserved",
     "status": "preparing"
-  }
+  },
+  "seven_page_turns500_v12": {
+    "version": "seven-page-turns500-v12",
+    "timeout_seconds": 3600,
+    "max_rounds": 500,
+    "max_attempts": 3,
+    "max_timeout_retries": 2,
+    "concurrency_per_cell": 16,
+    "retry_only_status": "timeout",
+    "attempt_budget": "Includes real or acceptance-unknown attempts from V10/V11; never reset on config migration",
+    "completed_results": "Preserve, with original limits and protocol labels",
+    "failed_results": "Do not select ordinary failed for retry",
+    "status": "preparing"
+  },
+  "active_execution_protocol": "seven_page_turns500_v12"
 }

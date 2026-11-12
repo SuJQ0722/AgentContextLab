@@ -384,5 +384,18 @@
     "excluded_benchmarks": [
       "agenticdatabench"
     ]
+  },
+  "visual_image_retention": {
+    "version": "visual-recent-five-v1",
+    "max_images_per_request": 5,
+    "retention": "last_5_in_message_order",
+    "count_scope": "native and canvas image_url blocks together",
+    "methods": [
+      "visual",
+      "vanilla_visual"
+    ],
+    "status": "prepared_not_launched",
+    "historical_results_modified": false,
+    "controlled_and_information_loss": "Keep their explicit evidence-matching protocols; do not silently change them"
   }
 }

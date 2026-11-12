@@ -18,9 +18,11 @@ class RecentImageTransportError(guard.TenImageRequestError):
 
 def _digest(raw):return hashlib.sha256(raw).hexdigest()
 
-def transform(body, *, rendered_registry):
+def transform(body, *, rendered_registry, max_images=MAX_IMAGES):
     """Return new bytes and provenance; input bytes/messages are never mutated."""
-    record={'version':VERSION,'retention_policy':RETENTION,'max_images':MAX_IMAGES,
+    if type(max_images) is not int or not 1 <= max_images <= MAX_IMAGES:
+        raise ValueError('Image limit must be an integer from 1 to 10')
+    record={'version':VERSION,'retention_policy':f'last_{max_images}_in_message_order','max_images':max_images,
             'original_body_bytes':None,'original_body_sha256':None,'original_image_count':None,
             'retained':[],'removed':[],'text_and_tool_semantics_unchanged':True,
             'pixels_reencoded':False,'pages_merged':False,'resolution_changed':False}
@@ -55,7 +57,7 @@ def transform(body, *, rendered_registry):
                     'origin':'canvas'if digest in registry else'native',
                     'detail':value.get('detail','auto')if isinstance(value,dict)else'auto'})
         record['original_image_count']=len(occurrences)
-        cutoff=max(0,len(occurrences)-MAX_IMAGES)
+        cutoff=max(0,len(occurrences)-max_images)
         removed=occurrences[:cutoff];retained=occurrences[cutoff:]
         dropped={(x['message_index'],x['original_part_index'])for x in removed}
         modified=copy.deepcopy(payload)

@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 import dsh_bounded_bc_worker_v1 as parent
 from lab import ROOT
+from inline_visual_transport_v1 import visual_max_images, transport_version
 from inline_route_contract_v1 import validate_routes
 
 BOUNDED_SOURCE_FILES = list(dict.fromkeys(parent.BOUNDED_SOURCE_FILES + [
@@ -21,6 +22,7 @@ def main():
     p.add_argument('--output-root', type=Path, required=True)
     a, _ = p.parse_known_args()
     cfg = json.loads(a.config.read_text()); validate_routes(cfg, cfg)
+    max_images = visual_max_images(cfg)
     if cfg.get('bounded_max_images') != 10 or cfg.get('bounded_request_protocol') != 'bounded-multimodal-recent-ten-v1':
         raise ValueError('Explicit recent-ten configuration required')
     parts = a.output_root.resolve().parts
@@ -37,9 +39,9 @@ def main():
         metrics = Path(env['ACL_BOUNDED_WIRE_LEDGER']).parent
         env['ACL_INLINE_DSH_LEDGER'] = str(metrics / 'inline-images-wire-dsh-v1.jsonl')
         env['ACL_INLINE_DSH_JOB_ID'] = worker_key
-        env['ACL_INLINE_DSH_RETAIN_IMAGES'] = '10'
+        env['ACL_INLINE_DSH_RETAIN_IMAGES'] = str(max_images)
         (metrics.parent.parent / 'inline-dsh-protocol.json').write_text(json.dumps({
-            'version': 'dsh-inline-wire-v1', 'max_images': 10, 'image_transport': 'inline-recent-ten-chunked-v1',
+            'version': 'dsh-inline-wire-v1', 'max_images': max_images, 'image_transport': transport_version(max_images),
             'wire_ledger': env['ACL_INLINE_DSH_LEDGER'], 'body_chunk_bytes': 65536,
             'prior_image_observer_stage': 'pre_retention', 'approved_model_routes': cfg['approved_model_routes'],
             'model_route_policy': cfg['model_route_policy'], 'worker_key': worker_key,

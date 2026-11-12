@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """DSH IPC entry applying exactly the new bounded Hermes visual implementation."""
 import hashlib
+import os,json
 from pathlib import Path
 import sys
 import shared_context_policy as shared
 
 PROTOCOL='bc-bounded-pages-v1'
-SOURCES=('shared_context_bounded_bc_v1.py','rq3_bounded_renderer_v2.py','bounded_lossless_transport_v1.py')
+SOURCES=('shared_context_bounded_bc_v1.py','rq3_bounded_renderer_v2.py','bounded_lossless_transport_v1.py','page_window_renderer_v1.py')
 _original_configure=shared.configure_engine
 _original_hashes=shared.implementation_hashes
 _original_apply=shared.apply_policy
@@ -23,8 +24,12 @@ def configure(engine,strategy,config):
     from plugins.context_engine.visual import render
     from rq3_bounded_renderer_v2 import install
     from bounded_lossless_transport_v1 import install as encode
-    install(render)
-    if not getattr(render,'_bounded_lossless_transport_v1',False):encode(render)
+    window=json.loads(os.environ.get('ACL_PAGE_WINDOW_RENDERER','null'))
+    if window:
+        from page_window_renderer_v1 import install as window_install
+        window_install(render,window)
+    else: install(render)
+    if not window and not getattr(render,'_bounded_lossless_transport_v1',False):encode(render)
     if not getattr(render,'_bounded_bc_stats_capture_v1',False):
         original=render.render_visual_compression
         def capture(*args,**kwargs):

@@ -101,7 +101,7 @@ def transport_version(max_images, page_budget=None):
     if page_budget is not None: return 'inline-history5-recent2-v1'
     return VERSION if max_images == 10 else f'inline-recent-{max_images}-chunked-v2'
 
-def transform(body,*,rendered_registry,max_images=10,page_budget=None):
+def transform(body,*,rendered_registry,max_images=10,page_budget=None,max_canvas_pixels=2097152,max_body_bytes=MAX_BODY_BYTES):
     segment_audit = None
     original_body = body
     if page_budget is not None:
@@ -109,25 +109,25 @@ def transform(body,*,rendered_registry,max_images=10,page_budget=None):
         registry = set(rendered_registry() if callable(rendered_registry) else rendered_registry)
         body, segment_audit = select_canvas_pages(body, registry, page_budget)
         rendered_registry = registry
-    wire,selection=retain(body,rendered_registry=rendered_registry,max_images=max_images)
+    wire,selection=retain(body,rendered_registry=rendered_registry,max_images=max_images,max_canvas_pixels=max_canvas_pixels)
     if segment_audit is not None:
         selection['canvas_page_selection'] = segment_audit
         selection['pre_segment_body_sha256'] = hashlib.sha256(original_body).hexdigest()
         selection['retention_policy'] = 'history5_recent2_preserve_native'
 
-    if len(wire)>MAX_BODY_BYTES:raise ValueError('Inline request exceeds 32MiB body budget')
+    if len(wire)>max_body_bytes:raise ValueError(f'Inline request exceeds {max_body_bytes} bytes (32MiB legacy ceiling)')
     selection.pop('final_hosted_body_limit_bytes',None)
-    selection.update(version='inline-recent-ten-selection-v1' if max_images == 10 else f'inline-recent-{max_images}-selection-v2',final_inline_body_limit_bytes=MAX_BODY_BYTES,transport_stage='local_image_selection_for_inline_delivery')
+    selection.update(version='inline-recent-ten-selection-v1' if max_images == 10 else f'inline-recent-{max_images}-selection-v2',final_inline_body_limit_bytes=max_body_bytes,transport_stage='local_image_selection_for_inline_delivery')
     final_guard=selection.get('final_guard',{})
     if final_guard.pop('deferred_to_hosted_wire',None):final_guard['body_limit_revalidated_for_inline']=True
-    final_guard.update(max_body_bytes=MAX_BODY_BYTES,body_limit_policy='inline_32_mib')
+    final_guard.update(max_body_bytes=max_body_bytes,max_canvas_pixels=max_canvas_pixels,body_limit_policy='explicit_inline_budget')
     return wire,{'version':transport_version(max_images, page_budget),'max_images':max_images,'selection':selection,'image_count':selection['retained_image_count'],
                  'final_body_bytes':len(wire),'final_body_sha256':hashlib.sha256(wire).hexdigest(),
-                 'max_body_bytes':MAX_BODY_BYTES,'chunk_bytes':CHUNK_BYTES,'image_transport':'inline',
+                 'max_body_bytes':max_body_bytes,'chunk_bytes':CHUNK_BYTES,'image_transport':'inline',
                  'pixels_reencoded':False,'pages_merged':False,'hosting_calls':0,
                  'content_length_preserved':True,'transfer_encoding_chunked':False}
 
-def install(out,*,rendered_registry,approved_base_url,max_images=10,page_budget=None):
+def install(out,*,rendered_registry,approved_base_url,max_images=10,page_budget=None,max_canvas_pixels=2097152,max_body_bytes=MAX_BODY_BYTES):
     endpoint=httpx.URL(approved_base_url.rstrip('/')+'/chat/completions');original=httpx.Client._send_single_request
     if getattr(original,'_inline_recent_ten_v1',False):raise RuntimeError('Fresh worker required')
     path=Path(out)/'inline-images-wire-v1.jsonl';path.parent.mkdir(parents=True,exist_ok=True)
@@ -135,7 +135,7 @@ def install(out,*,rendered_registry,approved_base_url,max_images=10,page_budget=
         if request.url!=endpoint:return original(client,request)
         began=time.monotonic()
         try:
-            wire,row=transform(request.content,rendered_registry=rendered_registry,max_images=max_images,page_budget=page_budget)
+            wire,row=transform(request.content,rendered_registry=rendered_registry,max_images=max_images,page_budget=page_budget,max_canvas_pixels=max_canvas_pixels,max_body_bytes=max_body_bytes)
             outgoing=chunk_request(request,wire)
         except Exception as exc:
             with path.open('a')as f:f.write(json.dumps({'version':transport_version(max_images, page_budget),'max_images':max_images,'decision':'reject','error_type':type(exc).__name__,'network_send_authorized':False,'at_unix':time.time()})+'\n')

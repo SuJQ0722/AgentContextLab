@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 import dsh_bounded_bc_worker_v1 as parent
 from lab import ROOT
-from inline_visual_transport_v1 import visual_max_images, visual_page_budget, transport_version
+from inline_visual_transport_v1 import visual_max_images, visual_page_budget, visual_policy, transport_version
 from inline_route_contract_v1 import validate_routes
 
 BOUNDED_SOURCE_FILES = list(dict.fromkeys(parent.BOUNDED_SOURCE_FILES + [
@@ -41,6 +41,9 @@ def main():
         env['ACL_INLINE_DSH_JOB_ID'] = worker_key
         env['ACL_INLINE_DSH_RETAIN_IMAGES'] = str(max_images)
         env['ACL_INLINE_DSH_PAGE_BUDGET'] = json.dumps(visual_page_budget(cfg))
+        from page_window_renderer_v1 import settings as window_settings
+        env['ACL_PAGE_WINDOW_RENDERER'] = json.dumps(window_settings(cfg))
+        env['ACL_INLINE_VISUAL_LIMITS'] = json.dumps(visual_policy(cfg))
         (metrics.parent.parent / 'inline-dsh-protocol.json').write_text(json.dumps({
             'version': 'dsh-inline-wire-v1', 'max_images': max_images, 'canvas_page_budget': visual_page_budget(cfg), 'image_transport': transport_version(max_images, visual_page_budget(cfg)),
             'wire_ledger': env['ACL_INLINE_DSH_LEDGER'], 'body_chunk_bytes': 65536,

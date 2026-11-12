@@ -23,7 +23,7 @@ class BoundedVisualRequestError(RuntimeError):
         super().__init__('Bounded visual request rejected: ' + ', '.join(ledger['violations']))
 
 
-def inspect_payload(body, *, rendered_registry=None, strict_all_images=True):
+def inspect_payload(body, *, rendered_registry=None, strict_all_images=True, max_canvas_pixels=MAX_CANVAS_PIXELS):
     """Inspect exact serialized bytes. Registry identities are decoded image SHA256.
 
     Preflight defaults to applying canvas limits to every inline image. Workers
@@ -32,6 +32,8 @@ def inspect_payload(body, *, rendered_registry=None, strict_all_images=True):
     """
     if not isinstance(body, (bytes, bytearray, memoryview)):
         raise TypeError('Exact serialized HTTP body bytes required')
+    if type(max_canvas_pixels) is not int or not 1 <= max_canvas_pixels <= 1280*2048:
+        raise ValueError('Invalid explicit canvas pixel limit')
     body = bytes(body)
     row = {'version': VERSION, 'body_bytes': len(body),
            'body_sha256': hashlib.sha256(body).hexdigest(), 'image_count': 0,
@@ -109,8 +111,8 @@ def inspect_payload(body, *, rendered_registry=None, strict_all_images=True):
             if strict_all_images or rendered:
                 if max(width, height) > MAX_CANVAS_SIDE:
                     fail('canvas_side_exceeds_2048')
-                if width * height > MAX_CANVAS_PIXELS:
-                    fail('canvas_area_exceeds_2097152')
+                if width * height > max_canvas_pixels:
+                    fail(f'canvas_area_exceeds_{max_canvas_pixels}')
     if row['image_count'] > MAX_IMAGES:
         fail('image_count_exceeds_32')
     if row['violations']:

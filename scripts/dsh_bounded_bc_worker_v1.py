@@ -11,7 +11,7 @@ from lab import ROOT
 PROTOCOL='bc-bounded-pages-v1'
 BOUNDED_SOURCE_FILES=[
     'scripts/'+n for n in (
-        'shared_context_bounded_bc_v1.py','dsh_bounded_wire_guard_v1.mjs','dsh_bounded_registry_v1.py',
+        'shared_context_bounded_bc_v1.py','page_window_renderer_v1.py','dsh_bounded_wire_guard_v1.mjs','dsh_bounded_registry_v1.py',
         'rq3_bounded_renderer_v2.py','bounded_lossless_transport_v1.py','hermes_bounded_rq3_worker_v1.py',
         'run_dsh_eval_v3.py','dsh_wire_image_guard.mjs','dsh_raw_usage_observer.mjs','dsh_wire_expectations.mjs','dsh_pre_sdk_images.mjs',
         'dsh_image_preservation.py','native_image_origins.py','shared_context_policy.py','rq3_pdf_renderer.py',
@@ -20,7 +20,7 @@ BOUNDED_SOURCE_FILES=[
     'dsh-context/hermes-policy-v3.mjs','dsh-context/shared-surface.mjs','dsh-context/content.mjs','dsh-context/image-data-url-cache.mjs',
     'dsh-evaluation/index.mjs','dsh-local-web/hermes-tools-v2.mjs')]
 
-SOURCES=('dsh_bounded_bc_worker_v1.py','shared_context_bounded_bc_v1.py','dsh_bounded_wire_guard_v1.mjs')
+SOURCES=('dsh_bounded_bc_worker_v1.py','shared_context_bounded_bc_v1.py','page_window_renderer_v1.py','dsh_bounded_wire_guard_v1.mjs')
 
 def validate(config):
     if config.get('bounded_bc_protocol')!=PROTOCOL or config.get('bounded_transport_encoding')!='bounded-canvas-lossless-webp-v1':

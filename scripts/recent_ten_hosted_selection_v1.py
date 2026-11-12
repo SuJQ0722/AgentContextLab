@@ -18,7 +18,7 @@ class RecentImageTransportError(guard.TenImageRequestError):
 
 def _digest(raw):return hashlib.sha256(raw).hexdigest()
 
-def transform(body, *, rendered_registry, max_images=MAX_IMAGES):
+def transform(body, *, rendered_registry, max_images=MAX_IMAGES, max_canvas_pixels=2097152):
     """Return new bytes and provenance; input bytes/messages are never mutated."""
     if type(max_images) is not int or not 1 <= max_images <= MAX_IMAGES:
         raise ValueError('Image limit must be an integer from 1 to 10')
@@ -87,7 +87,7 @@ def transform(body, *, rendered_registry, max_images=MAX_IMAGES):
                       network_send_authorized=False)
         raise RecentImageTransportError(record)from None
     try:
-        final_guard=guard.inspect_payload(wire,rendered_registry=registry,strict_all_images=False)
+        final_guard=guard.inspect_payload(wire,rendered_registry=registry,strict_all_images=False, max_canvas_pixels=max_canvas_pixels)
     except guard.TenImageRequestError as exc:
         final_guard=dict(exc.ledger)
         remaining=[v for v in final_guard['violations'] if v != 'body_exceeds_8_mib']

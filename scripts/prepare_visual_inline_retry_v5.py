@@ -13,7 +13,7 @@ DEST = ROOT / 'outputs/campaigns/visual-hosted-failure-retry-v1/cells/transport-
 ROUTES = ['deepseek-v4.1-flash-1017/' + suffix for suffix in
           ('huoshan/huoshan', 'zijian/sfb', 'huoshan/sfc', 'zijian/sfc')]
 NEW = (
-    'prepare_visual_inline_retry_v5.py', 'inline_visual_transport_v1.py',
+    'prepare_visual_inline_retry_v5.py', 'inline_visual_transport_v1.py', 'page_window_renderer_v1.py',
     'visual_transport_runtime_v3.py', 'recent_ten_hosted_selection_v1.py',
     'run_visual_hosted_retry_v3.py', 'run_visual_hosted_retry_trial_v3.py',
     'hermes_visual_hosted_retry_worker_v3.py', 'controlled_hosted_visual_worker_v3.py',

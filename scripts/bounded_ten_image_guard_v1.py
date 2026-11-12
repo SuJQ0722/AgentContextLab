@@ -16,11 +16,11 @@ MAX_CANVAS_PIXELS = original_guard.MAX_CANVAS_PIXELS
 class TenImageRequestError(original_guard.BoundedVisualRequestError):
     pass
 
-def inspect_payload(body, *, rendered_registry=None, strict_all_images=True):
+def inspect_payload(body, *, rendered_registry=None, strict_all_images=True, max_canvas_pixels=MAX_CANVAS_PIXELS):
     """Reuse immutable decoding/geometry/registry checks, enforce our own count."""
     try:
         row = original_guard.inspect_payload(body, rendered_registry=rendered_registry,
-                                             strict_all_images=strict_all_images)
+                                             strict_all_images=strict_all_images, max_canvas_pixels=max_canvas_pixels)
     except original_guard.BoundedVisualRequestError as error:
         row = dict(error.ledger)
     except Exception:

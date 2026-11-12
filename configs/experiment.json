@@ -400,6 +400,19 @@
     "page_budget": {
       "history": 5,
       "recent": 2
-    }
+    },
+    "canvas_max_pixels": 2359296,
+    "max_request_bytes": 3145728
+  },
+  "visual_page_window": {
+    "version": "page-window-seven-v1",
+    "width": 1152,
+    "height": 2048,
+    "pages": 7,
+    "recent_pages": 2,
+    "history_scale": 0.75,
+    "status": "offline_verified_not_launched",
+    "table_font_size": 16,
+    "table_max_width_fraction": 0.98
   }
 }

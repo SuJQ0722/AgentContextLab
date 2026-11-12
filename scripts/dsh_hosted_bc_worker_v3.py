@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 import dsh_bounded_bc_worker_v1 as parent
 from lab import ROOT
-from inline_visual_transport_v1 import visual_max_images, transport_version
+from inline_visual_transport_v1 import visual_max_images, visual_page_budget, transport_version
 from inline_route_contract_v1 import validate_routes
 
 BOUNDED_SOURCE_FILES = list(dict.fromkeys(parent.BOUNDED_SOURCE_FILES + [
@@ -40,8 +40,9 @@ def main():
         env['ACL_INLINE_DSH_LEDGER'] = str(metrics / 'inline-images-wire-dsh-v1.jsonl')
         env['ACL_INLINE_DSH_JOB_ID'] = worker_key
         env['ACL_INLINE_DSH_RETAIN_IMAGES'] = str(max_images)
+        env['ACL_INLINE_DSH_PAGE_BUDGET'] = json.dumps(visual_page_budget(cfg))
         (metrics.parent.parent / 'inline-dsh-protocol.json').write_text(json.dumps({
-            'version': 'dsh-inline-wire-v1', 'max_images': max_images, 'image_transport': transport_version(max_images),
+            'version': 'dsh-inline-wire-v1', 'max_images': max_images, 'canvas_page_budget': visual_page_budget(cfg), 'image_transport': transport_version(max_images, visual_page_budget(cfg)),
             'wire_ledger': env['ACL_INLINE_DSH_LEDGER'], 'body_chunk_bytes': 65536,
             'prior_image_observer_stage': 'pre_retention', 'approved_model_routes': cfg['approved_model_routes'],
             'model_route_policy': cfg['model_route_policy'], 'worker_key': worker_key,

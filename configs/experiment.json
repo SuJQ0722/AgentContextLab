@@ -386,16 +386,20 @@
     ]
   },
   "visual_image_retention": {
-    "version": "visual-recent-five-v1",
-    "max_images_per_request": 5,
-    "retention": "last_5_in_message_order",
-    "count_scope": "native and canvas image_url blocks together",
+    "version": "visual-history5-recent2-v1",
+    "max_images_per_request": 10,
+    "retention": "last_5_history_and_last_2_recent_preserve_native",
+    "count_scope": "native preserved first, then recent<=2, history<=5 within total10; reject native alone>10",
     "methods": [
       "visual",
       "vanilla_visual"
     ],
     "status": "prepared_not_launched",
     "historical_results_modified": false,
-    "controlled_and_information_loss": "Keep their explicit evidence-matching protocols; do not silently change them"
+    "controlled_and_information_loss": "Keep their explicit evidence-matching protocols; do not silently change them",
+    "page_budget": {
+      "history": 5,
+      "recent": 2
+    }
   }
 }

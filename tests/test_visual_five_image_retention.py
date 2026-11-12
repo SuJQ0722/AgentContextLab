@@ -51,7 +51,8 @@ class FiveImageRetentionTests(unittest.TestCase):
         self.assertEqual(wire, body)
         self.assertEqual(row['image_count'], 8)
         self.assertEqual(inline.visual_max_images({'visual_image_retention': {'max_images_per_request': 10}}), 10)
-        self.assertEqual(inline.visual_max_images({}), 5)
+        self.assertEqual(inline.visual_max_images({}), 10)
+        self.assertEqual(inline.visual_page_budget({}), {'history': 5, 'recent': 2})
         for value in (True, 0, 11, 5.0):
             with self.assertRaises(ValueError):
                 inline.transform(body, rendered_registry=set(), max_images=value)

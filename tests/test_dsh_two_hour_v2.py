@@ -102,9 +102,9 @@ assert.equal(calls,2);assert(rows.some(r=>r.event==='trial_transport_deadline'))
             self.assertEqual(record['outer_trial_timeout_seconds'], 7200)
             self.assertEqual(record['transport_deadline_seconds'], 7200)
             self.assertEqual(record['approved_model_routes'], ROUTES)
-            self.assertEqual(record['max_images'], 5)
-            self.assertEqual(env['ACL_INLINE_DSH_RETAIN_IMAGES'], '5')
-            self.assertEqual(record['image_transport'], 'inline-recent-5-chunked-v2')
+            self.assertEqual(record['max_images'], 10)
+            self.assertEqual(env['ACL_INLINE_DSH_RETAIN_IMAGES'], '10')
+            self.assertEqual(record['canvas_page_budget'], {'history': 5, 'recent': 2})
             self.assertEqual(record['fetch_wall_timeout_seconds'], 300)
 
 

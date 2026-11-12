@@ -7,6 +7,11 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
 import info_loss_phase4 as s
 
 class Phase4Tests(unittest.TestCase):
+ def setUp(self):
+  # Local HTTP tests are independent of production host-load throttling.
+  original=Path.iterdir
+  patcher=patch.object(Path,'iterdir',lambda path:iter(()) if str(path)=='/proc' else original(path))
+  patcher.start();self.addCleanup(patcher.stop)
  def image_case(self,root):
   reps={}
   for scale in [1,.75,.5]:

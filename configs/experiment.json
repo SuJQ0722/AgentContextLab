@@ -402,7 +402,7 @@
       "recent": 2
     },
     "canvas_max_pixels": 2359296,
-    "max_request_bytes": 3145728
+    "max_request_bytes": 33554432
   },
   "visual_page_window": {
     "version": "page-window-seven-v1",

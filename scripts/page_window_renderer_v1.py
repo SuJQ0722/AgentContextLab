@@ -28,8 +28,8 @@ def validate(config):
         raise ValueError('Unsupported explicit seven-page geometry')
     if config.get('table_font_size',16) not in (16,18) or not .5 <= config.get('table_max_width_fraction',.98) <= .98:
         raise ValueError('Invalid readable table font/width settings')
-    if config.get('pages') != 7 or config.get('recent_pages') != 2 or config.get('history_scale') != .75:
-        raise ValueError('Expected seven pages, last two native, earlier pages .75x')
+    if config.get('pages') != 7 or config.get('recent_pages') != 2 or config.get('history_scale') not in (0.,.25,.5,.7,.75,.8,1.):
+        raise ValueError('Expected seven pages, last two native, explicit supported history scale')
 
 
 def sha(raw): return hashlib.sha256(raw).hexdigest()
@@ -83,7 +83,8 @@ def render_history(render, messages, head_end, *, config, keep_rounds=1,
                 raise ValueError('PDF page exceeded geometry')
             raw = page.get_pixmap(dpi=72, alpha=False).tobytes('png')
             recent = index >= max(first, total-2)
-            scale = 1. if recent else .75
+            scale = 1. if recent else config['history_scale']
+            if scale == 0: continue
             with Image.open(io.BytesIO(raw)) as source:
                 source.load(); raw_dimensions = list(source.size)
                 final = source.copy() if recent else source.resize(tuple(max(1,int(d*scale)) for d in source.size), Image.Resampling.LANCZOS)
@@ -97,7 +98,7 @@ def render_history(render, messages, head_end, *, config, keep_rounds=1,
                           'raw_path':str(raw_path),'raw_sha256':sha(raw),'raw_dimensions':raw_dimensions,
                           'path':str(path),'sha256':sha(encoded),'dimensions':dimensions,'bytes':len(encoded)})
     manifest={'version':VERSION,'settings':dict(config),'source_pdf':str(pdf_path),'source_pdf_sha256':sha(pdf),
-              'source_page_count':total,'omitted_prefix_pages':first,'pages':pages,'source_images':audit,
+              'source_page_count':total,'omitted_prefix_pages':first,'omitted_history_pages':max(0,total-first-2) if config['history_scale']==0 else 0,'pages':pages,'source_images':audit,
               'selection':'paginate_once_then_last_seven_last_two_recent','text_only':text_only,
               'rendered_source_coverage_is_not_selected_page_coverage':True}
     manifest_path=directory/f'compact_{count}_window_manifest.json';write(manifest_path,(json.dumps(manifest,indent=2)+'\n').encode())
@@ -146,10 +147,11 @@ def registered_pages(directory):
         if m['version']!=VERSION:raise ValueError('Unknown page window')
         artifact(m['source_pdf'],m['source_pdf_sha256'])
         total=m['source_page_count']; first=max(0,total-7)
-        if m['omitted_prefix_pages']!=first or [p['source_page'] for p in m['pages']]!=list(range(first+1,total+1)):
+        expected_pages=list(range(max(first,total-2)+1 if m['settings']['history_scale']==0 else first+1,total+1))
+        if m['omitted_prefix_pages']!=first or [p['source_page'] for p in m['pages']]!=expected_pages:
             raise ValueError('Page-window selection mismatch')
         for p in m['pages']:
-            recent=p['source_page']>max(first,total-2);scale=1. if recent else .75
+            recent=p['source_page']>max(first,total-2);scale=1. if recent else m['settings']['history_scale']
             if p['segment']!=('recent' if recent else 'history') or p['scale']!=scale:raise ValueError('Page age/scale mismatch')
             raw=artifact(p['raw_path'],p['raw_sha256']);encoded=artifact(p['path'],p['sha256'])
             with Image.open(io.BytesIO(raw)) as source, Image.open(io.BytesIO(encoded)) as image:

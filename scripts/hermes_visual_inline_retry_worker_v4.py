@@ -24,7 +24,8 @@ def main():
  validate_routes(spec,cfg)
  kind=spec['experiment_kind'];scale=spec['scale'];max_images=visual_max_images(cfg)
  from page_window_renderer_v1 import settings as window_settings
- window=window_settings(cfg) if kind != 'rq3' else None
+ window=window_settings(cfg)
+ if window and window['history_scale'] != scale: raise ValueError('Page-window scale differs from frozen scientific scale')
  if kind=='mmbc':
   from hermes_bounded_mmbc_worker_v1 import validate,registered_pages
   validate(spec,cfg,out);validator=registered_pages

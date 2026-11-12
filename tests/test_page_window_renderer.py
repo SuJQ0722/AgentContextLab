@@ -38,4 +38,28 @@ class WindowTests(unittest.TestCase):
             path=Path(m['pages'][0]['path']);path.write_bytes(b'tamper')
             with self.assertRaisesRegex(ValueError,'hash mismatch'):window.registered_pages(Path(directory))
 
+    def test_rq3_seven_scales_keep_same_source_and_recent(self):
+        try: import pymupdf
+        except ImportError:
+            from lab import python_for
+            run=subprocess.run([python_for(ROOT),str(Path(__file__)), 'WindowTests.test_rq3_seven_scales_keep_same_source_and_recent'],cwd=ROOT,capture_output=True,text=True,timeout=120)
+            self.assertEqual(run.returncode,0,run.stderr[-5000:]);return
+        from test_bounded_multimodal_renderer_v1 import module,fixture
+        recent_hashes=[];counts=[]
+        with tempfile.TemporaryDirectory() as directory:
+            for scale in (0.,.25,.5,.7,.75,.8,1.):
+                d=Path(directory)/str(scale);d.mkdir();messages=fixture(d)
+                messages[3]['content']=' '.join('fact_%05d exact research observation.'%i for i in range(3500))
+                render=module();config={'version':window.VERSION,'width':1152,'height':2048,'pages':7,'recent_pages':2,'history_scale':scale}
+                window.install(render,config);stats={}
+                render.render_visual_compression(messages,head_end=2,keep_rounds=1,save_dir=str(d),stats=stats)
+                m=json.loads(Path(stats['page_window_manifest']).read_text());window.registered_pages(d)
+                self.assertEqual(sum(p['segment']=='recent' for p in m['pages']),2)
+                self.assertTrue(all(p['scale']==scale for p in m['pages'] if p['segment']=='history'))
+                if scale==0:self.assertEqual(len(m['pages']),2)
+                recent_hashes.append([p['sha256'] for p in m['pages'] if p['segment']=='recent'])
+                counts.append(m['source_page_count'])
+            self.assertEqual(len(set(counts)),1)
+            self.assertTrue(all(x==recent_hashes[0] for x in recent_hashes))
+
 if __name__=='__main__':unittest.main()

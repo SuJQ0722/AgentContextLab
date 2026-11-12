@@ -414,5 +414,17 @@
     "status": "offline_verified_not_launched",
     "table_font_size": 16,
     "table_max_width_fraction": 0.98
+  },
+  "seven_page_retry3_v10": {
+    "version": "visual-inline-seven-page-retry3-v10",
+    "timeout_seconds": 3600,
+    "max_attempts": 3,
+    "max_timeout_retries": 2,
+    "concurrency_per_cell": 16,
+    "rq3": "fresh100x3 at 0,.25,.5,.7,.75,.8,1",
+    "recovery": "DeepSeek BC Hermes/DSH and MMBC Hermes all timeout lineages without completed successor",
+    "gemini": "historical only",
+    "attempt_scope": "three total in this new campaign; prior attempt records and costs preserved",
+    "status": "preparing"
   }
 }

@@ -123,7 +123,13 @@ class InlineOnlyTests(unittest.TestCase):
             manifest = {'model': study.old.MODEL, 'max_requests': 1, 'max_output_tokens': 8192,
                         'max_request_wall_seconds': 30, 'thinking': {'type': 'disabled'}}
             env = {'TOKENHUB_BASE_URL': 'http://fixture', 'TOKENHUB_API_KEY': 'fixture', 'https_proxy': 'http://fixture'}
-            with patch.object(study, 'environment', return_value=(env, {})), patch.object(study.httpx, 'Client', HTTP), \
+            # This offline transport test must not wait for the host's live
+            # experiment process count to fall below the production throttle.
+            original_iterdir = Path.iterdir
+            def fixture_iterdir(path):
+                return iter(()) if str(path) == '/proc' else original_iterdir(path)
+            with patch.object(Path, 'iterdir', fixture_iterdir), \
+                 patch.object(study, 'environment', return_value=(env, {})), patch.object(study.httpx, 'Client', HTTP), \
                  patch('requests.sessions.Session.request', side_effect=AssertionError('No upload')):
                 client = study.Client(root, manifest)
                 item = {'path': str(path), 'sha256': hashlib.sha256(raw).hexdigest(), 'media_type': 'image/png', 'detail': 'high'}

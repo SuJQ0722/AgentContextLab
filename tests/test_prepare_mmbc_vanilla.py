@@ -24,6 +24,12 @@ class VanillaScopeTests(unittest.TestCase):
         source.write_bytes(base.jsonl([{'id': f'mmbc_{i:03}', 'question': f'Q{i}',
             'image': [self.url] if i % 2 else [], 'answer': f'PRIVATE GOLD {i}'} for i in range(400)]))
         args = {'source': source, 'grading_root': self.path / 'private-grading', 'expected_source_sha': base.sha(source)}
+        # The old parent protocol remains 60 rounds/1800s after new V12 defaults.
+        legacy = base.read(base.ROOT_CONFIG)
+        legacy['mmbc100_campaign'].update(max_rounds=60, timeout_seconds=1800)
+        legacy_path = self.path / 'legacy-config.json'
+        legacy_path.write_text(json.dumps(legacy))
+        args['root_config'] = legacy_path
         base.prepare_inputs(self.parent, **args)
         data = io.BytesIO()
         Image.new('RGB', (3, 2), 'red').save(data, format='PNG')

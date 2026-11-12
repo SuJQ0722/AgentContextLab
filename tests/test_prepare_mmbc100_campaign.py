@@ -24,6 +24,12 @@ class MMBCScopeTests(unittest.TestCase):
             for i in range(400)]))
         self.kw = {'source': self.source, 'grading_root': self.grading,
                    'expected_source_sha': m.sha(self.source)}
+        # Exercise this frozen legacy protocol independently of current defaults.
+        legacy = m.read(m.ROOT_CONFIG)
+        legacy['mmbc100_campaign'].update(max_rounds=60, timeout_seconds=1800)
+        legacy_path = self.path / 'legacy-config.json'
+        legacy_path.write_text(json.dumps(legacy))
+        self.kw['root_config'] = legacy_path
         self.fake_assets = types.SimpleNamespace(validate_assets=lambda root, deep=False: {})
 
     def test_selection_order_independent_no_image_or_result_filter(self):

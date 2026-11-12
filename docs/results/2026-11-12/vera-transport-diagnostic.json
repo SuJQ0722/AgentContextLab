@@ -1,0 +1,125 @@
+{
+  "at_unix": 1794473077.2900608,
+  "statuses": {
+    "completed": 7,
+    "failed": 2
+  },
+  "events": {
+    "request_started": 1145,
+    "transport_phase": 13290,
+    "response_headers": 1017,
+    "first_response_bytes": 1017,
+    "stream_complete": 1012,
+    "route_returned": 997,
+    "route_failed": 108,
+    "route_deadline_exhausted": 2,
+    "route_backoff": 7
+  },
+  "last15m_events": {
+    "transport_phase": 987,
+    "response_headers": 79,
+    "first_response_bytes": 79,
+    "stream_complete": 75,
+    "route_returned": 74,
+    "request_started": 84,
+    "route_failed": 7
+  },
+  "duration_stats": {
+    "successful_http_seconds": {
+      "n": 1012,
+      "sum": 112116.96907275263,
+      "median": 101.44211756391451,
+      "p90": 216.87160755787045
+    },
+    "render_seconds": {
+      "n": 79,
+      "sum": 414.80030973348767,
+      "median": 4.2364433677867055,
+      "p90": 8.816466654650867
+    },
+    "web_search_seconds": {
+      "n": 1002,
+      "sum": 1845.8773314878345,
+      "median": 1.755128230433911,
+      "p90": 2.9113559955731034
+    },
+    "web_fetch_seconds": {
+      "n": 570,
+      "sum": 5924.414004857652,
+      "median": 2.7793010296300054,
+      "p90": 26.616829597391188
+    },
+    "compression_seconds": {
+      "n": 79,
+      "sum": 416.0875514196232,
+      "median": 4.249523275531828,
+      "p90": 8.834958165884018
+    }
+  },
+  "phase_stats": {
+    "connection.connect_tcp.complete": {
+      "n": 1145,
+      "sum": 2.530466957949102,
+      "median": 0.001979127526283264,
+      "p90": 0.0022711753845214844
+    },
+    "http11.send_request_headers.complete": {
+      "n": 1141,
+      "sum": 5.113221995532513,
+      "median": 0.0023414595052599907,
+      "p90": 0.007515185512602329
+    },
+    "http11.send_request_body.complete": {
+      "n": 1112,
+      "sum": 16860.919961438514,
+      "median": 0.15987830935046077,
+      "p90": 52.979048878885806
+    },
+    "http11.receive_response_headers.complete": {
+      "n": 1017,
+      "sum": 92553.295636422,
+      "median": 84.60381482541561,
+      "p90": 172.43386521283537
+    },
+    "http11.receive_response_body.failed": {
+      "n": 999,
+      "sum": 9842.840013806708,
+      "median": 6.240485889837146,
+      "p90": 17.474829267710447
+    },
+    "http11.response_closed.complete": {
+      "n": 1101,
+      "sum": 2.204260407947004,
+      "median": 0.0018879938870668411,
+      "p90": 0.0021522846072912216
+    },
+    "http11.receive_response_headers.failed": {
+      "n": 72,
+      "sum": 13317.116453186609,
+      "median": 196.81111464556307,
+      "p90": 298.9746939940378
+    },
+    "http11.send_request_body.failed": {
+      "n": 23,
+      "sum": 3616.328848457895,
+      "median": 122.08849873021245,
+      "p90": 299.84106380678713
+    },
+    "http11.receive_response_body.complete": {
+      "n": 15,
+      "sum": 0.05352740455418825,
+      "median": 0.0034851599484682083,
+      "p90": 0.0037023015320301056
+    }
+  },
+  "route_failures": {
+    "('ReadError', None, None)": 63,
+    "('WriteTimeout', None, None)": 15,
+    "(None, 429, 'ModelAccountRpmRateLimitExceeded')": 11,
+    "('ReadTimeout', None, None)": 3,
+    "(None, 429, 'ModelAccountTpmRateLimitExceeded')": 1,
+    "('ConnectError', None, None)": 4,
+    "(None, 429, 'ModelAccountConcurrentRequestsLimitExceeded')": 3,
+    "('RemoteProtocolError', None, None)": 8
+  }
+}

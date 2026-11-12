@@ -1,0 +1,2681 @@
+{
+  "V10": {
+    "at": "2026-11-12T11:40:10.089447+00:00",
+    "cells": {
+      "bc_dsh": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 3128439,
+            "known_count": 188,
+            "missing_count": 10,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 2381184,
+            "known_count": 190,
+            "missing_count": 8,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 747255,
+            "known_count": 188,
+            "missing_count": 10,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 104738,
+            "known_count": 188,
+            "missing_count": 10,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 3257666,
+            "known_count": 190,
+            "missing_count": 8,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 16,
+        "http_attempts": 198,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "bc_hermes": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 6239787,
+            "known_count": 332,
+            "missing_count": 9,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 4465152,
+            "known_count": 335,
+            "missing_count": 6,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 1774635,
+            "known_count": 332,
+            "missing_count": 9,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 419385,
+            "known_count": 332,
+            "missing_count": 9,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 6699521,
+            "known_count": 335,
+            "missing_count": 6,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 27,
+        "http_attempts": 341,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "mmbc_vanilla": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 4097061,
+            "known_count": 205,
+            "missing_count": 24,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 3222272,
+            "known_count": 206,
+            "missing_count": 23,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 874789,
+            "known_count": 205,
+            "missing_count": 24,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 191697,
+            "known_count": 205,
+            "missing_count": 24,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 4304541,
+            "known_count": 206,
+            "missing_count": 23,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 23,
+        "http_attempts": 208,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "mmbc_vera": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0000": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 10303098,
+            "known_count": 553,
+            "missing_count": 13,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 7223424,
+            "known_count": 557,
+            "missing_count": 9,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 3079674,
+            "known_count": 553,
+            "missing_count": 13,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 570957,
+            "known_count": 553,
+            "missing_count": 13,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 10936512,
+            "known_count": 557,
+            "missing_count": 9,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 28,
+        "http_attempts": 566,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 27,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 16208,
+              "known_count": 27,
+              "missing_count": 0,
+              "complete_total": 16208
+            },
+            "cached_input": {
+              "known_subtotal": 512,
+              "known_count": 27,
+              "missing_count": 0,
+              "complete_total": 512
+            },
+            "noncache_input": {
+              "known_subtotal": 15696,
+              "known_count": 27,
+              "missing_count": 0,
+              "complete_total": 15696
+            },
+            "output": {
+              "known_subtotal": 3671,
+              "known_count": 27,
+              "missing_count": 0,
+              "complete_total": 3671
+            },
+            "total": {
+              "known_subtotal": 19879,
+              "known_count": 27,
+              "missing_count": 0,
+              "complete_total": 19879
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0250": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 10909056,
+            "known_count": 560,
+            "missing_count": 8,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 8253824,
+            "known_count": 562,
+            "missing_count": 6,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 2655232,
+            "known_count": 560,
+            "missing_count": 8,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 527603,
+            "known_count": 560,
+            "missing_count": 8,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 11467516,
+            "known_count": 562,
+            "missing_count": 6,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 18,
+        "http_attempts": 568,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 19,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 12849,
+              "known_count": 18,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 384,
+              "known_count": 18,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 12465,
+              "known_count": 18,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 6583,
+              "known_count": 18,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 19432,
+              "known_count": 18,
+              "missing_count": 1,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0500": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 9636278,
+            "known_count": 493,
+            "missing_count": 7,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 7109760,
+            "known_count": 496,
+            "missing_count": 4,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 2526518,
+            "known_count": 493,
+            "missing_count": 7,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 493102,
+            "known_count": 493,
+            "missing_count": 7,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 10179103,
+            "known_count": 496,
+            "missing_count": 4,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 24,
+        "http_attempts": 500,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 25,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 13013,
+              "known_count": 22,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 1024,
+              "known_count": 22,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 11989,
+              "known_count": 22,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 1904,
+              "known_count": 22,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 14917,
+              "known_count": 22,
+              "missing_count": 3,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0700": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 3960472,
+            "known_count": 223,
+            "missing_count": 3,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 2815360,
+            "known_count": 224,
+            "missing_count": 2,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 1145112,
+            "known_count": 223,
+            "missing_count": 3,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 358569,
+            "known_count": 223,
+            "missing_count": 3,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 4328233,
+            "known_count": 224,
+            "missing_count": 2,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 18,
+        "http_attempts": 226,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 8,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 4614,
+              "known_count": 8,
+              "missing_count": 0,
+              "complete_total": 4614
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 8,
+              "missing_count": 0,
+              "complete_total": 0
+            },
+            "noncache_input": {
+              "known_subtotal": 4614,
+              "known_count": 8,
+              "missing_count": 0,
+              "complete_total": 4614
+            },
+            "output": {
+              "known_subtotal": 853,
+              "known_count": 8,
+              "missing_count": 0,
+              "complete_total": 853
+            },
+            "total": {
+              "known_subtotal": 5467,
+              "known_count": 8,
+              "missing_count": 0,
+              "complete_total": 5467
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0750": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 3844513,
+            "known_count": 208,
+            "missing_count": 3,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 2761600,
+            "known_count": 208,
+            "missing_count": 3,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 1082913,
+            "known_count": 208,
+            "missing_count": 3,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 278721,
+            "known_count": 208,
+            "missing_count": 3,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 4123234,
+            "known_count": 208,
+            "missing_count": 3,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 17,
+        "http_attempts": 211,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 7,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 4043,
+              "known_count": 7,
+              "missing_count": 0,
+              "complete_total": 4043
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 7,
+              "missing_count": 0,
+              "complete_total": 0
+            },
+            "noncache_input": {
+              "known_subtotal": 4043,
+              "known_count": 7,
+              "missing_count": 0,
+              "complete_total": 4043
+            },
+            "output": {
+              "known_subtotal": 630,
+              "known_count": 7,
+              "missing_count": 0,
+              "complete_total": 630
+            },
+            "total": {
+              "known_subtotal": 4673,
+              "known_count": 7,
+              "missing_count": 0,
+              "complete_total": 4673
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0800": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 2891827,
+            "known_count": 166,
+            "missing_count": 6,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 2015488,
+            "known_count": 167,
+            "missing_count": 5,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 876339,
+            "known_count": 166,
+            "missing_count": 6,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 232443,
+            "known_count": 166,
+            "missing_count": 6,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 3133093,
+            "known_count": 167,
+            "missing_count": 5,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 18,
+        "http_attempts": 172,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 6,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 3192,
+              "known_count": 6,
+              "missing_count": 0,
+              "complete_total": 3192
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 6,
+              "missing_count": 0,
+              "complete_total": 0
+            },
+            "noncache_input": {
+              "known_subtotal": 3192,
+              "known_count": 6,
+              "missing_count": 0,
+              "complete_total": 3192
+            },
+            "output": {
+              "known_subtotal": 477,
+              "known_count": 6,
+              "missing_count": 0,
+              "complete_total": 477
+            },
+            "total": {
+              "known_subtotal": 3669,
+              "known_count": 6,
+              "missing_count": 0,
+              "complete_total": 3669
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_1000": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 15244394,
+            "known_count": 710,
+            "missing_count": 7,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 10710272,
+            "known_count": 713,
+            "missing_count": 4,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 4534122,
+            "known_count": 710,
+            "missing_count": 7,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 795215,
+            "known_count": 710,
+            "missing_count": 7,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 16097610,
+            "known_count": 713,
+            "missing_count": 4,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 23,
+        "http_attempts": 717,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 37,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 14682,
+              "known_count": 21,
+              "missing_count": 16,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 256,
+              "known_count": 21,
+              "missing_count": 16,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 14426,
+              "known_count": 21,
+              "missing_count": 16,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 4529,
+              "known_count": 21,
+              "missing_count": 16,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 19211,
+              "known_count": 21,
+              "missing_count": 16,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "shared_baselines": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 64,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 57,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      }
+    }
+  },
+  "V11": {
+    "at": "2026-11-12T10:43:31.728166+00:00",
+    "cells": {
+      "bc_hermes": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 62700477,
+            "known_count": 2940,
+            "missing_count": 188,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 45298688,
+            "known_count": 2967,
+            "missing_count": 161,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 17401789,
+            "known_count": 2940,
+            "missing_count": 188,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 2806327,
+            "known_count": 2942,
+            "missing_count": 186,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 65958417,
+            "known_count": 2967,
+            "missing_count": 161,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 89,
+        "http_attempts": 3128,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 18,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 9222,
+              "known_count": 15,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 1280,
+              "known_count": 15,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 7942,
+              "known_count": 15,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 4224,
+              "known_count": 15,
+              "missing_count": 3,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 13446,
+              "known_count": 15,
+              "missing_count": 3,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "bc_dsh": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 10083152,
+            "known_count": 583,
+            "missing_count": 8,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 8161280,
+            "known_count": 584,
+            "missing_count": 7,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 1921872,
+            "known_count": 583,
+            "missing_count": 8,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 349538,
+            "known_count": 583,
+            "missing_count": 8,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 10436696,
+            "known_count": 584,
+            "missing_count": 7,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 44,
+        "http_attempts": 591,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "mmbc_vera": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 36433074,
+            "known_count": 1811,
+            "missing_count": 273,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 27151872,
+            "known_count": 1836,
+            "missing_count": 248,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 9281202,
+            "known_count": 1811,
+            "missing_count": 273,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 1926941,
+            "known_count": 1815,
+            "missing_count": 269,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 38803578,
+            "known_count": 1836,
+            "missing_count": 248,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 87,
+        "http_attempts": 2084,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 18,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 14111,
+              "known_count": 16,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 1408,
+              "known_count": 16,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 12703,
+              "known_count": 16,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 1686,
+              "known_count": 16,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 15797,
+              "known_count": 16,
+              "missing_count": 2,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "mmbc_vanilla": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 41368858,
+            "known_count": 2044,
+            "missing_count": 233,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 31989888,
+            "known_count": 2064,
+            "missing_count": 213,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 9378970,
+            "known_count": 2044,
+            "missing_count": 233,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 1883063,
+            "known_count": 2046,
+            "missing_count": 231,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 43519548,
+            "known_count": 2064,
+            "missing_count": 213,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 82,
+        "http_attempts": 2277,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 10,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 6948,
+              "known_count": 9,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 896,
+              "known_count": 9,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 6052,
+              "known_count": 9,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 1232,
+              "known_count": 9,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 8180,
+              "known_count": 9,
+              "missing_count": 1,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "shared_baselines": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 58423156,
+            "known_count": 2512,
+            "missing_count": 315,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 43997312,
+            "known_count": 2520,
+            "missing_count": 307,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 14425844,
+            "known_count": 2512,
+            "missing_count": 315,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 1891061,
+            "known_count": 2514,
+            "missing_count": 313,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 60500851,
+            "known_count": 2520,
+            "missing_count": 307,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 92,
+        "http_attempts": 2827,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 18,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 8095,
+              "known_count": 14,
+              "missing_count": 4,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 896,
+              "known_count": 14,
+              "missing_count": 4,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 7199,
+              "known_count": 14,
+              "missing_count": 4,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 1842,
+              "known_count": 14,
+              "missing_count": 4,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 9937,
+              "known_count": 14,
+              "missing_count": 4,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0000": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 152524823,
+            "known_count": 7612,
+            "missing_count": 222,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 111765632,
+            "known_count": 7703,
+            "missing_count": 131,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 40759191,
+            "known_count": 7612,
+            "missing_count": 222,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 8405094,
+            "known_count": 7619,
+            "missing_count": 215,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 162325330,
+            "known_count": 7703,
+            "missing_count": 131,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 275,
+        "http_attempts": 7834,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 279,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 146482,
+              "known_count": 246,
+              "missing_count": 33,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 27648,
+              "known_count": 246,
+              "missing_count": 33,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 118834,
+              "known_count": 246,
+              "missing_count": 33,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 48695,
+              "known_count": 246,
+              "missing_count": 33,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 195177,
+              "known_count": 246,
+              "missing_count": 33,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0250": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 101619227,
+            "known_count": 5004,
+            "missing_count": 206,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 75082624,
+            "known_count": 5070,
+            "missing_count": 140,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 26536603,
+            "known_count": 5004,
+            "missing_count": 206,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 6230725,
+            "known_count": 5008,
+            "missing_count": 202,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 108720527,
+            "known_count": 5070,
+            "missing_count": 140,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 179,
+        "http_attempts": 5210,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 13,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 4945,
+              "known_count": 8,
+              "missing_count": 5,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 1152,
+              "known_count": 8,
+              "missing_count": 5,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 3793,
+              "known_count": 8,
+              "missing_count": 5,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 1270,
+              "known_count": 8,
+              "missing_count": 5,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 6215,
+              "known_count": 8,
+              "missing_count": 5,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0500": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 70457293,
+            "known_count": 3378,
+            "missing_count": 179,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 50659456,
+            "known_count": 3427,
+            "missing_count": 130,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 19797837,
+            "known_count": 3378,
+            "missing_count": 179,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 4096576,
+            "known_count": 3382,
+            "missing_count": 175,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 75252802,
+            "known_count": 3427,
+            "missing_count": 130,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 112,
+        "http_attempts": 3557,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0700": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 57757731,
+            "known_count": 2795,
+            "missing_count": 200,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 41274240,
+            "known_count": 2829,
+            "missing_count": 166,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 16483491,
+            "known_count": 2795,
+            "missing_count": 200,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 3465352,
+            "known_count": 2798,
+            "missing_count": 197,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 61685854,
+            "known_count": 2829,
+            "missing_count": 166,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 137,
+        "http_attempts": 2995,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0750": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 67550074,
+            "known_count": 3269,
+            "missing_count": 181,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 50012288,
+            "known_count": 3308,
+            "missing_count": 142,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 17537786,
+            "known_count": 3269,
+            "missing_count": 181,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 3563480,
+            "known_count": 3273,
+            "missing_count": 177,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 71595871,
+            "known_count": 3308,
+            "missing_count": 142,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 137,
+        "http_attempts": 3450,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0800": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 48876690,
+            "known_count": 2353,
+            "missing_count": 214,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 35155968,
+            "known_count": 2381,
+            "missing_count": 186,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 13720722,
+            "known_count": 2353,
+            "missing_count": 214,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 3090775,
+            "known_count": 2358,
+            "missing_count": 209,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 52335551,
+            "known_count": 2381,
+            "missing_count": 186,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 113,
+        "http_attempts": 2567,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_1000": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 82634620,
+            "known_count": 3772,
+            "missing_count": 186,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 59800192,
+            "known_count": 3824,
+            "missing_count": 134,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 22834428,
+            "known_count": 3772,
+            "missing_count": 186,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 4267230,
+            "known_count": 3778,
+            "missing_count": 180,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 87714723,
+            "known_count": 3824,
+            "missing_count": 134,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 134,
+        "http_attempts": 3958,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      }
+    }
+  },
+  "V12": {
+    "at": "2026-11-12T11:42:03.908832+00:00",
+    "cells": {
+      "bc_hermes": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 5248889,
+            "known_count": 282,
+            "missing_count": 23,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 3691136,
+            "known_count": 282,
+            "missing_count": 23,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 1557753,
+            "known_count": 282,
+            "missing_count": 23,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 261815,
+            "known_count": 282,
+            "missing_count": 23,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 5510704,
+            "known_count": 282,
+            "missing_count": 23,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 18,
+        "http_attempts": 305,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 3,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 987,
+              "known_count": 2,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 256,
+              "known_count": 2,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 731,
+              "known_count": 2,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 379,
+              "known_count": 2,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 1366,
+              "known_count": 2,
+              "missing_count": 1,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "bc_dsh": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "mmbc_vera": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 5270185,
+            "known_count": 299,
+            "missing_count": 26,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 3513984,
+            "known_count": 299,
+            "missing_count": 26,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 1756201,
+            "known_count": 299,
+            "missing_count": 26,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 229266,
+            "known_count": 299,
+            "missing_count": 26,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 5499451,
+            "known_count": 299,
+            "missing_count": 26,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 21,
+        "http_attempts": 325,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 5,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 1898,
+              "known_count": 3,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 384,
+              "known_count": 3,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 1514,
+              "known_count": 3,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 228,
+              "known_count": 3,
+              "missing_count": 2,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 2126,
+              "known_count": 3,
+              "missing_count": 2,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "mmbc_vanilla": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 9017702,
+            "known_count": 447,
+            "missing_count": 28,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 6656640,
+            "known_count": 447,
+            "missing_count": 28,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 2361062,
+            "known_count": 447,
+            "missing_count": 28,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 423270,
+            "known_count": 447,
+            "missing_count": 28,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 9440972,
+            "known_count": 447,
+            "missing_count": 28,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 16,
+        "http_attempts": 475,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "shared_baselines": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 4693242,
+            "known_count": 267,
+            "missing_count": 16,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 3534976,
+            "known_count": 267,
+            "missing_count": 16,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 1158266,
+            "known_count": 267,
+            "missing_count": 16,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 152602,
+            "known_count": 267,
+            "missing_count": 16,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 4845844,
+            "known_count": 267,
+            "missing_count": 16,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 18,
+        "http_attempts": 283,
+        "missing_instrumentation_attempt_count": 1,
+        "judge": {
+          "observations": 2,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 347,
+              "known_count": 1,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 256,
+              "known_count": 1,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 91,
+              "known_count": 1,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 67,
+              "known_count": 1,
+              "missing_count": 1,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 414,
+              "known_count": 1,
+              "missing_count": 1,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0000": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0250": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0500": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0700": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0750": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_0800": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      },
+      "rq3_scale_1000": {
+        "fields": {
+          "prompt": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "cached_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "noncache_input": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "output": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          },
+          "total": {
+            "known_subtotal": 0,
+            "known_count": 0,
+            "missing_count": 0,
+            "complete_total": null
+          }
+        },
+        "observed_attempts": 0,
+        "http_attempts": 0,
+        "missing_instrumentation_attempt_count": 0,
+        "judge": {
+          "observations": 0,
+          "fields": {
+            "prompt": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "cached_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "noncache_input": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "output": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            },
+            "total": {
+              "known_subtotal": 0,
+              "known_count": 0,
+              "missing_count": 0,
+              "complete_total": null
+            }
+          },
+          "conservation_issues": {},
+          "note": "Known subtotals need not conserve across different missing-field cohorts; conservation is checked per request. No derived total replaces missing provider total."
+        }
+      }
+    }
+  }
+}

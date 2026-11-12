@@ -1,0 +1,135 @@
+{
+  "archived_at": "2026-11-12 19:42:13 UTC+8",
+  "source_snapshots": [
+    {
+      "source": "/mnt/data/acl-results-20261112/summary.md",
+      "sha256": "92017a7dda3c215cffff3dec223ffda1623e9083611afcd4c01b736a33bb92e3"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/historical_cost_pareto.md",
+      "sha256": "9be3cae76ce4aa31e697ef809ff95d2ce74a09bfede253ea8feba459c666fd25"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/deepseek_paired_cost.md",
+      "sha256": "d6d4cbd0879232a34eef7e02ae592c5615937c5bacea251d4ad7f352a32ba8ad"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/deepseek_cost_summary.md",
+      "sha256": "f387b6b54edb73a456b57b702a317f401cb89f9f5c50a9b34b6168634dcbc18f"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/controlled-information-loss.md",
+      "sha256": "37b1b2b8879946a285b1b5e90649ac18fade6a9f30df04af9e8425e0572932b7"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/controlled-v8-v9.md",
+      "sha256": "3da448e6543d429ce2ffbd8088320a700fbd3ee6423a956cbe998976d69a9d9c"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/summary.csv",
+      "sha256": "b2925b5d8fae5a24b69dd4998edb61d38fa10fd84f793442b335ae54049f9077"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/method_mean_bootstrap95.csv",
+      "sha256": "ed6eca9c68f8ebf1df2ca63b48c58fa243a01545ac73d2aeae2ce6c3963d5009"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/historical_all_groups.csv",
+      "sha256": "a6f7868d1eadf72c0229011e23e2615cc195a4e8f25023d10c5d4d7a3084e98c"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/historical_paired.csv",
+      "sha256": "0af5d160877b81f616ed784619c42a70dc8abfe546bff3b601a2ed4ed5a48aa9"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/deepseek_paired_cost.csv",
+      "sha256": "63cd66e70b9077446805d6b29ca55058a26baf7b05ecfb20f0d2ec56d96f33e4"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/controlled-summary.csv",
+      "sha256": "c06ca99fe3b8dfd2f45d2ae982fbe5915947fe981894b8032313a53b34fabb02"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/controlled-v8-v9-summary.csv",
+      "sha256": "cddc77f0370e77dba2eb7954251ac8dd082fe2b53776dafadf684e061845b1a8"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/information-loss-summary.csv",
+      "sha256": "1380e717936bab552359dafcc3be7e09594753326e340e39b82f6544c8ef7e88"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/information-loss-age-curves.csv",
+      "sha256": "d6a7f10d1d0e415aa7913887402e7c2b128fb6edaf9aa1a947b2e99698587305"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/pareto_text.png",
+      "sha256": "859497a9105f391adc51aad6f9bcbe9008d35a419dd9aebb337f8180cf294421"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/pareto_text.pdf",
+      "sha256": "38a139e07385a7f88fbc3785b8c8289755caf897f1771791ae3602e0a758b2fe"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/pareto_multimodal.png",
+      "sha256": "bd2e9d470af680064d1f8a8c259b7576e7f375cf7dabd55e303e2735ea540e6c"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/pareto_multimodal.pdf",
+      "sha256": "1c296dd1ecedadbdb2653725143c0df3d460200d2b905d182e261a6797009e9d"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/rq3_mean_std.png",
+      "sha256": "2f36779ebc267809481faa3449344ba8c214c8678f26c1691b05e0b4f53e6012"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/rq3_mean_std.pdf",
+      "sha256": "107e3baec383c79e339725040be2359f56f6e2cbe62c119714ebd0d679a03b7e"
+    },
+    {
+      "source": "/mnt/data/acl-results-20261112/information-loss-age-curves.png",
+      "sha256": "58e056aab8446393e69d87fee0753085966eb8cfa8ca0d1812cff8cf1142adef"
+    },
+    {
+      "source": "/mnt/data/acl-seven-restart-20261112/judge-v11-v10-dry/resources.json",
+      "sha256": "a3ba86b80186ff0077a0decc948f0fde2c38c99b2117a12e581c91790a88db78"
+    },
+    {
+      "source": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/seven-page-runtime-v11/resources.json",
+      "sha256": "4d6b0ee84d0d1f07cbb46a222f9a61a57ba3ef33065bcea0bb629bca6739b48e"
+    },
+    {
+      "source": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/seven-page-turns500-v12/resources.json",
+      "sha256": "a0dbb9d34326054372cf7a9fbff9b333bf3c3f701fc0b396273d88dfd493f6ff"
+    },
+    {
+      "source": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/seven-page-turns500-v12/latest.json",
+      "sha256": "e6ba19990e3269f3403ff986c85306df60657403b812107c59cc42c456b3da46"
+    },
+    {
+      "source": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/seven-page-turns500-v12-local/latest.json",
+      "sha256": "2fc0ad65e26daf3e9ddfc5850f708720835a522d65bfa37441d886a3b021365d"
+    },
+    {
+      "source": "/mnt/data/acl-seven-restart-20261112/mmbc-ordinary-timeout-797-diagnosis.md",
+      "sha256": "2b2f745a6c50294b47e58d62703c262122c4556210969eb82e08704e888619cc"
+    },
+    {
+      "source": "/mnt/data/acl-mmbc-health-20261112/vera-live.json",
+      "sha256": "7d0b468e66e4b63b5844861800b48bf568a75cf21d3dea2f7975ac6df1177c8e"
+    }
+  ],
+  "policy": "Aggregate reports only; no credentials, question text, gold answers or request/response bodies published.",
+  "current_generations_archive": [
+    {
+      "source": "/mnt/data/acl-docs-results-20261112/current-generations.md",
+      "sha256": "8dbfbddbd1fa10d6d3bbf7cbbd356ad4ff0fff5b83a1b052d4ec147c6f504f52"
+    },
+    {
+      "source": "/mnt/data/acl-docs-results-20261112/current-generations.json",
+      "sha256": "0564cfa3fe590e464ab0e25a9e815aee6f63c3b60a66ec4d5126017b5e0a0e8e"
+    }
+  ],
+  "archive_transformations": [
+    "Markdown reports prefixed with snapshot notice; CSV/Markdown newlines normalized to LF and trailing whitespace removed; source SHA256 values refer to original input files."
+  ]
+}

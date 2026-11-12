@@ -1,0 +1,94 @@
+{
+  "captured_at": "2026-11-12 19:42:13 UTC+8",
+  "cloud_source_at_unix": 1794483674.1174898,
+  "local_source_at": "2026-11-12T11:41:28.229773+00:00",
+  "rows": [
+    {
+      "cell": "rq3_scale_0250",
+      "platform_state": "PROGRESSING",
+      "ready": 0,
+      "active_workers": 0,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "rq3_scale_0500",
+      "platform_state": "PROGRESSING",
+      "ready": 0,
+      "active_workers": 0,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "rq3_scale_0700",
+      "platform_state": "PROGRESSING",
+      "ready": 0,
+      "active_workers": 0,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "rq3_scale_0750",
+      "platform_state": "PROGRESSING",
+      "ready": 0,
+      "active_workers": 0,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "rq3_scale_0800",
+      "platform_state": "PROGRESSING",
+      "ready": 0,
+      "active_workers": 0,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "rq3_scale_1000",
+      "platform_state": "PROGRESSING",
+      "ready": 0,
+      "active_workers": 0,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "bc_hermes",
+      "platform_state": "RUNNING",
+      "ready": 1,
+      "active_workers": 16,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "mmbc_vera",
+      "platform_state": "RUNNING",
+      "ready": 1,
+      "active_workers": 16,
+      "stop_dispatch": false
+    },
+    {
+      "cell": "shared_baselines",
+      "platform_state": "local",
+      "active_workers": 16,
+      "stop_dispatch": false,
+      "prediction_states": {
+        "active": 16,
+        "completed": 1,
+        "pending": 992
+      }
+    },
+    {
+      "cell": "mmbc_vanilla",
+      "platform_state": "local",
+      "active_workers": 16,
+      "stop_dispatch": false,
+      "prediction_states": {
+        "active": 16,
+        "pending": 47
+      }
+    },
+    {
+      "cell": "bc_dsh",
+      "platform_state": "HOLD: inline_preparation_failure",
+      "active_workers": 0
+    },
+    {
+      "cell": "rq3_scale_0000",
+      "platform_state": "no eligible V12 jobs; retained V10/V11 results",
+      "active_workers": 0
+    }
+  ]
+}

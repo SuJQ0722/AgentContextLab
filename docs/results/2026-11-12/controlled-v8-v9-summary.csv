@@ -1,0 +1,7 @@
+generation,dataset,method,plan_jobs,calibration_excluded,noncalibration_planned,statuses_all,categories,completed_calibration,scored,correct,accuracy,valid_published_targets,individual_passed
+transport-v8-one-hour-retry5,browsecomp_v3,visual,16,11,5,"{""timeout"": 12, ""completed"": 4}","{""system_timeout_excluded"": 5, ""calibration_excluded"": 11}",4,0,0,,0,10
+transport-v8-one-hour-retry5,mmbrowsecomp,visual,11,2,9,"{""timeout"": 11}","{""system_timeout_excluded"": 9, ""calibration_excluded"": 2}",0,0,0,,0,9
+transport-v9-runtime-recovery,browsecomp_v3,summary,15,0,15,"{""blocked"": 4, ""not_started"": 11}","{""control_dependency_blocked"": 4, ""not_started"": 11}",0,0,0,,0,0
+transport-v9-runtime-recovery,browsecomp_v3,window,12,0,12,"{""blocked"": 4, ""not_started"": 8}","{""control_dependency_blocked"": 4, ""not_started"": 8}",0,0,0,,0,0
+transport-v9-runtime-recovery,mmbrowsecomp,summary,11,0,11,"{""blocked"": 4, ""not_started"": 7}","{""control_dependency_blocked"": 4, ""not_started"": 7}",0,0,0,,0,0
+transport-v9-runtime-recovery,mmbrowsecomp,window,9,0,9,"{""blocked"": 4, ""not_started"": 5}","{""control_dependency_blocked"": 4, ""not_started"": 5}",0,0,0,,0,0

@@ -1,0 +1,11 @@
+split,method,conditions,statuses,qa_valid_conditions,qa_facts_valid,qa_correct,qa_accuracy_available,semantic_valid_conditions,semantic_facts_valid,semantic_supported,semantic_recall_available,reconstruction_stopped
+dev,text_control,1,"{""completed"": 1}",1,4,4,1.0,1,4,4,1.0,1
+dev,canvas_1,1,"{""timeout"": 1}",0,0,0,,0,0,0,,0
+dev,canvas_0.75,1,"{""timeout"": 1}",0,0,0,,0,0,0,,0
+dev,canvas_0.5,1,"{""completed"": 1}",1,4,0,0.0,0,0,0,,0
+dev,summary,1,"{""completed"": 1}",1,4,1,0.25,1,4,2,0.5,1
+holdout,text_control,9,"{""completed"": 9}",9,32,31,0.96875,7,25,13,0.52,9
+holdout,canvas_1,9,"{""timeout"": 5, ""no_terminal_result"": 4}",3,10,7,0.7,0,0,0,,0
+holdout,canvas_0.75,9,"{""timeout"": 4, ""no_terminal_result"": 5}",1,6,4,0.6666666666666666,0,0,0,,0
+holdout,canvas_0.5,9,"{""completed"": 5, ""timeout"": 1, ""no_terminal_result"": 3}",7,26,4,0.15384615384615385,0,0,0,,0
+holdout,summary,9,"{""completed"": 9}",9,32,7,0.21875,8,26,8,0.3076923076923077,9

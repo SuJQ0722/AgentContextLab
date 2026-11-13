@@ -10,6 +10,7 @@ ROOT=Path('/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab')
 PRIVATE=ROOT/'outputs/private-network/proxy-recovery-v13.json'
 OLD='http://10.120.0.246:7890'
 ENTRY=Path(__file__).resolve()
+VERSION='proxy-recovery-v14-render-image-proxy'
 
 def apply(proxy):
  import httpx
@@ -20,7 +21,7 @@ def apply(proxy):
  httpx.Client.__init__=init
  def envfix(env):
   result=dict(env)
-  for k in ('http_proxy','https_proxy','HTTP_PROXY','HTTPS_PROXY'):result[k]=proxy
+  for k in ('http_proxy','https_proxy','HTTP_PROXY','HTTPS_PROXY','HERMES_IMAGE_PROXY'):result[k]=proxy
   for k in ('all_proxy','ALL_PROXY'):result.pop(k,None)
   return result
  os.environ.update(envfix(os.environ))
@@ -64,7 +65,7 @@ def main():
   out=Path(argv[argv.index('--out')+1]);out.mkdir(parents=True,exist_ok=True)
   from urllib.parse import urlsplit
   p=urlsplit(proxy)
-  (out/'network-deployment-v13.json').write_text(json.dumps({'at_unix':time.time(),'version':'proxy-recovery-v13','target':target.name,'actual_proxy_host':p.hostname,'actual_proxy_port':p.port,'proxy_has_auth':bool(p.username),'entry_sha256':hashlib.sha256(ENTRY.read_bytes()).hexdigest(),'science_and_attempt_budgets_unchanged':True}))
+  (out/'network-deployment-v13.json').write_text(json.dumps({'at_unix':time.time(),'version':VERSION,'target':target.name,'actual_proxy_host':p.hostname,'actual_proxy_port':p.port,'proxy_has_auth':bool(p.username),'renderer_proxy_propagated':True,'entry_sha256':hashlib.sha256(ENTRY.read_bytes()).hexdigest(),'science_and_attempt_budgets_unchanged':True}))
  sys.argv=[str(target),*argv]
  runpy.run_path(str(target),run_name='__main__')
 if __name__=='__main__':main()

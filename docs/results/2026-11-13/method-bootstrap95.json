@@ -1,0 +1,314 @@
+{
+  "bootstrap_draws": 10000,
+  "rows": [
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "dsh",
+      "method": "discard",
+      "question_cluster_bootstrap95": [
+        0.7267636634199133,
+        0.8748940783315783
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "dsh",
+      "method": "none",
+      "question_cluster_bootstrap95": [
+        0.7357333375782301,
+        0.8645172496609599
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "dsh",
+      "method": "sliding_window",
+      "question_cluster_bootstrap95": [
+        0.8197024289881434,
+        0.9337905136722314
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "dsh",
+      "method": "summarize",
+      "question_cluster_bootstrap95": [
+        0.8320566893864809,
+        0.9434620167843851
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "dsh",
+      "method": "visual",
+      "question_cluster_bootstrap95": [
+        0.7749158565464226,
+        0.9113550019926321
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "discard",
+      "question_cluster_bootstrap95": [
+        0.5533333333333333,
+        0.7166666666666667
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "none",
+      "question_cluster_bootstrap95": [
+        0.69,
+        0.8266666666666667
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "sliding_window",
+      "question_cluster_bootstrap95": [
+        0.6633333333333333,
+        0.8066666666666666
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "summarize",
+      "question_cluster_bootstrap95": [
+        0.7386727512119217,
+        0.8639462246421009
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "visual",
+      "question_cluster_bootstrap95": [
+        0.8400361741877285,
+        0.9400715712016189
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "method": "discard",
+      "question_cluster_bootstrap95": [
+        0.6363800204425205,
+        0.8029070565096869
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "method": "none",
+      "question_cluster_bootstrap95": [
+        0.5783703024112667,
+        0.7589390307780031
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "method": "sliding_window",
+      "question_cluster_bootstrap95": [
+        0.6182431636463894,
+        0.7980844999432075
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "method": "summarize",
+      "question_cluster_bootstrap95": [
+        0.6248808027484497,
+        0.7847907846295054
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "bc100",
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "method": "visual",
+      "question_cluster_bootstrap95": [
+        0.6558871879215462,
+        0.8219581881533101
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "mmbc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "discard",
+      "question_cluster_bootstrap95": [
+        0.3242634776778929,
+        0.5779960563629919
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "mmbc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "none",
+      "question_cluster_bootstrap95": [
+        0.6804755639097744,
+        0.9095523020914356
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "mmbc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "sliding_window",
+      "question_cluster_bootstrap95": [
+        0.6832474550825115,
+        0.8908348103509394
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "mmbc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "summarize",
+      "question_cluster_bootstrap95": [
+        0.7074507177871149,
+        0.9134904113289088
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "mmbc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "vanilla_visual",
+      "question_cluster_bootstrap95": [
+        0.6293704906204906,
+        0.842773543521823
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "mmbc100",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "visual",
+      "question_cluster_bootstrap95": [
+        0.7065835944640292,
+        0.8952234771212738
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "rq3",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "scale_0.0",
+      "question_cluster_bootstrap95": [
+        0.709108460993482,
+        0.8516890232035808
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "rq3",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "scale_0.25",
+      "question_cluster_bootstrap95": [
+        0.7196622277889551,
+        0.8619653173035825
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "rq3",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "scale_0.5",
+      "question_cluster_bootstrap95": [
+        0.8370554434111491,
+        0.9493577803928588
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "rq3",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "scale_0.7",
+      "question_cluster_bootstrap95": [
+        0.8172551199333488,
+        0.9786342797988761
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "rq3",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "scale_0.75",
+      "question_cluster_bootstrap95": [
+        0.8561256551069888,
+        0.9855072463768115
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "rq3",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "scale_0.8",
+      "question_cluster_bootstrap95": [
+        0.8211416245791247,
+        0.9791666666666666
+      ],
+      "valid_bootstraps": 10000
+    },
+    {
+      "benchmark": "rq3",
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "method": "scale_1.0",
+      "question_cluster_bootstrap95": [
+        0.6594166283206822,
+        0.8398983031028386
+      ],
+      "valid_bootstraps": 10000
+    }
+  ],
+  "scope": "Conditional on currently observed scores; does not remove missingness bias."
+}

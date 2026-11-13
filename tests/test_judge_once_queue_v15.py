@@ -59,6 +59,17 @@ class QueueTests(unittest.TestCase):
                 lambda *a: self.fail('Unexpected error'), lambda x: None, poll=.001)
             self.assertEqual(called, [rows[-1]['directory']])
 
+    def test_claim_appearing_after_scan_blocks_dispatch(self):
+        checks = [0]; calls = []
+        def allowed(candidate):
+            checks[0] += 1
+            return checks[0] == 1
+        queue.run_queue(lambda cost: ([{'directory': 'raced'}], {'all_terminal': True}),
+            lambda c: calls.append(c), lambda *a: self.fail('Unexpected error'),
+            lambda x: None, allowed=allowed, poll=.001)
+        self.assertEqual(calls, [])
+        self.assertEqual(checks[0], 2)
+
     def test_exception_consumes_attempt_and_stop_drains_without_dispatch(self):
         failed = []; calls = []; stopped = threading.Event()
         rows = [{'directory': str(i)} for i in range(20)]

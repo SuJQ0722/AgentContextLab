@@ -9,9 +9,12 @@ import json
 from pathlib import Path
 import os
 import statistics
+import sys
 import time
+import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT/'scripts') not in sys.path:sys.path.insert(0,str(ROOT/'scripts'))
 DEFAULT_BASE = Path('/mnt/data/acl-once24h-20261113/full-slot-manifest.json')
 DEFAULT_MAP = ROOT/'outputs/cloud-runtime/deepseek-once24h-v15/grading-map.json'
 DEFAULT_OUT = ROOT/'outputs/reports/once24h-v15'
@@ -84,6 +87,11 @@ class Reporter:
         self.bound_sources={'baseline':str(baseline),'baseline_sha256':self.hashes[str(Path(baseline))],
                             'grading_map':str(grading_map),'grading_map_sha256':self.hashes[str(Path(grading_map))]}
         self.load_grade_index()
+        from once24h_metrics_v15 import MetricsIndex
+        self.metrics_index=MetricsIndex(ROOT,self.slots,cache_path=self.output/'selected-metrics-cache.json')
+        price_path=ROOT/'configs/gemini-pricing-2026-11-07.json'
+        self.reference_price=dict(self.read(price_path,stable=True))
+        self.reference_price.update(archive_path=str(price_path),archive_sha256=self.hashes[str(price_path)],reference_only=True,current_price_reverified=False)
 
     def read(self,path,stable=False):
         path=Path(path);key=str(path)
@@ -131,8 +139,13 @@ class Reporter:
         job=self.expected_job(path)
         identity_valid=bool(job)and all(value.get(k)==job[k]for k in IDENTITY)
         if job:identity_valid &= digest(job['question'].encode())==slot['question_sha256']
+        derived=None
+        if not baseline and value.get('status')=='failed' and value.get('harness')=='hermes' and value.get('failure_category')=='execution_error':
+            from once24h_metrics_v15 import classify_failure
+            derived=classify_failure(path,h)
+        category=(derived or {}).get('derived_failure_category') or value.get('failure_category')
         return {'result_path':str(path),'result_sha256':h,'status':value.get('status'),'identity_valid':identity_valid,
-                'cleanup_confirmed':clean(value),'failure_category':value.get('failure_category'),
+                'cleanup_confirmed':clean(value),'failure_category':category,'failure_classification_proof':derived,
                 'finished_unix':timestamp(value.get('finished_at'))or timestamp(value.get('finished_at_unix')),
                 'end_to_end_seconds':value.get('end_to_end_seconds'),'baseline_priority':0 if baseline else 1,
                 'value':value}
@@ -198,13 +211,14 @@ class Reporter:
         # Pending authorization remains pending even when an old attempt timed out.
         if new and not new_runs and new_terminal is None and chosen is None:status='pending_new_pass';taskscore=None
         result={'slot_id':slot['slot_id'],'benchmark':slot['benchmark'],'harness':slot['harness'],'method':slot['method'],
-                'question_id':slot['question_id'],'repeat':slot['repeat'],'status':status,'score':score,'task_valid_score':taskscore,
+                'question_id':slot['question_id'],'question_sha256':slot.get('question_sha256'),'repeat':slot['repeat'],'status':status,'score':score,'task_valid_score':taskscore,
                 'selected_result_path':chosen['result_path']if chosen else None,'selected_result_sha256':chosen['result_sha256']if chosen else None,
                 'grade_path':gp,'grade_sha256':gh,'new_pass_end_to_end_seconds':new_terminal['end_to_end_seconds']if new_terminal else None,
                 'latest_terminal_result_path':latest['result_path'] if latest else None,
                 'latest_terminal_result_sha256':latest['result_sha256'] if latest else None,
                 'latest_terminal_status':latest['status'] if latest else None,
                 'latest_failure_category':latest['failure_category'] if latest else None,
+                'failure_classification_proof':latest.get('failure_classification_proof') if latest else None,
                 **replay_flags(new_runs,reserved_runs)}
         return result
 
@@ -214,7 +228,7 @@ class Reporter:
         except Exception as exc:
             self.errors.append({'slot_id':slot['slot_id'],'error_type':type(exc).__name__})
             return {k:slot[k] for k in ('slot_id','benchmark','harness','method','question_id','repeat')} | {
-                'status':'read_quarantined','score':None,'task_valid_score':None,
+                'question_sha256':slot.get('question_sha256'),'status':'read_quarantined','score':None,'task_valid_score':None,
                 'selected_result_path':None,'selected_result_sha256':None,'grade_path':None,'grade_sha256':None,
                 'new_pass_end_to_end_seconds':None,**replay_flags([],[])}
 
@@ -262,7 +276,7 @@ class Reporter:
                          'new_pass_end_to_end_terminal_n':len(e2e),'client_api_seconds':None,'render_seconds':None,'usd':None,
                          'replay_slots':[r['slot_id']for r in rr if r['replay_detected']]}
         resource=self.resources(groups)
-        result={'version':'once24h-fixed-cohort-report-v1','at':datetime.now(timezone.utc).isoformat(),'final':final,'deadline_utc':'2026-11-14T19:20:06Z',
+        result={'version':'once24h-fixed-cohort-report-v2','at':datetime.now(timezone.utc).isoformat(),'final':final,'deadline_utc':'2026-11-14T19:20:06Z',
                 'model_calls':0,'scope_slots':6900,'baseline':self.bound_sources,'totals':dict(Counter(r['status']for r in rows)),
                 'replay_detected_slots':[r['slot_id']for r in rows if r['replay_detected']],
                 'groups':list(groups.values()),'resource_reference':resource,'observations':rows,'read_errors':self.errors,
@@ -273,10 +287,30 @@ class Reporter:
                 'End-to-end means include all observed new terminal attempts; they are not provider API latency.',
                 'Active is inferred from started attempt directories with no terminal outer result; this is not a fresh OS liveness assertion.'],
                 'snapshot_client_seconds':time.time()-started}
-        atomic(self.output/'latest.json',result);atomic(self.output/'latest.md',render_markdown(result))
+        extension_md=''
+        try:
+            from once24h_statistics_v15 import analyze,markdown,plots
+            selected=[r for r in rows if r.get('selected_result_path')]
+            with ThreadPoolExecutor(max_workers=min(4,self.workers)) as pool:
+                selected_metrics=dict(zip((r['slot_id'] for r in selected),pool.map(self.metrics_index.observe,selected)))
+            self.metrics_index.checkpoint()
+            result['offline_statistics']=analyze(rows,selected_metrics,self.reference_price)
+            metric_path=self.output/'selected-trajectory-metrics.json'
+            metric_value={'at':result['at'],'scope':'selected_successful_native_execution','model_calls':0,'rows':selected_metrics}
+            atomic(metric_path,metric_value)
+            result['offline_statistics']['trajectory_metrics_source']={'path':str(metric_path),'sha256':digest(metric_path.read_bytes())}
+            extension_md='\n'+markdown(result['offline_statistics'])
+            plots(result['offline_statistics'],self.output)
+            result['offline_statistics_ready']=True
+        except Exception as exc:
+            result['offline_statistics_ready']=False
+            result['offline_statistics_error']={'error_type':type(exc).__name__,'frames':[{'path':r.filename,'line':r.lineno,'function':r.name} for r in traceback.extract_tb(exc.__traceback__)]}
+            extension_md='\n扩展离线统计尚未成功生成，见JSON offline_statistics_error；不新增模型调用。\n'
+        result['snapshot_client_seconds']=time.time()-started
+        atomic(self.output/'latest.json',result);atomic(self.output/'latest.md',render_markdown(result)+extension_md)
         stamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         atomic(self.output/'history'/f'{stamp}.json',{k:v for k,v in result.items()if k!='observations'})
-        if final:atomic(self.output/'final.json',result);atomic(self.output/'final.md',render_markdown(result))
+        if final:atomic(self.output/'final.json',result);atomic(self.output/'final.md',render_markdown(result)+extension_md)
         return result
 
 

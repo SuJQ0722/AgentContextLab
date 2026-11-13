@@ -28,14 +28,20 @@ RQ3评分存在ConnectError等失败，特别是0.75、1.0的本轮正常完成�
 
 |新队列|剩余题次|部署|并发|
 |---|---:|---|---:|
-|MMBC Discard-All|159|acl-v13b-mmbc-discard|16|
-|MMBC No Compression|185|acl-v13b-mmbc-none|16|
-|MMBC Sliding Window|167|acl-v13b-mmbc-sliding-window|16|
-|MMBC Summarization|181|acl-v13b-mmbc-summarize|16|
+|MMBC Discard-All|159|acl-v13c-mmbc-discard|16|
+|MMBC No Compression|185|acl-v13c-mmbc-none|16|
+|MMBC Sliding Window|167|acl-v13c-mmbc-sliding-window|16|
+|MMBC Summarization|181|acl-v13c-mmbc-summarize|16|
 |BC普通策略|153|本机独立控制器|16|
 
 四个CCI均采用8核32GiB、已有私有CPU镜像、afs_agents挂载。已提交并激活；启动后先检查真实search/fetch和依赖，控制器才派发。新队列独立评分及调度观察器已启动。已有V12结果和V13结果必须按题目×repeat×方法合并，不能将旧队列中已迁移的pending重复计入分母。
 
-运行记录：outputs/cloud-runtime/mmbc-strategy-split-v13b/。科学计划保留在seven-page-turns500-v12/cells/*_split_v13b，dispatch_partition_version单独标注迁移。不重新授予失败题尝试额度。
+运行记录：MMBC为outputs/cloud-runtime/mmbc-strategy-split-v13c/，BC本机为outputs/cloud-runtime/mmbc-strategy-split-v13b/。科学计划保留在seven-page-turns500-v12/cells/mmbc_*_split_v13c与cells/bc_baselines_split_v13b，dispatch_partition_version单独标注迁移。不重新授予失败题尝试额度。
 
 首轮分片V13的配置路径校验在模型调用前失败；四CCI已停，所有claim和日志保留，未启动native worker。V13b物理复制相同字节的config/cohort，重定位路径后重新验证。此操作没有新增科学重试次数。根测试1105项通过（216.027秒）；网络替换和子进程传播的零网络检查通过。
+
+V13b的四个MMBC分片另有64次初始化在输入图片目录检查处被拦截：图片字节正确但符号链接指向分片目录外。经检查全部在模型发送前退出，四CCI已停止，错误日志保留。MMBC的V13c采用物理图片副本并执行stage_images哈希校验；BC继续使用V13b，不重复启动。
+
+17:58 UTC观测：BC本机新网络队列首16任务已有46个DSH模型请求、44个完整流返回及usage。这证明该抽样中的模型网络已经恢复；不是44题完成，也不证明视觉大图超时已解决。
+
+18:01 UTC左右，旧RQ3的0.5/0.8活动轨迹最新请求仍连续ConnectError。0.5/0.7/0.75/0.8已发布STOP，停止新增派发并自然排空旧在途任务；这些旧进程不能描述为正常推理，未重置其已消耗尝试次数。新网络部署当前覆盖BC普通策略与MMBC四普通策略。

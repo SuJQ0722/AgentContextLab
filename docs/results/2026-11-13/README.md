@@ -157,3 +157,5 @@ Cache-aware VERA和AST/GUI没有独立完成的新实验，不列作完成结果
 ## 最新运行与缺口审计
 
 [完整300题覆盖、RQ3评分连接失败恢复、MMBC历史缺终态追溯及剩余额度](recovery-audit.md)。此页区分历史失败、新队列运行、待判分和预算耗尽；新补跑尚不代表完整avg3。
+
+[第一批RQ3旧判分恢复后的mean±std及有效样本数](rq3-grading-recovery-snapshot.md)（不含本轮新预测，非完整300题）。

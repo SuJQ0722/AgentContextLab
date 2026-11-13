@@ -1,0 +1,157 @@
+{
+  "at": "2026-11-13T19:13:52.811699+00:00",
+  "scope": "Existing selected-completed trajectories only plus recovered ConnectError grades; newly resumed predictions are not yet merged",
+  "rows": [
+    {
+      "scale": "scale_0.0",
+      "valid": 273,
+      "repeat_n": [
+        90,
+        89,
+        94
+      ],
+      "repeat_accuracy": [
+        0.8,
+        0.7752808988764045,
+        0.776595744680851
+      ],
+      "mean": 0.7839588811857519,
+      "sample_std": 0.013907563571020918,
+      "new_recovered_scores": 0
+    },
+    {
+      "scale": "scale_0.25",
+      "valid": 224,
+      "repeat_n": [
+        76,
+        76,
+        72
+      ],
+      "repeat_accuracy": [
+        0.7894736842105263,
+        0.7631578947368421,
+        0.8333333333333334
+      ],
+      "mean": 0.7953216374269007,
+      "sample_std": 0.03545133231866123,
+      "new_recovered_scores": 2
+    },
+    {
+      "scale": "scale_0.5",
+      "valid": 141,
+      "repeat_n": [
+        42,
+        48,
+        51
+      ],
+      "repeat_accuracy": [
+        0.8809523809523809,
+        0.9583333333333334,
+        0.8627450980392157
+      ],
+      "mean": 0.9006769374416433,
+      "sample_std": 0.05075501234542729,
+      "new_recovered_scores": 3
+    },
+    {
+      "scale": "scale_0.7",
+      "valid": 119,
+      "repeat_n": [
+        43,
+        36,
+        40
+      ],
+      "repeat_accuracy": [
+        0.9302325581395349,
+        0.8888888888888888,
+        0.95
+      ],
+      "mean": 0.9230404823428079,
+      "sample_std": 0.031183913176637112,
+      "new_recovered_scores": 21
+    },
+    {
+      "scale": "scale_0.75",
+      "valid": 85,
+      "repeat_n": [
+        23,
+        30,
+        32
+      ],
+      "repeat_accuracy": [
+        0.9130434782608695,
+        0.9333333333333333,
+        0.9375
+      ],
+      "mean": 0.9279589371980677,
+      "sample_std": 0.01308409203033248,
+      "new_recovered_scores": 0
+    },
+    {
+      "scale": "scale_0.8",
+      "valid": 56,
+      "repeat_n": [
+        21,
+        17,
+        18
+      ],
+      "repeat_accuracy": [
+        0.9523809523809523,
+        0.8823529411764706,
+        0.8888888888888888
+      ],
+      "mean": 0.9078742608154372,
+      "sample_std": 0.038682216181415784,
+      "new_recovered_scores": 0
+    },
+    {
+      "scale": "scale_1.0",
+      "valid": 112,
+      "repeat_n": [
+        39,
+        42,
+        31
+      ],
+      "repeat_accuracy": [
+        0.717948717948718,
+        0.8333333333333334,
+        0.7096774193548387
+      ],
+      "mean": 0.7536531568789634,
+      "sample_std": 0.06912887591272501,
+      "new_recovered_scores": 1
+    }
+  ],
+  "input_sha256": {
+    "/mnt/data/acl-rebuttal-20261113/selected-private.json": "972740f20dc735301f01bacd9688b7a6c288ad9fa74f364b486db0bb8e52ef7f",
+    "outputs/grading/connection-failure-recovery-v13/summary.json": "447bde3121b5bd6c57997b096e197e1c3c2b504d9ef5a65c08e5d80e616dd5d0",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/mmbc_vanilla/jobs/hermes/visual/mmbc_131_r02/grade.json": "30c679b460af28d9551e47b36c25e1b25d7f908e311718079ee2cec28d24952e",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0250/jobs/hermes/scale_0250/q_090_r02/grade.json": "d6521fa356428d4e3266b19c411dc01232060736fd3df93bf51b133a82ceb40d",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0250/jobs/hermes/scale_0250/q_009_r01/grade.json": "64cacc2fcd4acd804caecfe625c194493d8170eaa4c8e85ab36ce73b60b10167",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0500/jobs/hermes/scale_0500/q_065_r03/grade.json": "5ff07cb857350945254f2c8a2ce3eae3be8aec1cbde43d10c8cb271680e892c9",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0500/jobs/hermes/scale_0500/q_032_r03/grade.json": "b6d19a038d31ef65902745ce450728f7e0d76f60ca154e43158ffbd1ba0684b2",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0500/jobs/hermes/scale_0500/q_008_r03/grade.json": "033a3551c4b6e7c185630b5351b0c1f68815692f6eb85d81efce7317469a1f34",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_079_r02/grade.json": "6e6cbf586b605068b1a48a57e92acf3bff7cd8b77f9fcff9959865e5e7dd189c",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_014_r01/grade.json": "b8d4328fa67b42ca0500171031255b198bd1c03478b4157c12d43a34f926eb3c",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_100_r01/grade.json": "3a3fc02cd02208132c65dc7d064584a2cee8a8cf69f75414d08d192572ec8fd5",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_069_r03/grade.json": "869081e8904490ee9a4ba804f368724d763e252ac9d7fd3cbdc48ae108cf4315",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_085_r03/grade.json": "b182e35c53c0c81ab7602078d1308936ca32321be9fb18bddce4b86daa13f25f",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_004_r01/grade.json": "a9dc05d79db0a33ca2aae93eb73b140fd68f25dfa2f2f5346db48eea84553c15",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_062_r01/grade.json": "f7b96507bee8e875f97df78e7b752ebd1b44a68783ebe2b0966b1613df8f35a8",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_086_r03/grade.json": "731c49f3150acdfdf22a2912a6369da41111df365f3fe0df830b1d67a1754c24",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_015_r03/grade.json": "d035afb5523747dd89d43ee432bd6ea24541552531e36577e88d785ea980fdb5",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_075_r02/grade.json": "efb19d77294757f77199045b9561d097fe487f5337ad2510faea3dcc62190e9a",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_027_r02/grade.json": "79f738dc99fb5abcfc8139a54a9da8ea28a9a841c9ea9f90ff67aefd96ac8985",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_053_r02/grade.json": "fce8f6eda6183e7ed1e9ca07533b9a0689cccb1d186f48186b7237a51c57b2f5",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_057_r02/grade.json": "231b271fd76d2f72e16dc32e0011981849541644c32a3270da502054f90ad277",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_089_r03/grade.json": "86e2ab8f8e4df691568519760259c64740f58d53a848a6b7d267c6d58ce92736",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_067_r01/grade.json": "a178008ff1b766efcc8a51648208b774f63b62c5da836e634d3341ab5d513abd",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_061_r03/grade.json": "40d30d8d92419baed364d56c9b20a371c08b4797dc78616e8b1192c286776e86",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_038_r03/grade.json": "8540f2d9276b51b449caebaa8f147dc916736effe59a7c5c947de235df4a28c3",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_080_r02/grade.json": "12222756c18edaffac6be06968e56a9dc701becee21ddf573e9bce73e62ed545",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_015_r02/grade.json": "897b03503ea06f9ab60df04721150f754fe8cfc03a898bde9a4bfa89ee07c2ae",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_011_r01/grade.json": "6d739f088c35cdd582c7353807dfc32acff5c77465882b101362fc5fc925421e",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-turns500-v12/cells/rq3_scale_0700/jobs/hermes/scale_0700/q_064_r03/grade.json": "45cdc5050e2041958119e7dc5c38db8f840dd783896f362c68ad5b0c083d82a4",
+    "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/grading/connection-failure-recovery-v13/seven-page-runtime-v11/cells/rq3_scale_1000/jobs/hermes/scale_1000/q_003_r03/grade.json": "39473290e0f698a96c0160a24dd9b375af4fe989d09b0aacf83ae99dec9ffcd8"
+  }
+}

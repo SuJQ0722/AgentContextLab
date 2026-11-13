@@ -114,6 +114,8 @@ V8/V9正式运行没有新的有效配对：4条completed均为校准，不能�
 
 ## 7. 信息损失量化
 
+**新轮已结束：**[单次恢复后的最终信息损失结果与两张曲线](information-loss-v15.md)。下表保留旧冻结快照，不与新 span-judge 混算。
+
 9个holdout；q004开发题不混入。
 
 |表示|有QA条件/9|Probe QA正确/有效事实|比例|有效视觉重建语义评分|
@@ -161,3 +163,5 @@ Cache-aware VERA和AST/GUI没有独立完成的新实验，不列作完成结果
 [完整300题覆盖、RQ3评分连接失败恢复、MMBC历史缺终态追溯及剩余额度](recovery-audit.md)。此页区分历史失败、新队列运行、待判分和预算耗尽；新补跑尚不代表完整avg3。
 
 [第一批RQ3旧判分恢复后的mean±std及有效样本数](rq3-grading-recovery-snapshot.md)（不含本轮新预测，非完整300题）。
+
+[本轮20:33 UTC统计快照：严格三repeat、题簇CI/配对检验、缓存与成本](once24h-statistics-20261113T203324.md) · [无题目原文/答案的汇总JSON](once24h-statistics-20261113T203324.json) · [文本参考价Pareto](once24h-pareto_text-20261113T203324.png) · [多模态参考价Pareto](once24h-pareto_multimodal-20261113T203324.png) · [RQ3严格三repeat共同题集图](once24h-rq3_complete3_ci-20261113T203324.png)。新图两轴使用相同共同成本题次，不替换上文旧冻结表；RQ3当前完整三repeat共同题集为0，图明确标记不可用。参考价不是实际DeepSeek账单。

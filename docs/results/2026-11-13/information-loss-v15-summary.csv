@@ -1,0 +1,6 @@
+method,holdout_conditions,expected_conditions,qa_correct,qa_valid_facts,recall_supported,recall_valid_facts,reconstruction_complete,qa_matched_correct,qa_matched_facts,recall_matched_correct,recall_matched_facts
+text_control,9,9,31,32,18,32,9,18,18,3,7
+canvas_1,9,9,16,23,9,24,1,13,18,2,7
+canvas_0.75,9,9,12,18,2,7,1,12,18,2,7
+canvas_0.5,9,9,8,32,1,32,0,5,18,0,7
+summary,9,9,7,32,11,32,9,3,18,2,7

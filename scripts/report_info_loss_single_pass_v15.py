@@ -79,8 +79,8 @@ def report(root):
         if values:
             scale_methods = [('canvas_0.5', .5), ('canvas_0.75', .75), ('canvas_1', 1.)]
             axis.plot([scale for _, scale in scale_methods], [sum(v[m] for v in values.values()) / len(values) for m, _ in scale_methods], marker='o', label='Canvas')
-            for method in ['text_control', 'summary']:
-                axis.axhline(sum(v[method] for v in values.values()) / len(values), linestyle='--', label=method)
+            for method, color, style in [('text_control', 'tab:orange', ':'), ('summary', 'tab:green', '--')]:
+                axis.axhline(sum(v[method] for v in values.values()) / len(values), color=color, linestyle=style, label=method)
             axis.legend(fontsize=8)
         else: axis.text(.5, .5, 'No complete five-arm fact set yet', transform=axis.transAxes, ha='center')
         axis.set(xlabel='Linear canvas scale', ylabel='Exact QA' if metric == 'qa' else 'Generated-output fact support', ylim=(-.05, 1.05),

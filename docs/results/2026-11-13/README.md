@@ -149,3 +149,7 @@ Cache-aware VERA和AST/GUI没有独立完成的新实验，不列作完成结果
 > On matched BC subsets with complete usage records (134 Hermes and 119 DSH question–repeat instances), visual rendering reduces total token usage by 81.2% and 57.5%, respectively, relative to No Compression. Under the same cache-aware pricing assumption, the corresponding equivalent costs decrease by 55.6% and 34.8%. These are conditional comparisons on observed subsets, rather than full-benchmark cost estimates.
 
 [当前统计与来源SHA](results.json) · [所有准确率和配对明细](accuracy-current.md) · [历史运行组索引](historical-repeat-stats.json)。
+
+## BC超时子集与探索性推算（新增）
+
+[逐策略难度比较、推算公式及敏感性分析](bc-timeout-transfer.md)：不能确认固定比例关系；DeepSeek＋Hermes约82.20%、DeepSeek＋DSH约82.14–82.47%仅为全300题次的探索性估算，**不是实测accuracy，不替代主表或mean±std**。

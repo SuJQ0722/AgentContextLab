@@ -1,0 +1,318 @@
+{
+  "at": "2026-11-13T18:34:17.358497+00:00",
+  "input_sha256": {
+    "/mnt/data/acl-rebuttal-20261113/selected-private.json": "972740f20dc735301f01bacd9688b7a6c288ad9fa74f364b486db0bb8e52ef7f",
+    "/mnt/data/acl-results-20261112/lineage_rows.json": "86bbf2a2fbdd22647abb03fe50a175367309d37cb098ff3f51fb842d2d72840d"
+  },
+  "model_calls": 0,
+  "groups": [
+    {
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "dsh",
+      "vera_scored_completed": 206,
+      "historical_timeout_unresolved": 76,
+      "current_status_timeout": 32,
+      "explicit_budget_zero": 17,
+      "other_unknown": 1,
+      "common_S": 165,
+      "common_T": 16,
+      "repeat_common_S": [
+        61,
+        51,
+        53
+      ],
+      "repeat_common_T": [
+        3,
+        4,
+        9
+      ],
+      "baseline_comparison": [
+        {
+          "method": "none",
+          "common_S_accuracy": 0.8909090909090909,
+          "common_T_accuracy": 0.625,
+          "ratio": 0.701530612244898,
+          "difference": -0.2659090909090909,
+          "own_S_n": 198,
+          "own_T_n": 51,
+          "own_S_accuracy": 0.8737373737373737,
+          "own_T_accuracy": 0.6078431372549019
+        },
+        {
+          "method": "discard",
+          "common_S_accuracy": 0.8848484848484849,
+          "common_T_accuracy": 0.75,
+          "ratio": 0.8476027397260274,
+          "difference": -0.13484848484848488,
+          "own_S_n": 181,
+          "own_T_n": 23,
+          "own_S_accuracy": 0.8839779005524862,
+          "own_T_accuracy": 0.6086956521739131
+        },
+        {
+          "method": "sliding_window",
+          "common_S_accuracy": 0.9090909090909091,
+          "common_T_accuracy": 0.75,
+          "ratio": 0.8250000000000001,
+          "difference": -0.15909090909090906,
+          "own_S_n": 194,
+          "own_T_n": 44,
+          "own_S_accuracy": 0.9123711340206185,
+          "own_T_accuracy": 0.8636363636363636
+        },
+        {
+          "method": "summarize",
+          "common_S_accuracy": 0.9212121212121213,
+          "common_T_accuracy": 0.8125,
+          "ratio": 0.8819901315789473,
+          "difference": -0.10871212121212126,
+          "own_S_n": 194,
+          "own_T_n": 31,
+          "own_S_accuracy": 0.9123711340206185,
+          "own_T_accuracy": 0.8387096774193549
+        }
+      ],
+      "vera_S_all_accuracy": 0.9174757281553398,
+      "vera_S_common_accuracy": 0.9272727272727272,
+      "pooled_baseline_ratio": 0.8146008403361343,
+      "imputed_timeout_accuracy": 0.7553571428571427,
+      "imputed_full300_range": [
+        0.8213571428571428,
+        0.8246904761904762
+      ],
+      "additive_timeout_accuracy": 0.7601325757575756,
+      "additive_full300_range": [
+        0.8225669191919192,
+        0.8259002525252525
+      ],
+      "per_baseline_timeout_predictions": [
+        0.6505102040816327,
+        0.785958904109589,
+        0.765,
+        0.817845394736842
+      ],
+      "leave_one_baseline_out_errors": [
+        {
+          "method": "none",
+          "predicted_T_accuracy": 0.7587890624999999,
+          "observed_T_accuracy": 0.625,
+          "error_pp": 13.37890624999999
+        },
+        {
+          "method": "discard",
+          "predicted_T_accuracy": 0.7113028953229399,
+          "observed_T_accuracy": 0.75,
+          "error_pp": -3.8697104677060112
+        },
+        {
+          "method": "sliding_window",
+          "predicted_T_accuracy": 0.7373595505617976,
+          "observed_T_accuracy": 0.75,
+          "error_pp": -1.2640449438202417
+        },
+        {
+          "method": "summarize",
+          "predicted_T_accuracy": 0.729119638826185,
+          "observed_T_accuracy": 0.8125,
+          "error_pp": -8.338036117381497
+        }
+      ],
+      "imputed_timeout_cluster_bootstrap95_conditional": [
+        0.5324196455302078,
+        0.9435537055457406
+      ],
+      "imputed_full300_baseline_specific_range": [
+        0.794795918367347,
+        0.8405208333333334
+      ]
+    },
+    {
+      "model": "deepseek-v4.1-flash-1017",
+      "harness": "hermes",
+      "vera_scored_completed": 261,
+      "historical_timeout_unresolved": 37,
+      "current_status_timeout": 35,
+      "explicit_budget_zero": 2,
+      "other_unknown": 0,
+      "common_S": 259,
+      "common_T": 34,
+      "repeat_common_S": [
+        88,
+        83,
+        88
+      ],
+      "repeat_common_T": [
+        10,
+        15,
+        9
+      ],
+      "baseline_comparison": [
+        {
+          "method": "none",
+          "common_S_accuracy": 0.8223938223938224,
+          "common_T_accuracy": 0.38235294117647056,
+          "ratio": 0.46492681579674117,
+          "difference": -0.44004088121735185,
+          "own_S_n": 261,
+          "own_T_n": 37,
+          "own_S_accuracy": 0.8199233716475096,
+          "own_T_accuracy": 0.35135135135135137
+        },
+        {
+          "method": "discard",
+          "common_S_accuracy": 0.722007722007722,
+          "common_T_accuracy": 0.08823529411764706,
+          "ratio": 0.12220824158540422,
+          "difference": -0.6337724278900749,
+          "own_S_n": 261,
+          "own_T_n": 37,
+          "own_S_accuracy": 0.7164750957854407,
+          "own_T_accuracy": 0.08108108108108109
+        },
+        {
+          "method": "sliding_window",
+          "common_S_accuracy": 0.8262548262548263,
+          "common_T_accuracy": 0.17647058823529413,
+          "ratio": 0.21357888949972514,
+          "difference": -0.6497842380195321,
+          "own_S_n": 261,
+          "own_T_n": 37,
+          "own_S_accuracy": 0.8199233716475096,
+          "own_T_accuracy": 0.16216216216216217
+        },
+        {
+          "method": "summarize",
+          "common_S_accuracy": 0.8494208494208494,
+          "common_T_accuracy": 0.47058823529411764,
+          "ratio": 0.5540106951871658,
+          "difference": -0.37883261412673175,
+          "own_S_n": 259,
+          "own_T_n": 34,
+          "own_S_accuracy": 0.8494208494208494,
+          "own_T_accuracy": 0.47058823529411764
+        }
+      ],
+      "vera_S_all_accuracy": 0.9003831417624522,
+      "vera_S_common_accuracy": 0.9034749034749034,
+      "pooled_baseline_ratio": 0.34708703625335025,
+      "imputed_timeout_accuracy": 0.3135844265763859,
+      "imputed_full300_range": [
+        0.8220087459444209,
+        0.8220087459444209
+      ],
+      "additive_timeout_accuracy": 0.3778673631614806,
+      "additive_full300_range": [
+        0.829936974789916,
+        0.829936974789916
+      ],
+      "per_baseline_timeout_predictions": [
+        0.42004971002485497,
+        0.11041207927021077,
+        0.19296316657504123,
+        0.5005347593582887
+      ],
+      "leave_one_baseline_out_errors": [
+        {
+          "method": "none",
+          "predicted_T_accuracy": 0.2522023302074453,
+          "observed_T_accuracy": 0.38235294117647056,
+          "error_pp": -13.015061096902524
+        },
+        {
+          "method": "discard",
+          "predicted_T_accuracy": 0.2975270479134466,
+          "observed_T_accuracy": 0.08823529411764706,
+          "error_pp": 20.929175379579952
+        },
+        {
+          "method": "sliding_window",
+          "predicted_T_accuracy": 0.32485768500948764,
+          "observed_T_accuracy": 0.17647058823529413,
+          "error_pp": 14.83870967741935
+        },
+        {
+          "method": "summarize",
+          "predicted_T_accuracy": 0.23184518106917032,
+          "observed_T_accuracy": 0.47058823529411764,
+          "error_pp": -23.874305422494732
+        }
+      ],
+      "imputed_timeout_cluster_bootstrap95_conditional": [
+        0.17706817510265915,
+        0.48041354209791765
+      ],
+      "imputed_full300_baseline_specific_range": [
+        0.7969508231099927,
+        0.845065953654189
+      ]
+    },
+    {
+      "model": "gemini-3.5-flash-thinking",
+      "harness": "hermes",
+      "vera_scored_completed": 218,
+      "historical_timeout_unresolved": 0,
+      "current_status_timeout": 0,
+      "explicit_budget_zero": 0,
+      "other_unknown": 82,
+      "common_S": 88,
+      "common_T": 0,
+      "repeat_common_S": [
+        27,
+        32,
+        29
+      ],
+      "repeat_common_T": [
+        0,
+        0,
+        0
+      ],
+      "baseline_comparison": [
+        {
+          "method": "none",
+          "common_S_accuracy": 0.8409090909090909,
+          "common_T_accuracy": null,
+          "ratio": null,
+          "difference": null,
+          "own_S_n": 134,
+          "own_T_n": 0,
+          "own_S_accuracy": 0.7611940298507462,
+          "own_T_accuracy": null
+        },
+        {
+          "method": "discard",
+          "common_S_accuracy": 0.875,
+          "common_T_accuracy": null,
+          "ratio": null,
+          "difference": null,
+          "own_S_n": 191,
+          "own_T_n": 0,
+          "own_S_accuracy": 0.7905759162303665,
+          "own_T_accuracy": null
+        },
+        {
+          "method": "sliding_window",
+          "common_S_accuracy": 0.8295454545454546,
+          "common_T_accuracy": null,
+          "ratio": null,
+          "difference": null,
+          "own_S_n": 146,
+          "own_T_n": 0,
+          "own_S_accuracy": 0.7808219178082192,
+          "own_T_accuracy": null
+        },
+        {
+          "method": "summarize",
+          "common_S_accuracy": 0.8295454545454546,
+          "common_T_accuracy": null,
+          "ratio": null,
+          "difference": null,
+          "own_S_n": 186,
+          "own_T_n": 0,
+          "own_S_accuracy": 0.7526881720430108,
+          "own_T_accuracy": null
+        }
+      ],
+      "projection_unavailable_reason": "No explicitly documented unresolved timeout subset; missing/failed records are not assumed to be timeouts."
+    }
+  ]
+}

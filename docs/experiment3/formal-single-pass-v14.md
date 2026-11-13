@@ -93,3 +93,12 @@ post-annotation target publication, immutability, and the authorization gate.
 The generic fitter has four additional tests in `test_summary_prefix_fit_v14.py`.
 Offline render artifacts live under the independent campaign's
 `offline-preflight/`; they do not establish a provider token budget.
+
+The independent pending-only scorer is `scripts/judge_controlled_single_pass_v14.py`
+(`--watch --live --concurrency 2`, only after prediction authorization). It
+binds source/result/control/target hashes and private gold, excludes calibration,
+and reports three-arm groups only after all three are scored and pass native,
+prefix and measured-budget matching. Missing grades remain NA. Per-purpose SDK
+usage separates compaction/calibration from continuation; a distinct deduplicated
+physical-route view captures extra attempts. These overlapping accounting views
+must never be added together. The scorer was prepared offline and not launched.

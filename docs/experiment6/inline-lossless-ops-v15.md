@@ -52,3 +52,10 @@ Four offline tests pass, including a real localhost HTTP upload through the
 same HTTPX path: lossless pixels/high detail, write timeout 300, completed-stage
 reuse without a second send, and rejection of an old failure/unknown before
 encoding or model invocation. No paid diagnostic request was used.
+
+The independent read-only `scripts/report_info_loss_single_pass_v15.py --watch`
+generates `analysis/report.md`, cost coverage, and resolution/age figures.
+Resolution comparisons use common holdout facts across all five methods;
+if none are available the figure explicitly states that instead of drawing
+invented points. Age plots retain observed per-method denominators in CSV and
+make no causal decay claim. q004 development observations are excluded.

@@ -50,6 +50,8 @@
 
 后台预测 lifecycle、渠道/用量监控、独立评分和每 15 分钟汇总均已启动；汇总器截止时保存 final 快照。下列为共享工作区相对路径，包含运行时材料，不作为 GitHub 附件发布：
 
+评分调度另修复了共享盘瓶颈：原实现每收到少量评分就重新扫描全库存，状态写入也会阻塞后续派发。新队列将库存扫描、状态写入分别移出主调度线程，仍保持 4 个评分请求并发和原科学评分协议。切换前排空在途请求、核验已写入的成绩和唯一控制器锁；未知/失败请求不会重复评分。该改动不影响预测 CCI。
+
 - 部署及逐片 UID：`outputs/cloud-runtime/deepseek-once24h-v15/deployment-final-snapshot.json`
 - 逐槽评分绑定：`outputs/cloud-runtime/deepseek-once24h-v15/grading-map.json`
 - 实时汇总：`outputs/reports/once24h-v15/latest.md`、`latest.json`
@@ -61,4 +63,4 @@
 
 失败分类补充：20:26 的新轮 16 个 failed 中，9 个 DSH 为明确 output_limit；7 个 Hermes 外层记录 execution_error，但原生记录均显示四次续写后仍被截断、partial=true/completed=false，末调用为 length。后者应在派生统计中归为输出预算耗尽并计 0，保留外层原始记录及证据，不能作为系统故障排除。
 
-验证：单次补跑合同 6 项测试通过；加入汇总器后 root 共 1,156 项检查通过。信息损失传输和受控配对另有实际本地 HTTP 集成检查。原生 Hermes/DSH 启动路径 dry-run 均验证零模型调用。
+验证：单次补跑合同 6 项测试通过；加入统计扩展后 root 共 1,175 项检查通过，评分异步队列另有 8 项针对性检查通过。信息损失传输和受控配对另有实际本地 HTTP 集成检查。原生 Hermes/DSH 启动路径 dry-run 均验证零模型调用。

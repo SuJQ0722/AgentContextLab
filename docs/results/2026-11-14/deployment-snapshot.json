@@ -1,0 +1,263 @@
+{
+  "at_utc": "2026-11-14T04:37:00.175205+00:00",
+  "deadline_utc": "2026-11-14T19:20:06Z",
+  "predictions": [
+    {
+      "experiment": "mmbc-timeout-once-v18",
+      "cell": "mmbc_hermes_vera_0",
+      "cci_name": "acl-mmbc-retry18-mmbc-hermes-vera-0",
+      "concurrency_cap": 16,
+      "active": 0,
+      "original_plan_slots": 59,
+      "dispatched": 16,
+      "terminal": {
+        "completed": 1,
+        "timeout": 15
+      },
+      "new_dispatch_stopped": true,
+      "queued_owned": 0,
+      "controller_observed_at": [
+        1794630815.3357637
+      ],
+      "provider_observed_at": 1794631002.2246277,
+      "requests_observed": 488,
+      "usage_complete": 456,
+      "route_errors": 18,
+      "metrics_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/mmbc-timeout-once-v18/monitor/latest.json",
+      "prediction_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/campaigns/mmbc-timeout-once-v18/cells/mmbc_hermes_vera_0",
+      "estimated_finish_utc": "2026-11-14T05:00:00Z",
+      "eta_is_estimate": true,
+      "uid": "ab68f0cd7e124e5daeba93f989161e6e",
+      "platform_state": "SUSPENDED",
+      "ready_replicas": 0
+    },
+    {
+      "experiment": "mmbc-timeout-once-v18",
+      "cell": "mmbc_hermes_vera_1",
+      "cci_name": "acl-mmbc-retry18-mmbc-hermes-vera-1",
+      "concurrency_cap": 16,
+      "active": 3,
+      "original_plan_slots": 59,
+      "dispatched": 19,
+      "terminal": {
+        "timeout": 13,
+        "failed": 1,
+        "completed": 2
+      },
+      "new_dispatch_stopped": true,
+      "queued_owned": 0,
+      "controller_observed_at": [
+        1794631010.3766294
+      ],
+      "provider_observed_at": 1794631002.2246277,
+      "requests_observed": 554,
+      "usage_complete": 527,
+      "route_errors": 13,
+      "metrics_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/mmbc-timeout-once-v18/monitor/latest.json",
+      "prediction_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/campaigns/mmbc-timeout-once-v18/cells/mmbc_hermes_vera_1",
+      "estimated_finish_utc": "2026-11-14T05:00:00Z",
+      "eta_is_estimate": true,
+      "uid": "1ba5ca2d53764b92b4bed2552697a855",
+      "platform_state": "RUNNING",
+      "ready_replicas": 1
+    },
+    {
+      "experiment": "mmbc-timeout-scope-correction-v19",
+      "cell": "mmbc_hermes_vera_scope_correction",
+      "cci_name": "acl-mmbc-retry19-mmbc-hermes-vera-scope-correction",
+      "concurrency_cap": 16,
+      "active": 2,
+      "original_plan_slots": 2,
+      "dispatched": 2,
+      "terminal": {},
+      "new_dispatch_stopped": false,
+      "queued_owned": 0,
+      "controller_observed_at": [
+        1794631012.3953753
+      ],
+      "provider_observed_at": 1794631001.5659359,
+      "requests_observed": 67,
+      "usage_complete": 64,
+      "route_errors": 1,
+      "metrics_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/mmbc-timeout-scope-correction-v19/monitor/latest.json",
+      "prediction_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/campaigns/mmbc-timeout-scope-correction-v19/cells/mmbc_hermes_vera_scope_correction",
+      "estimated_finish_utc": "2026-11-14T05:00:00Z",
+      "eta_is_estimate": true,
+      "uid": "832ada92ffd84d2cbf54e4750bfdc7b4",
+      "platform_state": "RUNNING",
+      "ready_replicas": 1
+    },
+    {
+      "experiment": "mmbc-recent10-pending-v23",
+      "cell": "mmbc_hermes_recent10_0",
+      "cci_name": "acl-mmbc-recent23-mmbc-hermes-recent10-0",
+      "concurrency_cap": 16,
+      "active": 16,
+      "original_plan_slots": 42,
+      "dispatched": 16,
+      "terminal": {},
+      "new_dispatch_stopped": false,
+      "queued_owned": 26,
+      "controller_observed_at": [
+        1794631011.4385264
+      ],
+      "provider_observed_at": 1794630983.7700932,
+      "requests_observed": 102,
+      "usage_complete": 89,
+      "route_errors": 0,
+      "metrics_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/mmbc-recent10-pending-v23/monitor/latest.json",
+      "prediction_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/campaigns/mmbc-recent10-pending-v23/cells/mmbc_hermes_recent10_0",
+      "estimated_finish_utc": "2026-11-14T07:45:00Z",
+      "eta_is_estimate": true,
+      "uid": "c74986dcd130485e86d6e4df5cbca99a",
+      "platform_state": "RUNNING",
+      "ready_replicas": 1
+    },
+    {
+      "experiment": "mmbc-recent10-pending-v23",
+      "cell": "mmbc_hermes_recent10_1",
+      "cci_name": "acl-mmbc-recent23-mmbc-hermes-recent10-1",
+      "concurrency_cap": 16,
+      "active": 16,
+      "original_plan_slots": 41,
+      "dispatched": 16,
+      "terminal": {},
+      "new_dispatch_stopped": false,
+      "queued_owned": 25,
+      "controller_observed_at": [
+        1794631016.817447
+      ],
+      "provider_observed_at": 1794630983.7700932,
+      "requests_observed": 135,
+      "usage_complete": 119,
+      "route_errors": 3,
+      "metrics_path": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/cloud-runtime/mmbc-recent10-pending-v23/monitor/latest.json",
+      "prediction_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/campaigns/mmbc-recent10-pending-v23/cells/mmbc_hermes_recent10_1",
+      "estimated_finish_utc": "2026-11-14T07:45:00Z",
+      "eta_is_estimate": true,
+      "uid": "79987c41d7924abfa3c43b4435938df3",
+      "platform_state": "RUNNING",
+      "ready_replicas": 1
+    },
+    {
+      "experiment": "controlled-mmbc-vera-nontimeout-v20",
+      "method": "window",
+      "cci_name": "acl-controlled21-window",
+      "concurrency_cap": 16,
+      "active": 16,
+      "pending": 69,
+      "canary_released": null,
+      "controller_observed_at": 1794631016.5506823,
+      "finished": false,
+      "terminal": {
+        "no_compression_reuse": 67,
+        "completed": 21,
+        "failed": 3,
+        "blocked": 4
+      },
+      "runnable_protocol_slots": 109,
+      "fixed_non_timeout_cohort": 180,
+      "new_intervention_slots_across_protocols": 109,
+      "reuse_without_new_call": 67,
+      "blocked": 4,
+      "prediction_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/controlled-mmbc-vera-nontimeout-v20",
+      "provider_metrics_glob": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/controlled-mmbc-vera-nontimeout-v20/cells/window/jobs/*/attempt_001/metrics/calls.jsonl",
+      "grading_observed_at": 1794630968.98681,
+      "scored_new_interventions": 19,
+      "estimated_finish_utc": "2026-11-14T11:30:00Z",
+      "eta_conditional_on_canary_gate": false,
+      "eta_is_estimate": true,
+      "uid": "50a52fda3cf54419a64da5335e2bc2ee",
+      "platform_state": "RUNNING",
+      "ready_replicas": 1
+    },
+    {
+      "experiment": "controlled-mmbc-vera-nontimeout-summary-v23",
+      "method": "summary",
+      "cci_name": "acl-controlled23-summary",
+      "concurrency_cap": 16,
+      "active": 16,
+      "pending": 67,
+      "canary_released": true,
+      "controller_observed_at": 1794631017.6031582,
+      "finished": false,
+      "terminal": {},
+      "runnable_protocol_slots": 83,
+      "fixed_non_timeout_cohort": 180,
+      "new_intervention_slots_across_protocols": 109,
+      "reuse_without_new_call": 67,
+      "blocked": 4,
+      "prediction_root": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/controlled-mmbc-vera-nontimeout-summary-v23",
+      "provider_metrics_glob": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/controlled-mmbc-vera-nontimeout-summary-v23/cells/summary/jobs/*/attempt_001/metrics/calls.jsonl",
+      "grading_observed_at": 1794630972.87818,
+      "scored_new_interventions": 0,
+      "estimated_finish_utc": "2026-11-14T12:00:00Z",
+      "eta_conditional_on_canary_gate": false,
+      "eta_is_estimate": true,
+      "uid": "791d96117bcc479f821b36a68c705c32",
+      "platform_state": "RUNNING",
+      "ready_replicas": 1
+    }
+  ],
+  "baseline_cohort_slots": 180,
+  "original_core_timeout_slots": 120,
+  "core_transferred_unused_grants": 83,
+  "additional_grants_due_to_migration": 0,
+  "old_summary_failures_by_protocol": {
+    "v20": 25,
+    "v22": 1
+  },
+  "old_summary_failures_not_retried": true,
+  "secret_or_prompt_content_included": false,
+  "reports": {
+    "vera_overlay": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/reports/mmbc-timeout-overlay-v18/latest.md",
+    "controlled_pairs": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/reports/controlled-source-v20/latest.md"
+  },
+  "total_active_predictions": 69,
+  "core_grant_accounting": {
+    "total_authorized_slots": 120,
+    "old_v18_started_preserved": 35,
+    "old_v19_started_preserved": 2,
+    "unused_v18_grants_transferred_to_v23": 83,
+    "new_grants_from_transfer": 0,
+    "same_cumulative_authorized_ordinal": true,
+    "old_v18_roots_STOP_acknowledged": true,
+    "paid_tasks_retried": 0,
+    "timeout_retry_allowed": false
+  },
+  "core_protocol_strata": [
+    {
+      "protocol": "v18_preserve_all_native_old_policy",
+      "owned_slots": 35,
+      "completed": 3,
+      "failed_other": 1,
+      "timeout": 28,
+      "active": 3,
+      "queued": 0
+    },
+    {
+      "protocol": "v19_scope_correction_old_policy",
+      "owned_slots": 2,
+      "active": 2,
+      "terminal": 0
+    },
+    {
+      "protocol": "v23_core_recent10_new_policy",
+      "owned_slots": 83,
+      "active": 32,
+      "queued": 51,
+      "terminal": 0,
+      "timeout_rate_not_yet_estimable": true
+    }
+  ],
+  "eta_note": "Estimates based on remaining fixed16 concurrency and1h task limit, excluding unknown future infrastructure outages; no task retry. Terminal timeout is a result, not a promise of successful completion.",
+  "baseline_scientific_gate": {
+    "summary_canary": "mmbc_101_r02",
+    "source_total_prompt_tokens": 13907,
+    "actual_total_prompt_tokens": 14026,
+    "relative_difference": 0.008556841878190839,
+    "native_identity_verified": true,
+    "final_wire_native_identity_preserved": true,
+    "released_automatically": true
+  }
+}

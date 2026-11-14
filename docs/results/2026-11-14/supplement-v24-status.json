@@ -1,0 +1,194 @@
+{
+  "at": "2026-11-14 16:28 UTC",
+  "protocol": {
+    "concurrency_per_cci": 8,
+    "controlled_ccis": 3,
+    "core_ccis": 3,
+    "max_http_sends": 3,
+    "max_new_attempts_per_timeout_slot": 1,
+    "max_rounds": 200,
+    "new_concurrency_comparison": false,
+    "selection": "latest_timeout_only",
+    "status": "authorized",
+    "timeout_seconds": 10800
+  },
+  "selected": 1535,
+  "nodes": [
+    {
+      "scope": "controlled",
+      "shard": 0,
+      "at": 1794673688.8736348,
+      "active": 6,
+      "pending": 0,
+      "finished": false,
+      "unknown": [],
+      "launcher_failures": 0
+    },
+    {
+      "scope": "controlled",
+      "shard": 1,
+      "at": 1794673676.7786095,
+      "active": 8,
+      "pending": 0,
+      "finished": false,
+      "unknown": [],
+      "launcher_failures": 0
+    },
+    {
+      "scope": "controlled",
+      "shard": 2,
+      "at": 1794673685.2694347,
+      "active": 4,
+      "pending": 0,
+      "finished": false,
+      "unknown": [],
+      "launcher_failures": 0
+    },
+    {
+      "scope": "core",
+      "shard": 0,
+      "at": 1794673675.5359902,
+      "active": 8,
+      "pending": 493,
+      "finished": false,
+      "unknown": [],
+      "launcher_failures": 0
+    },
+    {
+      "scope": "core",
+      "shard": 1,
+      "at": 1794673687.182845,
+      "active": 8,
+      "pending": 491,
+      "finished": false,
+      "unknown": [],
+      "launcher_failures": 0
+    },
+    {
+      "scope": "core",
+      "shard": 2,
+      "at": 1794673688.1144876,
+      "active": 8,
+      "pending": 493,
+      "finished": false,
+      "unknown": [],
+      "launcher_failures": 0
+    }
+  ],
+  "recovery_states": {
+    "active": 42,
+    "failed": 4,
+    "completed": 12,
+    "pending": 1477
+  },
+  "missing_grades_repair": [
+    {
+      "slot_id": "retained-mmbc-v1:mmbc100:hermes:sliding_window:mmbc_1114:2",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "d5ca0d5b37194d164f0e96ba4b6aa434aa479e40b064c5fc0acd5b6920595447",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "controlled:window/mmbc_164_r02",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "c04b15cbf202bd11a405f2293430f7e7ba940fad13572851fedc6d7788a2ec42",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "controlled:window/mmbc_092_r01",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "79b12471ea0ebe94b9272d85029271729c8a6b7c142a214908083b64c84cbc7b",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "retained-mmbc-v1:mmbc100:hermes:none:mmbc_1031:3",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "c1dc561d75797795a34c18a66537b767d37105fbf979f0b356e7b9cc0084c76a",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "seven-page-rq3-v10:rq3:hermes:scale_1.0:q_087:1",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "29578d40f23ed745bcc1ff50a68f3b07a712ed745a3bc331af1a97ccfc33daaf",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "seven-page-rq3-v10:rq3:hermes:scale_0.25:q_069:1",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "55f0143c851f7ff62fb472f7cbeba6932c555fcb11979d60101ae79a9ff40dc8",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "retained-mmbc-v1:mmbc100:hermes:summarize:mmbc_1315:3",
+      "status": "invalid_judge_response",
+      "score": null,
+      "result_sha256": "8abfc0401de511661685b1d5a11fde53ee67737f03cdd32208cd9bd0111715bb",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "controlled:window/mmbc_1315_r01",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "accd8f711a2c12c7c374dfccb76482f14346eda13241e620ad2ef2e4cf3b5a8b",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "seven-page-rq3-v10:rq3:hermes:scale_0.5:q_067:3",
+      "status": "scored",
+      "score": 0.0,
+      "result_sha256": "90af3f9a227d2e979b41e0ee243e9bfa18eb367be63c51f6476190a87e7f4ee3",
+      "api_calls": 1
+    },
+    {
+      "slot_id": "seven-page-rq3-v10:rq3:hermes:scale_0.8:q_036:1",
+      "status": "scored",
+      "score": 1.0,
+      "result_sha256": "2b531cb2fab5141a1462f0f05cbdf9e2cd46a8edb74c7325ab2d913a4c7e7842",
+      "api_calls": 1
+    }
+  ],
+  "P3_status": {
+    "first_pass": {
+      "at": 1794673207.1097834,
+      "active": 5,
+      "pending": 0,
+      "concurrency": 8,
+      "human_review_status": "pending"
+    },
+    "pre_qa_annotation_resume": {
+      "at": 1794673686.0448062,
+      "active": 4,
+      "pending": 31,
+      "original_active": 4,
+      "combined_active": 8,
+      "concurrency_cap": 8
+    },
+    "fixed_histories": 40,
+    "fixed_facts": 240,
+    "pre_qa_quote_validation_failures": 35,
+    "repaired_fact_sets_so_far": 4,
+    "human_review_status": "pending",
+    "dev_token_match": {
+      "canvas": 1358,
+      "summary": 1358
+    },
+    "analysis_view": "outputs/reports/probe-qa-holdout-v25"
+  },
+  "source_plan": "/mnt/afs_agents/sujiaqi/workspace/projects/AgentContextLab/outputs/campaigns/supplement-timeout-v24/plan.json",
+  "checks": {
+    "root_unittest": "1346 tests passed",
+    "log": "/tmp/acl-supplement-v24-complete-tests.log",
+    "actual_hermes_and_dsh_turn_limits": 200,
+    "native_initialization_model_calls": 0,
+    "physical_send_limit_tests": "passed Python and Node",
+    "human_audit": "pending"
+  },
+  "controlled_strict_common_slots_current": 42,
+  "new_terminal_stage_profiles": 16
+}

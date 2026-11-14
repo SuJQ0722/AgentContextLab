@@ -443,5 +443,50 @@
     "failed_results": "Do not select ordinary failed for retry",
     "status": "preparing"
   },
-  "active_execution_protocol": "seven_page_turns500_v12"
+  "mmbc_bounded_calls_v1": {
+    "version": "mmbc-bounded-route-runtime-v1",
+    "status": "offline_candidate_not_launched",
+    "worker": "scripts/hermes_mmbc_bounded_calls_worker_v1.py",
+    "scope": "mmbc100/hermes/visual only; separate protocol and output directory",
+    "mmbc_request_budget_version": "mmbc-bounded-route-runtime-v1",
+    "mmbc_max_http_attempts_per_request": 3,
+    "transport_runtime_policy_overrides": {
+      "max_failed_sends": 3
+    },
+    "purpose": "Enforce the previously unused failed-send limit below route rotation; bound repeated API waiting",
+    "scientific_settings_changed": false,
+    "paid_evaluations_started": false,
+    "completion_improvement_measured": false,
+    "budget_selection": "Offline trace replay: limit two would interrupt six retained completed episodes; limit three retains all observed successful logical calls in the 148 instrumented completed episodes",
+    "exhausted_budget_outcome": "transport failure, never task incorrect or measured zero score"
+  },
+  "active_execution_protocol": "supplement-timeout-200turn-3h-v24",
+  "supplement_recovery_v24": {
+    "status": "authorized",
+    "max_rounds": 200,
+    "timeout_seconds": 10800,
+    "max_http_sends": 3,
+    "concurrency_per_cci": 8,
+    "core_ccis": 3,
+    "controlled_ccis": 3,
+    "max_new_attempts_per_timeout_slot": 1,
+    "selection": "latest_timeout_only",
+    "new_concurrency_comparison": false
+  },
+  "supplement_probe_qa_v24": {
+    "status": "authorized",
+    "reader": "deepseek-v4.1-flash-1017/huoshan/huoshan",
+    "judge": "qwen3.6-plus-2026-04-02",
+    "reader_thinking": {
+      "type": "disabled"
+    },
+    "histories": 40,
+    "facts_per_history": 6,
+    "concurrency": 8,
+    "case_timeout_seconds": 10800,
+    "max_http_sends": 3,
+    "max_logical_requests_per_history": 64,
+    "budget_tolerance": 0.02,
+    "human_review_status": "pending"
+  }
 }

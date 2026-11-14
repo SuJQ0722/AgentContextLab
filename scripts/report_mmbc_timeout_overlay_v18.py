@@ -19,7 +19,7 @@ from report_once24h_v15 import Reporter, atomic, repeat_statistics, DEADLINE
 
 SOURCE = ROOT/'outputs/controlled-mmbc-vera-nontimeout-v17/source-report-core-corrected.json'
 OUT = ROOT/'outputs/reports/mmbc-timeout-overlay-v18'
-ROUNDS = ('mmbc-timeout-once-v18', 'mmbc-timeout-scope-correction-v19')
+ROUNDS = ('mmbc-timeout-once-v18', 'mmbc-timeout-scope-correction-v19', 'mmbc-recent10-pending-v23')
 
 
 def read(path): return json.loads(Path(path).read_text())
@@ -78,6 +78,7 @@ class Overlay(Reporter):
         self.register_rounds()
 
     def register_rounds(self):
+        proposed={}
         for round_name in ROUNDS:
             prediction = ROOT/'outputs/campaigns'/round_name
             inventory = prediction/'inventory.json'
@@ -89,10 +90,21 @@ class Overlay(Reporter):
                     result = root/'jobs'/job['job_id']/'attempts/attempt_001/result.json'
                     grade = ROOT/'outputs/grading'/round_name/'cells'/cell['cell']/'jobs'/job['job_id']/'grade.json'
                     record = {'slot_id':slot_id,'prediction_result_path':str(result),'grade_path':str(grade),'round':round_name}
-                    if slot_id in self.new and self.new[slot_id] != record: raise ValueError('Two new executions for one slot')
+                    if slot_id in proposed and proposed[slot_id] != record:
+                        previous=proposed[slot_id]
+                        if round_name!='mmbc-recent10-pending-v23' or previous['round']!='mmbc-timeout-once-v18':raise ValueError('Two new executions for one slot')
+                        migration=self.read(job['migration_manifest_path'],stable=True)
+                        if self.hashes[job['migration_manifest_path']]!=job['migration_manifest_sha256']:raise ValueError('Migration manifest changed')
+                        old=migration['jobs'][slot_id];oldroot=Path(old['source_campaign_root'])
+                        expected=oldroot/'jobs'/job['job_id']/'attempts/attempt_001/result.json'
+                        if str(expected)!=previous['prediction_result_path']:raise ValueError('Migration source differs')
+                        jobdir=oldroot/'jobs'/job['job_id']
+                        if (jobdir/'claim').exists() or (jobdir/'spec.json').exists() or ((jobdir/'attempts').exists() and any((jobdir/'attempts').iterdir())):raise ValueError('Migrated task was also dispatched by old source')
+                        record['transferred_from_round']=previous['round'];record['additional_attempts']=0
                     if slot_id not in self.slots or self.slots[slot_id]['selected_completed']: raise ValueError('New round contains a retained complete')
-                    self.new[slot_id] = record
+                    proposed[slot_id] = record
                     self.result_grade_paths[str(result)].add(str(grade))
+        self.new=proposed
 
     def ledger_partition(self):
         destination = self.output/'historical-cost-partition.json'
@@ -121,7 +133,7 @@ class Overlay(Reporter):
         self.register_rounds(); self.errors=[]
         with ThreadPoolExecutor(max_workers=4) as pool: rows=list(pool.map(self.safe_observe,self.base['slots']))
         for row in rows:
-            if row['slot_id'] in self.new: row['supplemental_round']=self.new[row['slot_id']]['round']
+            if row['slot_id'] in self.new: row['supplemental_round']=self.new[row['slot_id']]['round'];row['grant_transferred_without_extra_attempt']=self.new[row['slot_id']].get('additional_attempts')==0
         states=dict(Counter(r['status'] for r in rows)); rounds=[]
         for name in ROUNDS:
             p=ROOT/'outputs/grading'/name/'resources.json'

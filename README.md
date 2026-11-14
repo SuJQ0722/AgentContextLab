@@ -93,12 +93,12 @@ The DSH overlay selects a custom OpenAI Chat Completions route for TokenHub's
 `/v1` gateway. DSH's official DeepSeek adapter uses a different Messages protocol.
 Exact model ID, image support and token limits must be verified at your endpoint.
 
-See [the rebuttal plan](docs/rebuttal-plan.md) for experimental order and controls,
-and [Hermes evaluation documentation](hermes-agent/Browsecomp_eval/README.md) for
-existing benchmark runs and trajectory exports. Experimental DSH context plugins
-and Hermes Native Images baselines are implemented; validation status and remaining
-execution blockers are recorded in the rebuttal plan. No scored pilot results have
-been produced yet. Setup, doctor and dry-run do not start paid runs.
+See [the latest experiment results and rebuttal gaps](docs/results/2026-11-14/README.md)
+for measured accuracy, timeout counts, estimates, controlled baselines and runtime status.
+The current authorized prediction batches have ended; incomplete coverage is not an
+active queue. The [rebuttal plan](docs/rebuttal-plan.md) preserves experimental controls,
+and [Hermes evaluation documentation](hermes-agent/Browsecomp_eval/README.md) covers
+benchmark runs and trajectory exports. Setup, doctor and dry-run do not start paid runs.
 
 ## Checks
 

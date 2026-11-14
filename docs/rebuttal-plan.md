@@ -1,3 +1,5 @@
+> **当前结果与运行状态（2026-11-14）：[全部实验、超时及rebuttal缺口](results/2026-11-14/README.md)。下文为历史规划/盘点，其中“运行中”和ETA不代表当前状态。**
+
 # Rebuttal experiments
 
 This branch contains experimental native-image baselines, an external DSH

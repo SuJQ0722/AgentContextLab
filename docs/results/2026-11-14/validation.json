@@ -1,0 +1,18 @@
+{
+  "root_unittest": {
+    "passed": 1331,
+    "seconds": 225.288,
+    "failures": 0
+  },
+  "checked_markdown_files": 7,
+  "broken_local_links": 0,
+  "main_groups": 23,
+  "slots": 6900,
+  "completed": 5281,
+  "scored": 5274,
+  "timeouts_audited": 1508,
+  "other_failures": 111,
+  "ungraded_completed": 7,
+  "new_model_calls": 0,
+  "raw_prediction_or_grading_modified": false
+}

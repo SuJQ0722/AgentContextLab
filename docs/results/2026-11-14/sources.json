@@ -1,0 +1,121 @@
+{
+  "document_generated_at": "2026-11-14T14:27:12+00:00",
+  "model_calls": 0,
+  "sources": [
+    {
+      "path": "outputs/reports/once24h-v15/latest.json",
+      "sha256": "562cc665c26781a032d086c984f08241ed214cbdfa44b10a01b72854844ec338",
+      "source_at": "2026-11-14T14:18:35.211190+00:00"
+    },
+    {
+      "path": "outputs/reports/mmbc-timeout-overlay-v18/latest.json",
+      "sha256": "d6d83bdf61a3b1dbb9239669dc49b0abdc01d4d84827fdaad2ee92ce2699edf1",
+      "source_at": "2026-11-14T14:26:19.253620+00:00"
+    },
+    {
+      "path": "outputs/reports/controlled-source-v20/latest.json",
+      "sha256": "67058876026090b4346dbcc2c06727d5538a573df99a9ef9d620aa03483f2432",
+      "source_at": "2026-11-14T14:25:57.752273+00:00"
+    },
+    {
+      "path": "outputs/cloud-runtime/deepseek-once24h-v15/monitor/latest.json",
+      "sha256": "ffc9ee880a03fff539bc821fbd1d7ef02372715be59f27242cf3a632c1d66193",
+      "source_at": 1794666361.9503498
+    },
+    {
+      "path": "outputs/analysis/runtime-budget-audit-20261114/audit.json",
+      "sha256": "52e5737f3fec364b0f8b6f9ef7c3df5a57ffb0191f71f2a57c500b25e4fdd492",
+      "source_at": 1794657671.8484151
+    },
+    {
+      "path": "docs/results/2026-11-13/information-loss-v15-report.json",
+      "sha256": "4dc0e4fd1878acb630a874129cf1c1c2ac0c2c44b8ab8c3487938996ac9bae00",
+      "source_at": 1794601984.1113312
+    },
+    {
+      "path": "outputs/experiment6/single-pass-inline-lossless-v15/status.json",
+      "sha256": "83c9b11d0356a18ef35102535f3f7a42221d6e28ff0efed3694bd9bdfac24d0e",
+      "source_at": 1794601844.3595102
+    },
+    {
+      "path": "outputs/grading/deepseek-once24h-v15/status.json",
+      "sha256": "5e575101ff373498b02e9aeaf552840aaa25bd77eb97535bb54a2614ddba2cb2",
+      "source_at": "2026-11-14T14:26:59.707637+00:00"
+    },
+    {
+      "path": "outputs/grading/mmbc-timeout-once-v18/status.json",
+      "sha256": "87dd998df1112376d989f5afc7c03246d2986b6318142a7d0402d319de465f04",
+      "source_at": "2026-11-14T14:26:59.733880+00:00"
+    },
+    {
+      "path": "outputs/grading/controlled-mmbc-vera-nontimeout-v20/status.json",
+      "sha256": "70dfc3b7de8311eda5d07319751399cdb01ff1133272142f52ffe5e5f14297db",
+      "source_at": 1794666419.8000789
+    },
+    {
+      "path": "outputs/grading/controlled-mmbc-vera-nontimeout-summary-v23/status.json",
+      "sha256": "5b1d13fcda5116e82c96b1c576eaa5a992c4d355073abf77e7a2481ddd488952",
+      "source_at": 1794641845.9779656
+    },
+    {
+      "path": "outputs/controlled-mmbc-vera-nontimeout-summary-v23/cells/summary/status.json",
+      "sha256": "5b2e96fed3411a8f3addc5acc78fc709dc2a1aca8fd5478464b7ec39a2a26d84",
+      "source_at": 1794641804.56555
+    },
+    {
+      "path": "outputs/controlled-mmbc-vera-nontimeout-v20/cells/window/status.json",
+      "sha256": "03abee66b31ad0022e5ca7fd19d0e2b83f0dfd681a77a24ca115ffaeab6b2f77",
+      "source_at": 1794639450.1868055
+    },
+    {
+      "path": "outputs/campaigns/deepseek-once24h-v15/cells/rq3_hermes_scale_0p7_001/jobs/hermes/scale_0700/q_071_r03/attempts/attempt_001/runs/attempt_008/result.json.84f7360ce22244da80a9a9fd12bac3a5.tmp",
+      "sha256": "38800ad112a57ef953eb031e84bc91157db871006618d5c8e5c7463e35f2d04e",
+      "source_at": null
+    },
+    {
+      "path": "outputs/analysis/bc-rq3-full-score-estimates-20261114/bc_hermes/report.json",
+      "sha256": "5f0503ad958e0fc5f6932ad0d1126b8a29a42cd9eee312f0282ce37985fd9fad",
+      "source_at": "2026-11-14T10:30:57.536023+00:00"
+    },
+    {
+      "path": "outputs/analysis/bc-rq3-full-score-estimates-20261114/bc_dsh/report.json",
+      "sha256": "35a35dfe35eb89bb7aa92757bd3874f8e6dff7f49ba17bd3607799633d13ca67",
+      "source_at": "2026-11-14T10:31:02.357470+00:00"
+    },
+    {
+      "path": "outputs/analysis/mmbc-full-score-estimates-20261114/report.json",
+      "sha256": "d96f59aa9b441e9958c617a857f1bb727ee3f7fb6dbcdc342a16436122bfa610",
+      "source_at": "2026-11-14T09:59:33.212186+00:00"
+    },
+    {
+      "path": "outputs/analysis/bc-rq3-full-score-estimates-20261114/rq3/report.json",
+      "sha256": "7a67f3953fd0377144a73efe257e9468a0541ac715dfb894d845fbd23b4845d0",
+      "source_at": "2026-11-14T10:31:09.028021+00:00"
+    },
+    {
+      "path": "docs/results/2026-11-13/historical-repeat-stats.json",
+      "sha256": "9ff5888ec783808ab471c59e57666eb686b9f10b99972c976e547532e48c8f0d",
+      "source_at": null
+    },
+    {
+      "path": "outputs/analysis/mmbc-bounded-calls-v1/replay.json",
+      "sha256": "a7bd281df35b3904b0f954a73c8b55255ae485f1daab2e16d886561a0b9d5183",
+      "source_at": null
+    },
+    {
+      "path": "outputs/analysis/stage-profile-20261114/summary.json",
+      "sha256": "1823fad71168f4be2fda1596b34716226b7284d8059bf11d305ca6d312a89443",
+      "source_at": null
+    },
+    {
+      "path": "outputs/analysis/stage-profile-20261114/comparisons.json",
+      "sha256": "46dce8004f6421c5d723844acc0ed5cd67511508773f664207ca2c85d32466ba",
+      "source_at": null
+    },
+    {
+      "path": "outputs/analysis/stage-profile-20261114/http-prepost.json",
+      "sha256": "eb13609434f25f82ff328cbc51aec04842cc9fe5c4186de6763a4518db8a1150",
+      "source_at": null
+    }
+  ]
+}

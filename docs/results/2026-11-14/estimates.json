@@ -1,0 +1,1455 @@
+{
+  "BC + Hermes": {
+    "at": "2026-11-14T10:30:57.536023+00:00",
+    "model_calls": 0,
+    "selected_model": {
+      "name": "question_sd_4",
+      "question_sd": 4.0,
+      "interaction_sd": 0.0
+    },
+    "methods": [
+      {
+        "method": "none",
+        "total": 300,
+        "known_n": 300,
+        "known_correct": 228,
+        "completed_scored_n": 299,
+        "known_budget_failures": 1,
+        "missing_n": 0,
+        "observed_accuracy": 0.76,
+        "estimated_missing_accuracy": null,
+        "estimated_full_accuracy": 0.76,
+        "estimated_total_correct": 228.0,
+        "posterior_predictive95": [
+          0.76,
+          0.76
+        ],
+        "expected_score_parameter95": [
+          0.76,
+          0.76
+        ],
+        "nonidentified_bounds": [
+          0.76,
+          0.76
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.76
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.76
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.76
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.79,
+          0.75,
+          0.74
+        ],
+        "estimated_repeat_mean": 0.7600000000000001,
+        "estimated_repeat_sample_std": 0.026457513110645932
+      },
+      {
+        "method": "discard",
+        "total": 300,
+        "known_n": 300,
+        "known_correct": 193,
+        "completed_scored_n": 294,
+        "known_budget_failures": 6,
+        "missing_n": 0,
+        "observed_accuracy": 0.6433333333333333,
+        "estimated_missing_accuracy": null,
+        "estimated_full_accuracy": 0.6433333333333333,
+        "estimated_total_correct": 193.0,
+        "posterior_predictive95": [
+          0.6433333333333333,
+          0.6433333333333333
+        ],
+        "expected_score_parameter95": [
+          0.6433333333333333,
+          0.6433333333333333
+        ],
+        "nonidentified_bounds": [
+          0.6433333333333333,
+          0.6433333333333333
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.6433333333333333
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.6433333333333333
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.6433333333333333
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.64,
+          0.68,
+          0.61
+        ],
+        "estimated_repeat_mean": 0.6433333333333334,
+        "estimated_repeat_sample_std": 0.03511884584284249
+      },
+      {
+        "method": "summarize",
+        "total": 300,
+        "known_n": 297,
+        "known_correct": 241,
+        "completed_scored_n": 297,
+        "known_budget_failures": 0,
+        "missing_n": 3,
+        "observed_accuracy": 0.8114478114478114,
+        "estimated_missing_accuracy": 0.13535363647826584,
+        "estimated_full_accuracy": 0.804686869698116,
+        "estimated_total_correct": 241.40606090943479,
+        "posterior_predictive95": [
+          0.8033333333333333,
+          0.81
+        ],
+        "expected_score_parameter95": [
+          0.8036064797684509,
+          0.8068203984277902
+        ],
+        "nonidentified_bounds": [
+          0.8033333333333333,
+          0.8133333333333334
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8041402438332983
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.804686869698116
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8054659719940458
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.79,
+          0.82,
+          0.804060609094348
+        ],
+        "estimated_repeat_mean": 0.804686869698116,
+        "estimated_repeat_sample_std": 0.01500980185604969
+      },
+      {
+        "method": "sliding_window",
+        "total": 300,
+        "known_n": 300,
+        "known_correct": 221,
+        "completed_scored_n": 300,
+        "known_budget_failures": 0,
+        "missing_n": 0,
+        "observed_accuracy": 0.7366666666666667,
+        "estimated_missing_accuracy": null,
+        "estimated_full_accuracy": 0.7366666666666667,
+        "estimated_total_correct": 221.0,
+        "posterior_predictive95": [
+          0.7366666666666667,
+          0.7366666666666667
+        ],
+        "expected_score_parameter95": [
+          0.7366666666666667,
+          0.7366666666666667
+        ],
+        "nonidentified_bounds": [
+          0.7366666666666667,
+          0.7366666666666667
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.7366666666666667
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7366666666666667
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.7366666666666667
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.75,
+          0.72,
+          0.74
+        ],
+        "estimated_repeat_mean": 0.7366666666666667,
+        "estimated_repeat_sample_std": 0.01527525231651948
+      },
+      {
+        "method": "visual",
+        "total": 300,
+        "known_n": 264,
+        "known_correct": 237,
+        "completed_scored_n": 264,
+        "known_budget_failures": 0,
+        "missing_n": 36,
+        "observed_accuracy": 0.8977272727272727,
+        "estimated_missing_accuracy": 0.4640341194607846,
+        "estimated_full_accuracy": 0.8456840943352942,
+        "estimated_total_correct": 253.70522830058826,
+        "posterior_predictive95": [
+          0.8266666666666667,
+          0.8666666666666667
+        ],
+        "expected_score_parameter95": [
+          0.8330268219372813,
+          0.8600541102537511
+        ],
+        "nonidentified_bounds": [
+          0.79,
+          0.91
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8338760066599511
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8456840943352942
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8574209387008538
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.82964921865619,
+          0.850396277315424,
+          0.8570067870342684
+        ],
+        "estimated_repeat_mean": 0.8456840943352941,
+        "estimated_repeat_sample_std": 0.014274545114257662
+      }
+    ],
+    "assumptions": [
+      "Known labels transport to unknown outcomes given the hierarchical model.",
+      "Historical protocol mixture accepted; no cross-harness pooling.",
+      "No extra missingness penalty in central estimate; sensitivity shifts missing odds by 0.5x / 2x.",
+      "Categorical resolution effects; no forced monotonicity."
+    ],
+    "uncertainty": {
+      "draws": 4000,
+      "seed": 20261116,
+      "type": "Laplace posterior predictive, unknown-only Bernoulli imputation",
+      "excludes": "Unmodeled MNAR bias, hyperparameter uncertainty, judge error and protocol changes."
+    },
+    "nested_validation": {
+      "block": {
+        "selected_pipeline": {
+          "n": 1461,
+          "brier": 0.0936123196124266,
+          "log_loss": 0.31596291350610833,
+          "observed_accuracy": 0.7665982203969883,
+          "predicted_accuracy": 0.7228369230034628
+        },
+        "method_repeat_baseline": {
+          "n": 1461,
+          "brier": 0.1757744997191916,
+          "log_loss": 0.5335903316438324,
+          "observed_accuracy": 0.7665982203969883,
+          "predicted_accuracy": 0.7657017964666608
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_4",
+            "train_n": 974,
+            "test_n": 487
+          },
+          {
+            "fold": 1,
+            "model": "question_sd_4",
+            "train_n": 973,
+            "test_n": 488
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_4",
+            "train_n": 975,
+            "test_n": 486
+          }
+        ]
+      },
+      "partial": {
+        "selected_pipeline": {
+          "n": 1457,
+          "brier": 0.08581331444635885,
+          "log_loss": 0.2912890090139462,
+          "observed_accuracy": 0.7687028140013726,
+          "predicted_accuracy": 0.7427839412988461
+        },
+        "method_repeat_baseline": {
+          "n": 1457,
+          "brier": 0.1724615367078469,
+          "log_loss": 0.5238726436766223,
+          "observed_accuracy": 0.7687028140013726,
+          "predicted_accuracy": 0.7633612303351208
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_4",
+            "train_n": 975,
+            "test_n": 486
+          },
+          {
+            "fold": 1,
+            "model": "question_sd_4",
+            "train_n": 975,
+            "test_n": 486
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_4",
+            "train_n": 976,
+            "test_n": 485
+          }
+        ]
+      },
+      "selected_pipeline_weighted_brier": 0.09001277876654917,
+      "method_repeat_baseline_weighted_brier": 0.17424543986780172
+    }
+  },
+  "BC + DSH": {
+    "at": "2026-11-14T10:31:02.357470+00:00",
+    "model_calls": 0,
+    "selected_model": {
+      "name": "question_sd_4",
+      "question_sd": 4.0,
+      "interaction_sd": 0.0
+    },
+    "methods": [
+      {
+        "method": "none",
+        "total": 300,
+        "known_n": 257,
+        "known_correct": 218,
+        "completed_scored_n": 242,
+        "known_budget_failures": 15,
+        "missing_n": 43,
+        "observed_accuracy": 0.8482490272373541,
+        "estimated_missing_accuracy": 0.5914293156025486,
+        "estimated_full_accuracy": 0.811438201903032,
+        "estimated_total_correct": 243.4314605709096,
+        "posterior_predictive95": [
+          0.7866666666666666,
+          0.8333333333333334
+        ],
+        "expected_score_parameter95": [
+          0.7938737065455262,
+          0.8269813393107157
+        ],
+        "nonidentified_bounds": [
+          0.7266666666666667,
+          0.87
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.80045650755358
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.811438201903032
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8223718824629196
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8612361052221336,
+          0.8016049069561586,
+          0.7714735935308038
+        ],
+        "estimated_repeat_mean": 0.811438201903032,
+        "estimated_repeat_sample_std": 0.04568202483929737
+      },
+      {
+        "method": "discard",
+        "total": 300,
+        "known_n": 219,
+        "known_correct": 185,
+        "completed_scored_n": 200,
+        "known_budget_failures": 19,
+        "missing_n": 81,
+        "observed_accuracy": 0.8447488584474886,
+        "estimated_missing_accuracy": 0.7517255727706169,
+        "estimated_full_accuracy": 0.8196325713147332,
+        "estimated_total_correct": 245.88977139441997,
+        "posterior_predictive95": [
+          0.7833333333333333,
+          0.85
+        ],
+        "expected_score_parameter95": [
+          0.7913547855906506,
+          0.8446978758376038
+        ],
+        "nonidentified_bounds": [
+          0.6166666666666667,
+          0.8866666666666667
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8007213847633151
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8196325713147332
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8363439439212448
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.80744483124559,
+          0.8254791532910144,
+          0.8259737294075953
+        ],
+        "estimated_repeat_mean": 0.8196325713147332,
+        "estimated_repeat_sample_std": 0.010557788943643596
+      },
+      {
+        "method": "summarize",
+        "total": 300,
+        "known_n": 244,
+        "known_correct": 223,
+        "completed_scored_n": 237,
+        "known_budget_failures": 7,
+        "missing_n": 56,
+        "observed_accuracy": 0.9139344262295082,
+        "estimated_missing_accuracy": 0.7230538473513197,
+        "estimated_full_accuracy": 0.878303384838913,
+        "estimated_total_correct": 263.4910154516739,
+        "posterior_predictive95": [
+          0.85,
+          0.9033333333333333
+        ],
+        "expected_score_parameter95": [
+          0.8543024629249285,
+          0.8986309847507418
+        ],
+        "nonidentified_bounds": [
+          0.7433333333333333,
+          0.93
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8641351510579978
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.878303384838913
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8906468130197925
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8808580949872412,
+          0.8781617393668213,
+          0.8758903201626765
+        ],
+        "estimated_repeat_mean": 0.878303384838913,
+        "estimated_repeat_sample_std": 0.002486914605835454
+      },
+      {
+        "method": "sliding_window",
+        "total": 300,
+        "known_n": 256,
+        "known_correct": 229,
+        "completed_scored_n": 246,
+        "known_budget_failures": 10,
+        "missing_n": 44,
+        "observed_accuracy": 0.89453125,
+        "estimated_missing_accuracy": 0.6857891441772345,
+        "estimated_full_accuracy": 0.8639157411459943,
+        "estimated_total_correct": 259.1747223437983,
+        "posterior_predictive95": [
+          0.84,
+          0.8866666666666667
+        ],
+        "expected_score_parameter95": [
+          0.8435383334075637,
+          0.882593799973038
+        ],
+        "nonidentified_bounds": [
+          0.7633333333333333,
+          0.91
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8522038024053451
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8639157411459943
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8744690467454078
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8825100885091106,
+          0.8355084813445387,
+          0.8737286535843338
+        ],
+        "estimated_repeat_mean": 0.8639157411459945,
+        "estimated_repeat_sample_std": 0.02499015219851756
+      },
+      {
+        "method": "visual",
+        "total": 300,
+        "known_n": 225,
+        "known_correct": 196,
+        "completed_scored_n": 215,
+        "known_budget_failures": 10,
+        "missing_n": 75,
+        "observed_accuracy": 0.8711111111111111,
+        "estimated_missing_accuracy": 0.6775038666602381,
+        "estimated_full_accuracy": 0.8227092999983928,
+        "estimated_total_correct": 246.81278999951783,
+        "posterior_predictive95": [
+          0.7866666666666666,
+          0.8566666666666667
+        ],
+        "expected_score_parameter95": [
+          0.7944425540900191,
+          0.8500661293999107
+        ],
+        "nonidentified_bounds": [
+          0.6533333333333333,
+          0.9033333333333333
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8027069269371816
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8227092999983928
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8414770975485191
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8345399467699595,
+          0.82688687272853,
+          0.8067010804966892
+        ],
+        "estimated_repeat_mean": 0.8227092999983929,
+        "estimated_repeat_sample_std": 0.014381922829786878
+      }
+    ],
+    "assumptions": [
+      "Known labels transport to unknown outcomes given the hierarchical model.",
+      "Historical protocol mixture accepted; no cross-harness pooling.",
+      "No extra missingness penalty in central estimate; sensitivity shifts missing odds by 0.5x / 2x.",
+      "Categorical resolution effects; no forced monotonicity."
+    ],
+    "uncertainty": {
+      "draws": 4000,
+      "seed": 20261116,
+      "type": "Laplace posterior predictive, unknown-only Bernoulli imputation",
+      "excludes": "Unmodeled MNAR bias, hyperparameter uncertainty, judge error and protocol changes."
+    },
+    "nested_validation": {
+      "block": {
+        "selected_pipeline": {
+          "n": 1201,
+          "brier": 0.05654308239872529,
+          "log_loss": 0.2101651477585143,
+          "observed_accuracy": 0.8751040799333888,
+          "predicted_accuracy": 0.8405484491237318
+        },
+        "method_repeat_baseline": {
+          "n": 1201,
+          "brier": 0.11063138489387832,
+          "log_loss": 0.3840347800992306,
+          "observed_accuracy": 0.8751040799333888,
+          "predicted_accuracy": 0.8729793031705823
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_2",
+            "train_n": 802,
+            "test_n": 399
+          },
+          {
+            "fold": 1,
+            "model": "question_sd_2",
+            "train_n": 805,
+            "test_n": 396
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_2",
+            "train_n": 795,
+            "test_n": 406
+          }
+        ]
+      },
+      "partial": {
+        "selected_pipeline": {
+          "n": 1162,
+          "brier": 0.04657357347717154,
+          "log_loss": 0.18302402796976242,
+          "observed_accuracy": 0.878657487091222,
+          "predicted_accuracy": 0.846436459602451
+        },
+        "method_repeat_baseline": {
+          "n": 1162,
+          "brier": 0.1071747460231916,
+          "log_loss": 0.3718865496595562,
+          "observed_accuracy": 0.878657487091222,
+          "predicted_accuracy": 0.8712053565833691
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_4",
+            "train_n": 822,
+            "test_n": 379
+          },
+          {
+            "fold": 1,
+            "model": "question_sd_2",
+            "train_n": 810,
+            "test_n": 391
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_2",
+            "train_n": 809,
+            "test_n": 392
+          }
+        ]
+      },
+      "selected_pipeline_weighted_brier": 0.0517750563927648,
+      "method_repeat_baseline_weighted_brier": 0.10897820978181076
+    }
+  },
+  "MMBC + Hermes": {
+    "at": "2026-11-14T09:59:33.212186+00:00",
+    "model_calls": 0,
+    "selected_model": {
+      "name": "question_2_interaction_0.5",
+      "question_sd": 2.0,
+      "interaction_sd": 0.5
+    },
+    "methods": [
+      {
+        "method": "none",
+        "total": 300,
+        "known_n": 177,
+        "known_correct": 146,
+        "completed_scored_n": 177,
+        "known_budget_failures": 0,
+        "missing_n": 123,
+        "observed_accuracy": 0.8248587570621468,
+        "estimated_missing_accuracy": 0.7022689671578592,
+        "estimated_full_accuracy": 0.7745969432013889,
+        "estimated_total_correct": 232.3790829604167,
+        "posterior_predictive95": [
+          0.7266666666666667,
+          0.82
+        ],
+        "expected_score_parameter95": [
+          0.734958579630057,
+          0.8112949378083808
+        ],
+        "nonidentified_bounds": [
+          0.4866666666666667,
+          0.8966666666666666
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.7340391127429718
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7745969432013889
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8098708267606282
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.7545804017203577,
+          0.79636310896406,
+          0.7728473189197494
+        ],
+        "estimated_repeat_mean": 0.7745969432013889,
+        "estimated_repeat_sample_std": 0.02094622985165616
+      },
+      {
+        "method": "discard",
+        "total": 300,
+        "known_n": 159,
+        "known_correct": 89,
+        "completed_scored_n": 156,
+        "known_budget_failures": 3,
+        "missing_n": 141,
+        "observed_accuracy": 0.559748427672956,
+        "estimated_missing_accuracy": 0.5027876641388821,
+        "estimated_full_accuracy": 0.5329768688119413,
+        "estimated_total_correct": 159.89306064358237,
+        "posterior_predictive95": [
+          0.48,
+          0.5833333333333334
+        ],
+        "expected_score_parameter95": [
+          0.4887405934260224,
+          0.5776879255933408
+        ],
+        "nonidentified_bounds": [
+          0.2966666666666667,
+          0.7666666666666667
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.4838352582282471
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.5329768688119413
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.581740400577071
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.5562557645423318,
+          0.527864569887441,
+          0.514810272006051
+        ],
+        "estimated_repeat_mean": 0.5329768688119413,
+        "estimated_repeat_sample_std": 0.02119042031470382
+      },
+      {
+        "method": "summarize",
+        "total": 300,
+        "known_n": 167,
+        "known_correct": 139,
+        "completed_scored_n": 167,
+        "known_budget_failures": 0,
+        "missing_n": 133,
+        "observed_accuracy": 0.8323353293413174,
+        "estimated_missing_accuracy": 0.7451314044516795,
+        "estimated_full_accuracy": 0.7936749226402446,
+        "estimated_total_correct": 238.1024767920734,
+        "posterior_predictive95": [
+          0.7433333333333333,
+          0.8366666666666667
+        ],
+        "expected_score_parameter95": [
+          0.7522075590107744,
+          0.829308999351608
+        ],
+        "nonidentified_bounds": [
+          0.4633333333333333,
+          0.9066666666666666
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.7532412528307814
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7936749226402446
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8277505206160212
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8315754044322432,
+          0.7819415501380282,
+          0.7675078133504624
+        ],
+        "estimated_repeat_mean": 0.7936749226402445,
+        "estimated_repeat_sample_std": 0.03360681596733609
+      },
+      {
+        "method": "sliding_window",
+        "total": 300,
+        "known_n": 196,
+        "known_correct": 164,
+        "completed_scored_n": 196,
+        "known_budget_failures": 0,
+        "missing_n": 104,
+        "observed_accuracy": 0.8367346938775511,
+        "estimated_missing_accuracy": 0.7330921147966899,
+        "estimated_full_accuracy": 0.8008052664628525,
+        "estimated_total_correct": 240.24157993885578,
+        "posterior_predictive95": [
+          0.76,
+          0.84
+        ],
+        "expected_score_parameter95": [
+          0.7673710336792596,
+          0.8311266531273768
+        ],
+        "nonidentified_bounds": [
+          0.5466666666666666,
+          0.8933333333333333
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.7686820975415013
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8008052664628525
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8281432921968258
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.7933987620168925,
+          0.8097211217087151,
+          0.7992959156629499
+        ],
+        "estimated_repeat_mean": 0.8008052664628525,
+        "estimated_repeat_sample_std": 0.008265195784443577
+      },
+      {
+        "method": "vanilla_visual",
+        "total": 300,
+        "known_n": 162,
+        "known_correct": 126,
+        "completed_scored_n": 162,
+        "known_budget_failures": 0,
+        "missing_n": 138,
+        "observed_accuracy": 0.7777777777777778,
+        "estimated_missing_accuracy": 0.690243138041722,
+        "estimated_full_accuracy": 0.7375118434991921,
+        "estimated_total_correct": 221.2535530497576,
+        "posterior_predictive95": [
+          0.6866666666666666,
+          0.7866666666666666
+        ],
+        "expected_score_parameter95": [
+          0.6949947954866034,
+          0.7766044463092748
+        ],
+        "nonidentified_bounds": [
+          0.42,
+          0.88
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.6924947473848475
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7375118434991921
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.7768135166769488
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.7222838342447093,
+          0.7534838425892567,
+          0.7367678536636103
+        ],
+        "estimated_repeat_mean": 0.7375118434991922,
+        "estimated_repeat_sample_std": 0.015613304289340662
+      },
+      {
+        "method": "visual",
+        "total": 300,
+        "known_n": 181,
+        "known_correct": 148,
+        "completed_scored_n": 181,
+        "known_budget_failures": 0,
+        "missing_n": 119,
+        "observed_accuracy": 0.8176795580110497,
+        "estimated_missing_accuracy": 0.7196791121061685,
+        "estimated_full_accuracy": 0.7788060478021135,
+        "estimated_total_correct": 233.64181434063406,
+        "posterior_predictive95": [
+          0.7333333333333333,
+          0.82
+        ],
+        "expected_score_parameter95": [
+          0.7433975049775118,
+          0.8119254958512687
+        ],
+        "nonidentified_bounds": [
+          0.49333333333333335,
+          0.89
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.740114402182872
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7788060478021135
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8118845285089243
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.7858571502225347,
+          0.7992104229194515,
+          0.7513505702643545
+        ],
+        "estimated_repeat_mean": 0.7788060478021136,
+        "estimated_repeat_sample_std": 0.02469675905962869
+      }
+    ],
+    "assumptions": [
+      "Observed labels transport to unknown outcomes conditional on the hierarchical model.",
+      "No extra unmodeled missingness penalty in the central estimate; odds-ratio sensitivity supplied.",
+      "Retained historical protocol mixture accepted; not a clean single-version experiment."
+    ],
+    "uncertainty": {
+      "draws": 4000,
+      "seed": 20261116,
+      "approximation": "Laplace Gaussian posterior plus Bernoulli imputation; known outcomes fixed",
+      "excludes": "Unmodeled MNAR bias, hyperparameter-selection uncertainty, judge error, and protocol changes."
+    },
+    "nested_validation": {
+      "block": {
+        "selected_pipeline": {
+          "n": 1042,
+          "brier": 0.12111327018598174,
+          "log_loss": 0.38706599369982775,
+          "observed_accuracy": 0.7792706333973128,
+          "predicted_accuracy": 0.7474185562335377
+        },
+        "method_repeat_baseline": {
+          "n": 1042,
+          "brier": 0.17022781662235859,
+          "log_loss": 0.5272571201114497,
+          "observed_accuracy": 0.7792706333973128,
+          "predicted_accuracy": 0.775903762035276
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_2",
+            "train_n": 694,
+            "test_n": 348
+          },
+          {
+            "fold": 1,
+            "model": "question_2_interaction_1",
+            "train_n": 697,
+            "test_n": 345
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_2",
+            "train_n": 693,
+            "test_n": 349
+          }
+        ]
+      },
+      "partial": {
+        "selected_pipeline": {
+          "n": 963,
+          "brier": 0.09081711815084334,
+          "log_loss": 0.3033028058635455,
+          "observed_accuracy": 0.7850467289719626,
+          "predicted_accuracy": 0.7570464732488136
+        },
+        "method_repeat_baseline": {
+          "n": 963,
+          "brier": 0.16142990818397934,
+          "log_loss": 0.501927717075389,
+          "observed_accuracy": 0.7850467289719626,
+          "predicted_accuracy": 0.7737795811235362
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_4",
+            "train_n": 721,
+            "test_n": 321
+          },
+          {
+            "fold": 1,
+            "model": "question_sd_4",
+            "train_n": 728,
+            "test_n": 314
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_4",
+            "train_n": 714,
+            "test_n": 328
+          }
+        ]
+      },
+      "selected_pipeline_weighted_brier": 0.11048163899686984,
+      "method_repeat_baseline_weighted_brier": 0.16714042395137063
+    }
+  },
+  "RQ3": {
+    "at": "2026-11-14T10:31:09.028021+00:00",
+    "model_calls": 0,
+    "selected_model": {
+      "name": "question_sd_4",
+      "question_sd": 4.0,
+      "interaction_sd": 0.0
+    },
+    "methods": [
+      {
+        "method": "scale_0.0",
+        "total": 300,
+        "known_n": 291,
+        "known_correct": 230,
+        "completed_scored_n": 290,
+        "known_budget_failures": 1,
+        "missing_n": 9,
+        "observed_accuracy": 0.7903780068728522,
+        "estimated_missing_accuracy": 0.42540763418732325,
+        "estimated_full_accuracy": 0.7794288956922863,
+        "estimated_total_correct": 233.8286687076859,
+        "posterior_predictive95": [
+          0.7733333333333333,
+          0.7866666666666666
+        ],
+        "expected_score_parameter95": [
+          0.7762170716254607,
+          0.7828505890588077
+        ],
+        "nonidentified_bounds": [
+          0.7666666666666667,
+          0.7966666666666666
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.7769024936000378
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7794288956922863
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.7819778429523274
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.795755441102014,
+          0.7613508159254575,
+          0.7811804300493876
+        ],
+        "estimated_repeat_mean": 0.7794288956922863,
+        "estimated_repeat_sample_std": 0.017269060855701335
+      },
+      {
+        "method": "scale_0.25",
+        "total": 300,
+        "known_n": 262,
+        "known_correct": 215,
+        "completed_scored_n": 261,
+        "known_budget_failures": 1,
+        "missing_n": 38,
+        "observed_accuracy": 0.8206106870229007,
+        "estimated_missing_accuracy": 0.49804577055445726,
+        "estimated_full_accuracy": 0.7797524642702313,
+        "estimated_total_correct": 233.92573928106938,
+        "posterior_predictive95": [
+          0.7633333333333333,
+          0.7966666666666666
+        ],
+        "expected_score_parameter95": [
+          0.7701564757741498,
+          0.789612317567723
+        ],
+        "nonidentified_bounds": [
+          0.7166666666666667,
+          0.8433333333333334
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.7687275527322163
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7797524642702313
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.7902164970106711
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.790726917206589,
+          0.759996265755703,
+          0.7885342098484016
+        ],
+        "estimated_repeat_mean": 0.7797524642702313,
+        "estimated_repeat_sample_std": 0.01714446051057739
+      },
+      {
+        "method": "scale_0.5",
+        "total": 300,
+        "known_n": 231,
+        "known_correct": 207,
+        "completed_scored_n": 228,
+        "known_budget_failures": 3,
+        "missing_n": 69,
+        "observed_accuracy": 0.8961038961038961,
+        "estimated_missing_accuracy": 0.6647210847366644,
+        "estimated_full_accuracy": 0.8428858494894328,
+        "estimated_total_correct": 252.86575484682984,
+        "posterior_predictive95": [
+          0.8166666666666667,
+          0.87
+        ],
+        "expected_score_parameter95": [
+          0.8233066289588187,
+          0.8624400218934095
+        ],
+        "nonidentified_bounds": [
+          0.69,
+          0.92
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8244122396248643
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8428858494894328
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8586750228587275
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8458498158994558,
+          0.8455085032623803,
+          0.8372992293064624
+        ],
+        "estimated_repeat_mean": 0.8428858494894329,
+        "estimated_repeat_sample_std": 0.00484116384567145
+      },
+      {
+        "method": "scale_0.7",
+        "total": 300,
+        "known_n": 201,
+        "known_correct": 186,
+        "completed_scored_n": 199,
+        "known_budget_failures": 2,
+        "missing_n": 99,
+        "observed_accuracy": 0.9253731343283582,
+        "estimated_missing_accuracy": 0.7477211572231054,
+        "estimated_full_accuracy": 0.8667479818836248,
+        "estimated_total_correct": 260.02439456508745,
+        "posterior_predictive95": [
+          0.83,
+          0.9
+        ],
+        "expected_score_parameter95": [
+          0.835501745935519,
+          0.8952166088968171
+        ],
+        "nonidentified_bounds": [
+          0.62,
+          0.95
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8429537862783335
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8667479818836248
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8860720605079269
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8696934394339246,
+          0.8461262071174144,
+          0.8844242990995353
+        ],
+        "estimated_repeat_mean": 0.8667479818836248,
+        "estimated_repeat_sample_std": 0.01931819744446188
+      },
+      {
+        "method": "scale_0.75",
+        "total": 300,
+        "known_n": 227,
+        "known_correct": 206,
+        "completed_scored_n": 223,
+        "known_budget_failures": 4,
+        "missing_n": 73,
+        "observed_accuracy": 0.9074889867841409,
+        "estimated_missing_accuracy": 0.6459044846387351,
+        "estimated_full_accuracy": 0.8438367579287588,
+        "estimated_total_correct": 253.15102737862765,
+        "posterior_predictive95": [
+          0.8166666666666667,
+          0.87
+        ],
+        "expected_score_parameter95": [
+          0.8218155878850602,
+          0.8654418538076302
+        ],
+        "nonidentified_bounds": [
+          0.6866666666666666,
+          0.93
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8243659527240532
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8438367579287588
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8610332276269005
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.8506120977342667,
+          0.8370240926361899,
+          0.84387408341582
+        ],
+        "estimated_repeat_mean": 0.8438367579287589,
+        "estimated_repeat_sample_std": 0.006794079446866105
+      },
+      {
+        "method": "scale_0.8",
+        "total": 300,
+        "known_n": 198,
+        "known_correct": 182,
+        "completed_scored_n": 197,
+        "known_budget_failures": 1,
+        "missing_n": 102,
+        "observed_accuracy": 0.9191919191919192,
+        "estimated_missing_accuracy": 0.6661535143559316,
+        "estimated_full_accuracy": 0.8331588615476834,
+        "estimated_total_correct": 249.94765846430502,
+        "posterior_predictive95": [
+          0.7933333333333333,
+          0.8733333333333333
+        ],
+        "expected_score_parameter95": [
+          0.7989618395482881,
+          0.8647107579241077
+        ],
+        "nonidentified_bounds": [
+          0.6066666666666667,
+          0.9466666666666667
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.8049163553789576
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.8331588615476834
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8574010648025042
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.864724693229357,
+          0.8089396111915974,
+          0.8258122802220962
+        ],
+        "estimated_repeat_mean": 0.8331588615476835,
+        "estimated_repeat_sample_std": 0.02860896777882754
+      },
+      {
+        "method": "scale_1.0",
+        "total": 300,
+        "known_n": 246,
+        "known_correct": 207,
+        "completed_scored_n": 243,
+        "known_budget_failures": 3,
+        "missing_n": 54,
+        "observed_accuracy": 0.8414634146341463,
+        "estimated_missing_accuracy": 0.5933857995849471,
+        "estimated_full_accuracy": 0.7968094439252905,
+        "estimated_total_correct": 239.04283317758714,
+        "posterior_predictive95": [
+          0.7733333333333333,
+          0.82
+        ],
+        "expected_score_parameter95": [
+          0.7816482683366998,
+          0.8113999224268885
+        ],
+        "nonidentified_bounds": [
+          0.69,
+          0.87
+        ],
+        "sensitivity": [
+          {
+            "missing_odds_multiplier": 0.5,
+            "full_accuracy": 0.7803498384774533
+          },
+          {
+            "missing_odds_multiplier": 1.0,
+            "full_accuracy": 0.7968094439252905
+          },
+          {
+            "missing_odds_multiplier": 2.0,
+            "full_accuracy": 0.8112179804714718
+          }
+        ],
+        "estimated_repeat_rates": [
+          0.7933314038935795,
+          0.8072329608022989,
+          0.7898639670799931
+        ],
+        "estimated_repeat_mean": 0.7968094439252904,
+        "estimated_repeat_sample_std": 0.009192010529694414
+      }
+    ],
+    "assumptions": [
+      "Known labels transport to unknown outcomes given the hierarchical model.",
+      "Historical protocol mixture accepted; no cross-harness pooling.",
+      "No extra missingness penalty in central estimate; sensitivity shifts missing odds by 0.5x / 2x.",
+      "Categorical resolution effects; no forced monotonicity."
+    ],
+    "uncertainty": {
+      "draws": 4000,
+      "seed": 20261116,
+      "type": "Laplace posterior predictive, unknown-only Bernoulli imputation",
+      "excludes": "Unmodeled MNAR bias, hyperparameter uncertainty, judge error and protocol changes."
+    },
+    "nested_validation": {
+      "block": {
+        "selected_pipeline": {
+          "n": 1656,
+          "brier": 0.061438800656584934,
+          "log_loss": 0.22655078696379943,
+          "observed_accuracy": 0.8653381642512077,
+          "predicted_accuracy": 0.8291605654283811
+        },
+        "method_repeat_baseline": {
+          "n": 1656,
+          "brier": 0.11569643907694714,
+          "log_loss": 0.3918892936101976,
+          "observed_accuracy": 0.8653381642512077,
+          "predicted_accuracy": 0.8622659935107326
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_2",
+            "train_n": 1110,
+            "test_n": 546
+          },
+          {
+            "fold": 1,
+            "model": "question_sd_4",
+            "train_n": 1096,
+            "test_n": 560
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_4",
+            "train_n": 1106,
+            "test_n": 550
+          }
+        ]
+      },
+      "partial": {
+        "selected_pipeline": {
+          "n": 1588,
+          "brier": 0.05733861037461634,
+          "log_loss": 0.21462737660971637,
+          "observed_accuracy": 0.8721662468513854,
+          "predicted_accuracy": 0.8374100492354338
+        },
+        "method_repeat_baseline": {
+          "n": 1588,
+          "brier": 0.10999758504828004,
+          "log_loss": 0.3753434273104918,
+          "observed_accuracy": 0.8721662468513854,
+          "predicted_accuracy": 0.8577753419203359
+        },
+        "outer_selections": [
+          {
+            "fold": 0,
+            "model": "question_sd_4",
+            "train_n": 1125,
+            "test_n": 531
+          },
+          {
+            "fold": 1,
+            "model": "question_sd_4",
+            "train_n": 1127,
+            "test_n": 529
+          },
+          {
+            "fold": 2,
+            "model": "question_sd_4",
+            "train_n": 1128,
+            "test_n": 528
+          }
+        ]
+      },
+      "selected_pipeline_weighted_brier": 0.059028553666508804,
+      "method_repeat_baseline_weighted_brier": 0.11234643704658201
+    }
+  }
+}

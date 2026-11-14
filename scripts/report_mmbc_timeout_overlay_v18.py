@@ -73,6 +73,7 @@ class Overlay(Reporter):
             slots.append(slot)
         self.base = {'slots':slots}; self.slots = {r['slot_id']:r for r in slots}
         self.source_states = dict(Counter(r['status'] for r in observed))
+        self.original_timeout_ids = {r['slot_id'] for r in observed if r['status']=='timeout_unresolved'}
         self.bound_sources = {'core_corrected_report':str(SOURCE),'core_corrected_report_sha256':sha(SOURCE)}
         self.register_rounds()
 
@@ -130,9 +131,16 @@ class Overlay(Reporter):
                 'resource_available':p.exists(),'resources':read(p) if p.exists() else None,
                 'scope':'This new round only; historical attempts and judgments are separate.'})
         partition=self.ledger_partition()
+        retried=[r for r in rows if r['slot_id'] in self.original_timeout_ids]
+        recovered=sum(r['status'].startswith('completed_') for r in retried)
+        recovery={'original_timeout_slots':len(self.original_timeout_ids),'original_timeout_fraction':len(self.original_timeout_ids)/300,
+            'recovered_completed':recovered,'unresolved_historical_timeouts':len(self.original_timeout_ids)-recovered,
+            'running_or_pending':sum(r['status'] in ('active','pending_new_pass')for r in retried),
+            'new_terminal_timeouts':sum(r['status']=='timeout_unresolved' and r.get('new_pass_end_to_end_seconds') is not None for r in retried),
+            'new_terminal_other_failures':sum(r['status'] in ('system_or_unclassified_failed','task_budget_failed')and r.get('new_pass_end_to_end_seconds')is not None for r in retried)}
         result={'version':'mmbc-core-timeout-overlay-v18','at':datetime.now(timezone.utc).isoformat(),'final':final,
             'scope_slots':300,'benchmark':'mmbc100','harness':'hermes','method':'visual','source':self.bound_sources,
-            'frozen_source_states':self.source_states,'states':states,'completed_only':repeat_statistics(rows),
+            'frozen_source_states':self.source_states,'timeout_recovery':recovery,'states':states,'completed_only':repeat_statistics(rows),
             'task_valid':repeat_statistics(rows,'task_valid_score'),'rounds':rounds,'observations':rows,
             'historical_cost_partition':{'path':str(self.output/'historical-cost-partition.json'),'sha256':sha(self.output/'historical-cost-partition.json'),'counts':partition['physical_attempt_counts']},
             'read_errors':self.errors,'model_calls':0,'baseline_cohort_unchanged':True,'new_seed':False,
@@ -149,13 +157,14 @@ def markdown(r):
     s=r['states']; stats=r['completed_only']; rate='NA' if stats['mean'] is None else f"{100*stats['mean']:.2f} ± {100*stats['sample_std']:.2f}"
     completed=s.get('completed_scored',0)+s.get('completed_ungraded',0)
     lines=['# MMBC VERA 核心实验回补结果','',f"更新时间：{r['at']}。原300题次；补跑不是新seed。",'',
-        '|完成/300|已评分|三个repeat有效分母|mean ± std (%)|在跑|待跑|超时/300|其他失败|',
+        '|完成/300|已评分|三个repeat有效分母|mean ± std (%)|在跑|待跑|本轮终态超时|其他失败|',
         '|---:|---:|---|---:|---:|---:|---:|---:|',
-        f"|{completed}|{stats['valid_n']}|"+'/'.join(str(x['valid_n']) for x in stats['repeats'])+f"|{rate}|{s.get('active',0)}|{s.get('pending_new_pass',0)}|{s.get('timeout_unresolved',0)}|{sum(v for k,v in s.items() if k not in ('completed_scored','completed_ungraded','active','pending_new_pass','timeout_unresolved'))}|",'',
+        f"|{completed}|{stats['valid_n']}|"+'/'.join(str(x['valid_n']) for x in stats['repeats'])+f"|{rate}|{s.get('active',0)}|{s.get('pending_new_pass',0)}|{r['timeout_recovery']['new_terminal_timeouts']}|{sum(v for k,v in s.items() if k not in ('completed_scored','completed_ungraded','active','pending_new_pass','timeout_unresolved'))}|",'',
         '统计排除了误并入的受控实验轨迹。只保留最早合法核心完成；系统错误和未明确原因超时不补零。受控baseline集合固定，新增回补完成不会自动扩大集合。','',
         '|回补轮次|题次|状态|','|---|---:|---|']
     for x in r['rounds']:lines.append(f"|{x['round']}|{x['planned']}|{json.dumps(x['states'],ensure_ascii=False)}|")
-    lines+=['','新轮token及延迟逐轮保存在JSON资源引用中；历史成本保留并按core VERA / controlled / other分账。未测得的成本、provider API延迟不视为0。',f"历史物理attempt归属：{r['historical_cost_partition']['counts']}。读取异常：{len(r['read_errors'])}。"]
+    tr=r['timeout_recovery']
+    lines+=['',f"原始超时 **{tr['original_timeout_slots']}/300（{100*tr['original_timeout_fraction']:.1f}%）**：已回补完成 {tr['recovered_completed']}，在跑/待跑 {tr['running_or_pending']}，本轮其他终态失败 {tr['new_terminal_other_failures']}，本轮终态超时 {tr['new_terminal_timeouts']}。历史超时仍未恢复完成 {tr['unresolved_historical_timeouts']}；在跑或待跑不代表超时问题已经解决。",'','新轮token及延迟逐轮保存在JSON资源引用中；历史成本保留并按core VERA / controlled / other分账。未测得的成本、provider API延迟不视为0。',f"历史物理attempt归属：{r['historical_cost_partition']['counts']}。读取异常：{len(r['read_errors'])}。"]
     return '\n'.join(lines)+'\n'
 
 

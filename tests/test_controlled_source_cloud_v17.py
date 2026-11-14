@@ -5,9 +5,9 @@ import sys
 import tempfile
 import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from judge_controlled_source_v17 import valid_control
+from judge_controlled_source_v20 import valid_control
 from report_mmbc_timeout_overlay_v18 import cost_scope
-from provision_controlled_source_v17 import template_value
+from provision_controlled_source_v21 import template_value
 
 class Eligibility(unittest.TestCase):
     def setUp(self):

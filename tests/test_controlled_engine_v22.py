@@ -1,0 +1,150 @@
+import base64
+import contextvars
+import json
+import sys
+import tempfile
+import threading
+import types
+import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+import controlled_native_engine_v22 as engine
+
+
+class FineGrainedSummaryTests(unittest.TestCase):
+    def test_accepts_only_valid_structured_summary_with_optional_fence_metadata(self):
+        for raw in ['```json\n{"summary":"Supported fact.","metadata":{"source":1}}\n```', '{"summary":"Supported fact.","extra":2}']:
+            choice=types.SimpleNamespace(finish_reason='stop',message=types.SimpleNamespace(content=raw,tool_calls=None))
+            self.assertEqual(engine.parse_summary(choice),'Supported fact.')
+        for raw in ['Unstructured source copy.', '{"summary":{"fact":1}}', '{"other":"text"}']:
+            choice=types.SimpleNamespace(finish_reason='stop',message=types.SimpleNamespace(content=raw,tool_calls=None))
+            with self.assertRaises(ValueError):engine.parse_summary(choice)
+
+    def test_partition_exhaustive_disjoint_and_bounded(self):
+        for text in ['short', 'paragraph one.\nparagraph two. ' * 800]:
+            for count in range(1,7):
+                chunks=engine.partition_text(text,count)
+                self.assertEqual(''.join(chunks),text)
+                self.assertTrue(all(chunks))
+                self.assertLessEqual(len(chunks),count)
+
+    def test_disjoint_partition_generations_match_large_target_without_padding(self):
+        self.run_case()
+
+    def test_source_text_below_target_stops_without_summary_generation(self):
+        self.run_case(source_count=4, feasible=False)
+
+    def test_failed_partition_is_never_invoked_twice_by_native_recovery(self):
+        self.run_case(fail_generation=True)
+
+    def run_case(self, source_count=1800, feasible=True, fail_generation=False):
+        import httpx
+        from openai import OpenAI
+        from openai.resources.chat.completions import Completions
+        import capture_multimodal_prefix_v5 as capture
+        native = {'type': 'image_url', 'image_url': {
+            'url': 'data:image/png;base64,' + base64.b64encode(b'fixture-native').decode(), 'detail': 'high'}}
+        archive = ''.join(f'Source fact {i}: recorded observation and supporting evidence.\n' for i in range(source_count))
+        sections = []; generated = []
+        sent = []
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *args): pass
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+                sent.append(payload)
+                generation = payload.get('max_tokens') == 8192
+                if generation and fail_generation:
+                    raw=json.dumps({'error':{'message':'fixture failure','type':'server_error'}}).encode()
+                    self.send_response(503);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(raw)));self.end_headers();self.wfile.write(raw);return
+                if generation:
+                    self.server.testcase.assertEqual(payload.get('thinking'), {'type': 'disabled'})
+                    section = json.loads(payload['messages'][1]['content'])['archived_history']
+                    sections.append(section); generated.append(section[:2000].strip())
+                    content = json.dumps({'summary': generated[-1]})
+                    prompt = 2000
+                else:
+                    parts = payload['messages'][0]['content']
+                    self.server.testcase.assertEqual(parts[1], native)
+                    text = parts[2]['text'] if len(parts) > 2 else ''
+                    if generated:
+                        self.server.testcase.assertTrue('\n\n'.join(generated).startswith(text))
+                    prompt = 1000 + len(text)
+                    content = 'final answer'
+                raw = json.dumps({'id': 'local-fixture', 'object': 'chat.completion', 'created': 1,
+                    'model': 'fixture', 'choices': [{'index': 0, 'finish_reason': 'stop',
+                    'message': {'role': 'assistant', 'content': content}}],
+                    'usage': {'prompt_tokens': prompt, 'completion_tokens': 1,
+                              'total_tokens': prompt + 1, 'prompt_tokens_details': {'cached_tokens': 0}}}).encode()
+                self.send_response(200); self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(raw))); self.end_headers(); self.wfile.write(raw)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), Handler); server.testcase = self
+        thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
+        self.addCleanup(server.server_close); self.addCleanup(server.shutdown)
+        with tempfile.TemporaryDirectory() as folder:
+            out = Path(folder); prefix = out / 'prefix.json'; target = out / 'target.json'
+            prefix.write_text(json.dumps({'model': 'fixture', 'messages': [
+                {'role': 'user', 'content': [{'type': 'text', 'text': archive}, native]}]}))
+            target.write_text(json.dumps({'version': 'source-vera-total-prompt-reference-v17', 'source_usage_verified': True, 'image_token_parity_claimed': False,
+                'prefix_sha256': engine.hashlib.sha256(prefix.read_bytes()).hexdigest(),
+                'baseline_native_hashes': engine.image_ids([native]), 'source_first_post_prompt_tokens': 20000}))
+            spec = {'model': 'fixture', 'method': 'summary', 'prefix_path': str(prefix),
+                    'target_reference_path': str(target), 'question': 'task', 'question_id': 'local',
+                    'source_target_upper': 20400, 'source_native_root': str(engine.ROOT/'outputs/preflight/fixture')}
+            metrics = out / 'metrics'; metrics.mkdir()
+            class Recorder:
+                def __init__(self):
+                    self.out = metrics; self.purpose = contextvars.ContextVar('purpose', default='agent')
+                def write(self, name, value):
+                    with (metrics / name).open('a') as stream: stream.write(json.dumps(value) + '\n')
+                def archive(self, value): pass
+            recorder = Recorder(); sdk = Completions.create
+            def measured(obj, *args, **kwargs):
+                result = sdk(obj, *args, **kwargs)
+                recorder.write('calls.jsonl', {'call_id': str(len(sent)), 'purpose': recorder.purpose.get(),
+                    'raw_provider_usage': result.usage.model_dump()})
+                return result
+            def fake_capture_worker(spec, path):
+                capture.install_capture(recorder)
+                client = OpenAI(base_url=f'http://127.0.0.1:{server.server_port}/v1', api_key='fixture-only', max_retries=0,
+                                http_client=httpx.Client(trust_env=False))
+                if fail_generation:
+                    for attempt in range(2):
+                        try:client.chat.completions.create(model='fixture',messages=[{'role':'user','content':'task'}],max_tokens=100,stream=False)
+                        except BaseException:pass
+                    return
+                result = client.chat.completions.create(model='fixture', messages=[{'role': 'user', 'content': 'task'}], max_tokens=100, stream=False)
+                (out / 'conversation.json').write_text(json.dumps({'final_response': result.choices[0].message.content}))
+            with patch.object(Completions, 'create', measured), patch.object(capture, 'worker', fake_capture_worker), \
+                    patch.object(capture, 'install_capture', None), patch.object(capture, 'write', capture.write):
+                engine.run(spec, out)
+            result = json.loads((out / 'result.json').read_text())
+            if fail_generation:
+                self.assertEqual(result['status'],'failed',result)
+                self.assertEqual(sum(p.get('max_tokens')==8192 for p in sent),1)
+                self.assertEqual(result['control_gate']['summary_sdk_requests'],1)
+                self.assertEqual(result['control_gate']['fatal_error'],'AuxiliaryRequestLimit')
+                return
+            if not feasible:
+                self.assertEqual(result['status'], 'budget_infeasible', result)
+                self.assertIn('Entire source text is below target',result['control_gate']['failure_message'])
+                self.assertEqual(len(generated),0)
+                self.assertEqual(len(sent),2)
+                return
+            self.assertEqual(result['status'], 'completed', result)
+            self.assertTrue(result['control_gate']['passed'])
+            self.assertGreater(result['control_gate']['first_actual_prompt_tokens'], 16384)
+            self.assertFalse(result['control_gate']['image_token_parity_claimed'])
+            self.assertEqual(result['control_gate']['native_hashes'], engine.image_ids([native]))
+            self.assertEqual(sum(p.get('max_tokens') == 8192 for p in sent), 19)
+            source_text='\n'.join(json.dumps(m,ensure_ascii=False) for m in engine.text_only(json.loads(prefix.read_text())['messages']) if m.get('role')!='system')
+            self.assertEqual(''.join(sections),source_text)
+            self.assertEqual(len(set(sections)),19)
+            self.assertLessEqual(len(sent), 34)
+            self.assertTrue('\n\n'.join(generated).startswith(json.loads((out / 'representation.json').read_text())[0]['text']))
+            self.assertTrue((metrics / 'summary-prefix-fit.jsonl').exists())
+
+
+if __name__ == '__main__': unittest.main()
